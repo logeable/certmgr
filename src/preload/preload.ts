@@ -8,7 +8,7 @@ contextBridge.exposeInMainWorld('versions', {
 
 contextBridge.exposeInMainWorld('msg', {
   ping: async () => {
-    const result = await ipcRenderer.invoke('ping', 'hello');
+    const result = await ipcRenderer.invoke('ping');
     return result;
   },
 });

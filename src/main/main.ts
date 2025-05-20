@@ -26,9 +26,11 @@ async function createWindow() {
 app.whenReady().then(async () => {
   ipcMain.handle('ping', async (_event, _arg) => {
     const timeout = Math.floor(Math.random() * 3000) + 1000;
-    setTimeout(() => {
-      return 'pong';
-    }, timeout);
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve('pong');
+      }, timeout);
+    });
   });
   await createWindow();
 

@@ -14,7 +14,7 @@ async function createWindow() {
   });
 
   if (process.env.NODE_ENV === 'development') {
-    await win.loadURL('http://localhost:5173');
+    await win.loadURL(process.env.VITE_DEV_SERVER_URL as string);
   } else {
     await win.loadFile(join(__dirname, '../renderer/index.html'));
   }
@@ -28,6 +28,7 @@ app.whenReady().then(async () => {
     const timeout = Math.floor(Math.random() * 3000) + 1000;
     return new Promise(resolve => {
       setTimeout(() => {
+        console.log('pong');
         resolve('pong');
       }, timeout);
     });

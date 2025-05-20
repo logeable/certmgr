@@ -6,10 +6,10 @@
     "doc": "docs"
   },
   "scripts": {
-    "dev": "npm run build && concurrently -k \"vite\" \"cross-env NODE_ENV=development electron .\"",
+    "dev": "ts-node src/scripts/dev.ts",
     "build": "vite build && tsc -p .",
-    "start": "electron .",
-    "make": "electron-forge make",
+    "start": "npm run build && electron .",
+    "make": "npm run build && electron-forge make",
     "format": "prettier --write \"src/**/*.{js,ts,tsx,jsx,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{js,ts,tsx,jsx,json,css,md}\"",
     "lint": "eslint \"{src,main,scripts}/**/*.{js,ts,tsx,jsx}\"",

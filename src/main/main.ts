@@ -1,3 +1,4 @@
+import { ChildProcess, spawn } from 'child_process';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 
@@ -23,7 +24,46 @@ async function createWindow() {
   // win.webContents.openDevTools();
 }
 
+async function startServer() {
+  const path = join(app.getAppPath(), '../bin/server');
+  const server = spawn(path);
+  return new Promise<{ port: number; process: ChildProcess }>((resolve, reject) => {
+    const returnPort = 0;
+
+    setTimeout(() => {
+      if (returnPort === 0) {
+        server.kill();
+        reject(new Error('server start timeout'));
+      }
+    }, 5000);
+
+    server.stdout.on('data', data => {
+      if (data.toString().includes('http server started on')) {
+        const port = data.toString().split(':')[2].trim();
+        console.log(`http server started on http://localhost:${port}`);
+        resolve({ port: Number(port), process: server });
+      }
+      console.log(`server output: ${data.toString()}`);
+    });
+    server.stderr.on('data', data => {
+      console.error(`server error: ${data.toString()}`);
+    });
+    server.on('close', () => {
+      console.log('server closed');
+    });
+  });
+}
+
 app.whenReady().then(async () => {
+  let serverPort = 8080;
+  let serverProcess: ChildProcess | null = null;
+
+  if (process.env.NODE_ENV !== 'development') {
+    const { port, process } = await startServer();
+    serverPort = port;
+    serverProcess = process;
+  }
+
   ipcMain.handle('ping', async (_event, _arg) => {
     const timeout = Math.floor(Math.random() * 3000) + 1000;
     return new Promise(resolve => {
@@ -34,7 +74,7 @@ app.whenReady().then(async () => {
   });
 
   ipcMain.handle('status', async (_event, _arg) => {
-    const response = await fetch('http://localhost:8080/status');
+    const response = await fetch(`http://localhost:${serverPort}/status`);
     const data = await response.json();
     return data;
   });
@@ -52,8 +92,14 @@ app.whenReady().then(async () => {
   app.on('activate', async function () {
     if (BrowserWindow.getAllWindows().length === 0) await createWindow();
   });
-});
 
-app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') app.quit();
+  app.on('before-quit', function () {
+    if (serverProcess) {
+      serverProcess.kill();
+    }
+  });
+
+  app.on('window-all-closed', function () {
+    app.quit();
+  });
 });

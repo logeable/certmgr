@@ -9,3 +9,8 @@ document.body.appendChild(document.createElement("h2")).textContent =
 
 document.body.appendChild(document.createElement("h2")).textContent =
   versions.electron();
+
+(async () => {
+  const result = await msg.ping();
+  document.body.appendChild(document.createElement("h2")).textContent = result;
+})();

@@ -1,0 +1,2 @@
+build:
+	npm run make

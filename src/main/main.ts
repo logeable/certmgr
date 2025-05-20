@@ -64,28 +64,7 @@ app.whenReady().then(async () => {
     serverProcess = process;
   }
 
-  ipcMain.handle('ping', async (_event, _arg) => {
-    const timeout = Math.floor(Math.random() * 3000) + 1000;
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve('pong');
-      }, timeout);
-    });
-  });
-
-  ipcMain.handle('status', async (_event, _arg) => {
-    const response = await fetch(`http://localhost:${serverPort}/status`);
-    const data = await response.json();
-    return data;
-  });
-
-  ipcMain.handle('path', async (_event, _arg) => {
-    return {
-      cwd: process.cwd(),
-      app: app.getAppPath(),
-      dir: __dirname,
-    };
-  });
+  handleIPC(`http://localhost:${serverPort}/api/v1`);
 
   await createWindow();
 
@@ -103,3 +82,27 @@ app.whenReady().then(async () => {
     app.quit();
   });
 });
+
+function handleIPC(serverBaseURL: string) {
+  ipcMain.handle('namespaces:list', async () => {
+    console.log(`list namespaces`);
+    const response = await fetch(`${serverBaseURL}/namespaces/`);
+    const data = await response.json();
+    console.log(`list namespaces result: ${JSON.stringify(data)}`);
+    return data;
+  });
+
+  ipcMain.handle('namespaces:create', async (_, name: string) => {
+    console.log(`create namespace: ${name}`);
+    const response = await fetch(`${serverBaseURL}/namespaces/`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    });
+    const data = await response.json();
+    console.log(`create namespace result: ${JSON.stringify(data)}`);
+    return data;
+  });
+}

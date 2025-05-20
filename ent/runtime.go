@@ -26,6 +26,10 @@ func init() {
 	certificateDescCreatedAt := certificateFields[6].Descriptor()
 	// certificate.DefaultCreatedAt holds the default value on creation for the created_at field.
 	certificate.DefaultCreatedAt = certificateDescCreatedAt.Default.(func() time.Time)
+	// certificateDescID is the schema descriptor for id field.
+	certificateDescID := certificateFields[0].Descriptor()
+	// certificate.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	certificate.IDValidator = certificateDescID.Validators[0].(func(int) error)
 	namespaceFields := schema.Namespace{}.Fields()
 	_ = namespaceFields
 	// namespaceDescUpdatedAt is the schema descriptor for updated_at field.
@@ -38,4 +42,8 @@ func init() {
 	namespaceDescCreatedAt := namespaceFields[3].Descriptor()
 	// namespace.DefaultCreatedAt holds the default value on creation for the created_at field.
 	namespace.DefaultCreatedAt = namespaceDescCreatedAt.Default.(func() time.Time)
+	// namespaceDescID is the schema descriptor for id field.
+	namespaceDescID := namespaceFields[0].Descriptor()
+	// namespace.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	namespace.IDValidator = namespaceDescID.Validators[0].(func(int) error)
 }

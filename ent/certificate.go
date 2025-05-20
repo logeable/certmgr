@@ -17,9 +17,9 @@ import (
 type Certificate struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID string `json:"id,omitempty"`
+	ID int `json:"id,omitempty"`
 	// Namespace holds the value of the "namespace" field.
-	Namespace string `json:"namespace,omitempty"`
+	Namespace int `json:"namespace,omitempty"`
 	// Type holds the value of the "type" field.
 	Type string `json:"type,omitempty"`
 	// CertPem holds the value of the "cert_pem" field.
@@ -61,7 +61,9 @@ func (*Certificate) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case certificate.FieldID, certificate.FieldNamespace, certificate.FieldType, certificate.FieldCertPem, certificate.FieldKeyPem:
+		case certificate.FieldID, certificate.FieldNamespace:
+			values[i] = new(sql.NullInt64)
+		case certificate.FieldType, certificate.FieldCertPem, certificate.FieldKeyPem:
 			values[i] = new(sql.NullString)
 		case certificate.FieldUpdatedAt, certificate.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -81,16 +83,16 @@ func (c *Certificate) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case certificate.FieldID:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value.Valid {
-				c.ID = value.String
+			value, ok := values[i].(*sql.NullInt64)
+			if !ok {
+				return fmt.Errorf("unexpected type %T for field id", value)
 			}
+			c.ID = int(value.Int64)
 		case certificate.FieldNamespace:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field namespace", values[i])
 			} else if value.Valid {
-				c.Namespace = value.String
+				c.Namespace = int(value.Int64)
 			}
 		case certificate.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -164,7 +166,7 @@ func (c *Certificate) String() string {
 	builder.WriteString("Certificate(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", c.ID))
 	builder.WriteString("namespace=")
-	builder.WriteString(c.Namespace)
+	builder.WriteString(fmt.Sprintf("%v", c.Namespace))
 	builder.WriteString(", ")
 	builder.WriteString("type=")
 	builder.WriteString(c.Type)

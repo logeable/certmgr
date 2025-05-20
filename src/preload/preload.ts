@@ -6,17 +6,15 @@ contextBridge.exposeInMainWorld('versions', {
   electron: () => process.versions.electron,
 });
 
-contextBridge.exposeInMainWorld('msg', {
-  ping: async () => {
-    const result = await ipcRenderer.invoke('ping');
-    return result;
-  },
-  status: async () => {
-    const result = await ipcRenderer.invoke('status');
-    return result;
-  },
-  path: async () => {
-    const result = await ipcRenderer.invoke('path');
-    return result;
+contextBridge.exposeInMainWorld('api', {
+  namespaces: {
+    list: async () => {
+      const result = await ipcRenderer.invoke('namespaces:list');
+      return result;
+    },
+    create: async (name: string) => {
+      const result = await ipcRenderer.invoke('namespaces:create', name);
+      return result;
+    },
   },
 });

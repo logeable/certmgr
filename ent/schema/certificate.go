@@ -17,8 +17,11 @@ type Certificate struct {
 // Fields of the Certificate.
 func (Certificate) Fields() []ent.Field {
 	return []ent.Field{
-		field.Text("id"),
-		field.Text("namespace"),
+		field.Int("id").
+			Positive().
+			Unique().
+			Immutable(),
+		field.Int("namespace"),
 		field.Text("type"), // ROOT, INTERMEDIATE, LEAF
 		field.Text("cert_pem"),
 		field.Text("key_pem").Optional(),

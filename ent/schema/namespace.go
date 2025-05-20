@@ -17,7 +17,10 @@ type Namespace struct {
 // Fields of the Namespace.
 func (Namespace) Fields() []ent.Field {
 	return []ent.Field{
-		field.Text("id"),
+		field.Int("id").
+			Positive().
+			Unique().
+			Immutable(),
 		field.Text("name").Unique(),
 		field.Time("updated_at").
 			Default(time.Now).

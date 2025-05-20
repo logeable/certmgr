@@ -34,14 +34,14 @@ type CertificateMutation struct {
 	config
 	op                   Op
 	typ                  string
-	id                   *string
+	id                   *int
 	_type                *string
 	cert_pem             *string
 	key_pem              *string
 	updated_at           *time.Time
 	created_at           *time.Time
 	clearedFields        map[string]struct{}
-	namespace_ref        *string
+	namespace_ref        *int
 	clearednamespace_ref bool
 	done                 bool
 	oldValue             func(context.Context) (*Certificate, error)
@@ -68,7 +68,7 @@ func newCertificateMutation(c config, op Op, opts ...certificateOption) *Certifi
 }
 
 // withCertificateID sets the ID field of the mutation.
-func withCertificateID(id string) certificateOption {
+func withCertificateID(id int) certificateOption {
 	return func(m *CertificateMutation) {
 		var (
 			err   error
@@ -120,13 +120,13 @@ func (m CertificateMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of Certificate entities.
-func (m *CertificateMutation) SetID(id string) {
+func (m *CertificateMutation) SetID(id int) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *CertificateMutation) ID() (id string, exists bool) {
+func (m *CertificateMutation) ID() (id int, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -137,12 +137,12 @@ func (m *CertificateMutation) ID() (id string, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *CertificateMutation) IDs(ctx context.Context) ([]string, error) {
+func (m *CertificateMutation) IDs(ctx context.Context) ([]int, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []string{id}, nil
+			return []int{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -153,12 +153,12 @@ func (m *CertificateMutation) IDs(ctx context.Context) ([]string, error) {
 }
 
 // SetNamespace sets the "namespace" field.
-func (m *CertificateMutation) SetNamespace(s string) {
-	m.namespace_ref = &s
+func (m *CertificateMutation) SetNamespace(i int) {
+	m.namespace_ref = &i
 }
 
 // Namespace returns the value of the "namespace" field in the mutation.
-func (m *CertificateMutation) Namespace() (r string, exists bool) {
+func (m *CertificateMutation) Namespace() (r int, exists bool) {
 	v := m.namespace_ref
 	if v == nil {
 		return
@@ -169,7 +169,7 @@ func (m *CertificateMutation) Namespace() (r string, exists bool) {
 // OldNamespace returns the old "namespace" field's value of the Certificate entity.
 // If the Certificate object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *CertificateMutation) OldNamespace(ctx context.Context) (v string, err error) {
+func (m *CertificateMutation) OldNamespace(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldNamespace is only allowed on UpdateOne operations")
 	}
@@ -382,7 +382,7 @@ func (m *CertificateMutation) ResetCreatedAt() {
 }
 
 // SetNamespaceRefID sets the "namespace_ref" edge to the Namespace entity by id.
-func (m *CertificateMutation) SetNamespaceRefID(id string) {
+func (m *CertificateMutation) SetNamespaceRefID(id int) {
 	m.namespace_ref = &id
 }
 
@@ -398,7 +398,7 @@ func (m *CertificateMutation) NamespaceRefCleared() bool {
 }
 
 // NamespaceRefID returns the "namespace_ref" edge ID in the mutation.
-func (m *CertificateMutation) NamespaceRefID() (id string, exists bool) {
+func (m *CertificateMutation) NamespaceRefID() (id int, exists bool) {
 	if m.namespace_ref != nil {
 		return *m.namespace_ref, true
 	}
@@ -408,7 +408,7 @@ func (m *CertificateMutation) NamespaceRefID() (id string, exists bool) {
 // NamespaceRefIDs returns the "namespace_ref" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // NamespaceRefID instead. It exists only for internal usage by the builders.
-func (m *CertificateMutation) NamespaceRefIDs() (ids []string) {
+func (m *CertificateMutation) NamespaceRefIDs() (ids []int) {
 	if id := m.namespace_ref; id != nil {
 		ids = append(ids, *id)
 	}
@@ -525,7 +525,7 @@ func (m *CertificateMutation) OldField(ctx context.Context, name string) (ent.Va
 func (m *CertificateMutation) SetField(name string, value ent.Value) error {
 	switch name {
 	case certificate.FieldNamespace:
-		v, ok := value.(string)
+		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -573,13 +573,16 @@ func (m *CertificateMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *CertificateMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *CertificateMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	}
 	return nil, false
 }
 
@@ -725,13 +728,13 @@ type NamespaceMutation struct {
 	config
 	op                  Op
 	typ                 string
-	id                  *string
+	id                  *int
 	name                *string
 	updated_at          *time.Time
 	created_at          *time.Time
 	clearedFields       map[string]struct{}
-	certificates        map[string]struct{}
-	removedcertificates map[string]struct{}
+	certificates        map[int]struct{}
+	removedcertificates map[int]struct{}
 	clearedcertificates bool
 	done                bool
 	oldValue            func(context.Context) (*Namespace, error)
@@ -758,7 +761,7 @@ func newNamespaceMutation(c config, op Op, opts ...namespaceOption) *NamespaceMu
 }
 
 // withNamespaceID sets the ID field of the mutation.
-func withNamespaceID(id string) namespaceOption {
+func withNamespaceID(id int) namespaceOption {
 	return func(m *NamespaceMutation) {
 		var (
 			err   error
@@ -810,13 +813,13 @@ func (m NamespaceMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of Namespace entities.
-func (m *NamespaceMutation) SetID(id string) {
+func (m *NamespaceMutation) SetID(id int) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *NamespaceMutation) ID() (id string, exists bool) {
+func (m *NamespaceMutation) ID() (id int, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -827,12 +830,12 @@ func (m *NamespaceMutation) ID() (id string, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *NamespaceMutation) IDs(ctx context.Context) ([]string, error) {
+func (m *NamespaceMutation) IDs(ctx context.Context) ([]int, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []string{id}, nil
+			return []int{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -951,9 +954,9 @@ func (m *NamespaceMutation) ResetCreatedAt() {
 }
 
 // AddCertificateIDs adds the "certificates" edge to the Certificate entity by ids.
-func (m *NamespaceMutation) AddCertificateIDs(ids ...string) {
+func (m *NamespaceMutation) AddCertificateIDs(ids ...int) {
 	if m.certificates == nil {
-		m.certificates = make(map[string]struct{})
+		m.certificates = make(map[int]struct{})
 	}
 	for i := range ids {
 		m.certificates[ids[i]] = struct{}{}
@@ -971,9 +974,9 @@ func (m *NamespaceMutation) CertificatesCleared() bool {
 }
 
 // RemoveCertificateIDs removes the "certificates" edge to the Certificate entity by IDs.
-func (m *NamespaceMutation) RemoveCertificateIDs(ids ...string) {
+func (m *NamespaceMutation) RemoveCertificateIDs(ids ...int) {
 	if m.removedcertificates == nil {
-		m.removedcertificates = make(map[string]struct{})
+		m.removedcertificates = make(map[int]struct{})
 	}
 	for i := range ids {
 		delete(m.certificates, ids[i])
@@ -982,7 +985,7 @@ func (m *NamespaceMutation) RemoveCertificateIDs(ids ...string) {
 }
 
 // RemovedCertificates returns the removed IDs of the "certificates" edge to the Certificate entity.
-func (m *NamespaceMutation) RemovedCertificatesIDs() (ids []string) {
+func (m *NamespaceMutation) RemovedCertificatesIDs() (ids []int) {
 	for id := range m.removedcertificates {
 		ids = append(ids, id)
 	}
@@ -990,7 +993,7 @@ func (m *NamespaceMutation) RemovedCertificatesIDs() (ids []string) {
 }
 
 // CertificatesIDs returns the "certificates" edge IDs in the mutation.
-func (m *NamespaceMutation) CertificatesIDs() (ids []string) {
+func (m *NamespaceMutation) CertificatesIDs() (ids []int) {
 	for id := range m.certificates {
 		ids = append(ids, id)
 	}

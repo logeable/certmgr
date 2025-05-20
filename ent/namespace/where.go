@@ -11,58 +11,48 @@ import (
 )
 
 // ID filters vertices based on their ID field.
-func ID(id string) predicate.Namespace {
+func ID(id int) predicate.Namespace {
 	return predicate.Namespace(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id string) predicate.Namespace {
+func IDEQ(id int) predicate.Namespace {
 	return predicate.Namespace(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id string) predicate.Namespace {
+func IDNEQ(id int) predicate.Namespace {
 	return predicate.Namespace(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...string) predicate.Namespace {
+func IDIn(ids ...int) predicate.Namespace {
 	return predicate.Namespace(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...string) predicate.Namespace {
+func IDNotIn(ids ...int) predicate.Namespace {
 	return predicate.Namespace(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id string) predicate.Namespace {
+func IDGT(id int) predicate.Namespace {
 	return predicate.Namespace(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id string) predicate.Namespace {
+func IDGTE(id int) predicate.Namespace {
 	return predicate.Namespace(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id string) predicate.Namespace {
+func IDLT(id int) predicate.Namespace {
 	return predicate.Namespace(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id string) predicate.Namespace {
+func IDLTE(id int) predicate.Namespace {
 	return predicate.Namespace(sql.FieldLTE(FieldID, id))
-}
-
-// IDEqualFold applies the EqualFold predicate on the ID field.
-func IDEqualFold(id string) predicate.Namespace {
-	return predicate.Namespace(sql.FieldEqualFold(FieldID, id))
-}
-
-// IDContainsFold applies the ContainsFold predicate on the ID field.
-func IDContainsFold(id string) predicate.Namespace {
-	return predicate.Namespace(sql.FieldContainsFold(FieldID, id))
 }
 
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.

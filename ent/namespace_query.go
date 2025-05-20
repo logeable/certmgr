@@ -107,8 +107,8 @@ func (nq *NamespaceQuery) FirstX(ctx context.Context) *Namespace {
 
 // FirstID returns the first Namespace ID from the query.
 // Returns a *NotFoundError when no Namespace ID was found.
-func (nq *NamespaceQuery) FirstID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (nq *NamespaceQuery) FirstID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = nq.Limit(1).IDs(setContextOp(ctx, nq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
@@ -120,7 +120,7 @@ func (nq *NamespaceQuery) FirstID(ctx context.Context) (id string, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (nq *NamespaceQuery) FirstIDX(ctx context.Context) string {
+func (nq *NamespaceQuery) FirstIDX(ctx context.Context) int {
 	id, err := nq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -158,8 +158,8 @@ func (nq *NamespaceQuery) OnlyX(ctx context.Context) *Namespace {
 // OnlyID is like Only, but returns the only Namespace ID in the query.
 // Returns a *NotSingularError when more than one Namespace ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (nq *NamespaceQuery) OnlyID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (nq *NamespaceQuery) OnlyID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = nq.Limit(2).IDs(setContextOp(ctx, nq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -175,7 +175,7 @@ func (nq *NamespaceQuery) OnlyID(ctx context.Context) (id string, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (nq *NamespaceQuery) OnlyIDX(ctx context.Context) string {
+func (nq *NamespaceQuery) OnlyIDX(ctx context.Context) int {
 	id, err := nq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -203,7 +203,7 @@ func (nq *NamespaceQuery) AllX(ctx context.Context) []*Namespace {
 }
 
 // IDs executes the query and returns a list of Namespace IDs.
-func (nq *NamespaceQuery) IDs(ctx context.Context) (ids []string, err error) {
+func (nq *NamespaceQuery) IDs(ctx context.Context) (ids []int, err error) {
 	if nq.ctx.Unique == nil && nq.path != nil {
 		nq.Unique(true)
 	}
@@ -215,7 +215,7 @@ func (nq *NamespaceQuery) IDs(ctx context.Context) (ids []string, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (nq *NamespaceQuery) IDsX(ctx context.Context) []string {
+func (nq *NamespaceQuery) IDsX(ctx context.Context) []int {
 	ids, err := nq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -405,7 +405,7 @@ func (nq *NamespaceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Na
 
 func (nq *NamespaceQuery) loadCertificates(ctx context.Context, query *CertificateQuery, nodes []*Namespace, init func(*Namespace), assign func(*Namespace, *Certificate)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[string]*Namespace)
+	nodeids := make(map[int]*Namespace)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -444,7 +444,7 @@ func (nq *NamespaceQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (nq *NamespaceQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(namespace.Table, namespace.Columns, sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeString))
+	_spec := sqlgraph.NewQuerySpec(namespace.Table, namespace.Columns, sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeInt))
 	_spec.From = nq.sql
 	if unique := nq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

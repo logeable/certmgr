@@ -106,8 +106,8 @@ func (cq *CertificateQuery) FirstX(ctx context.Context) *Certificate {
 
 // FirstID returns the first Certificate ID from the query.
 // Returns a *NotFoundError when no Certificate ID was found.
-func (cq *CertificateQuery) FirstID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (cq *CertificateQuery) FirstID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = cq.Limit(1).IDs(setContextOp(ctx, cq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
@@ -119,7 +119,7 @@ func (cq *CertificateQuery) FirstID(ctx context.Context) (id string, err error) 
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (cq *CertificateQuery) FirstIDX(ctx context.Context) string {
+func (cq *CertificateQuery) FirstIDX(ctx context.Context) int {
 	id, err := cq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -157,8 +157,8 @@ func (cq *CertificateQuery) OnlyX(ctx context.Context) *Certificate {
 // OnlyID is like Only, but returns the only Certificate ID in the query.
 // Returns a *NotSingularError when more than one Certificate ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (cq *CertificateQuery) OnlyID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (cq *CertificateQuery) OnlyID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = cq.Limit(2).IDs(setContextOp(ctx, cq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -174,7 +174,7 @@ func (cq *CertificateQuery) OnlyID(ctx context.Context) (id string, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (cq *CertificateQuery) OnlyIDX(ctx context.Context) string {
+func (cq *CertificateQuery) OnlyIDX(ctx context.Context) int {
 	id, err := cq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -202,7 +202,7 @@ func (cq *CertificateQuery) AllX(ctx context.Context) []*Certificate {
 }
 
 // IDs executes the query and returns a list of Certificate IDs.
-func (cq *CertificateQuery) IDs(ctx context.Context) (ids []string, err error) {
+func (cq *CertificateQuery) IDs(ctx context.Context) (ids []int, err error) {
 	if cq.ctx.Unique == nil && cq.path != nil {
 		cq.Unique(true)
 	}
@@ -214,7 +214,7 @@ func (cq *CertificateQuery) IDs(ctx context.Context) (ids []string, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (cq *CertificateQuery) IDsX(ctx context.Context) []string {
+func (cq *CertificateQuery) IDsX(ctx context.Context) []int {
 	ids, err := cq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -298,7 +298,7 @@ func (cq *CertificateQuery) WithNamespaceRef(opts ...func(*NamespaceQuery)) *Cer
 // Example:
 //
 //	var v []struct {
-//		Namespace string `json:"namespace,omitempty"`
+//		Namespace int `json:"namespace,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
@@ -321,7 +321,7 @@ func (cq *CertificateQuery) GroupBy(field string, fields ...string) *Certificate
 // Example:
 //
 //	var v []struct {
-//		Namespace string `json:"namespace,omitempty"`
+//		Namespace int `json:"namespace,omitempty"`
 //	}
 //
 //	client.Certificate.Query().
@@ -402,8 +402,8 @@ func (cq *CertificateQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 }
 
 func (cq *CertificateQuery) loadNamespaceRef(ctx context.Context, query *NamespaceQuery, nodes []*Certificate, init func(*Certificate), assign func(*Certificate, *Namespace)) error {
-	ids := make([]string, 0, len(nodes))
-	nodeids := make(map[string][]*Certificate)
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Certificate)
 	for i := range nodes {
 		fk := nodes[i].Namespace
 		if _, ok := nodeids[fk]; !ok {
@@ -441,7 +441,7 @@ func (cq *CertificateQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (cq *CertificateQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(certificate.Table, certificate.Columns, sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeString))
+	_spec := sqlgraph.NewQuerySpec(certificate.Table, certificate.Columns, sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeInt))
 	_spec.From = cq.sql
 	if unique := cq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

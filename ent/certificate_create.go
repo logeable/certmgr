@@ -22,8 +22,8 @@ type CertificateCreate struct {
 }
 
 // SetNamespace sets the "namespace" field.
-func (cc *CertificateCreate) SetNamespace(s string) *CertificateCreate {
-	cc.mutation.SetNamespace(s)
+func (cc *CertificateCreate) SetNamespace(i int) *CertificateCreate {
+	cc.mutation.SetNamespace(i)
 	return cc
 }
 
@@ -82,13 +82,13 @@ func (cc *CertificateCreate) SetNillableCreatedAt(t *time.Time) *CertificateCrea
 }
 
 // SetID sets the "id" field.
-func (cc *CertificateCreate) SetID(s string) *CertificateCreate {
-	cc.mutation.SetID(s)
+func (cc *CertificateCreate) SetID(i int) *CertificateCreate {
+	cc.mutation.SetID(i)
 	return cc
 }
 
 // SetNamespaceRefID sets the "namespace_ref" edge to the Namespace entity by ID.
-func (cc *CertificateCreate) SetNamespaceRefID(id string) *CertificateCreate {
+func (cc *CertificateCreate) SetNamespaceRefID(id int) *CertificateCreate {
 	cc.mutation.SetNamespaceRefID(id)
 	return cc
 }
@@ -160,6 +160,11 @@ func (cc *CertificateCreate) check() error {
 	if _, ok := cc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Certificate.created_at"`)}
 	}
+	if v, ok := cc.mutation.ID(); ok {
+		if err := certificate.IDValidator(v); err != nil {
+			return &ValidationError{Name: "id", err: fmt.Errorf(`ent: validator failed for field "Certificate.id": %w`, err)}
+		}
+	}
 	if len(cc.mutation.NamespaceRefIDs()) == 0 {
 		return &ValidationError{Name: "namespace_ref", err: errors.New(`ent: missing required edge "Certificate.namespace_ref"`)}
 	}
@@ -177,12 +182,9 @@ func (cc *CertificateCreate) sqlSave(ctx context.Context) (*Certificate, error) 
 		}
 		return nil, err
 	}
-	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(string); ok {
-			_node.ID = id
-		} else {
-			return nil, fmt.Errorf("unexpected Certificate.ID type: %T", _spec.ID.Value)
-		}
+	if _spec.ID.Value != _node.ID {
+		id := _spec.ID.Value.(int64)
+		_node.ID = int(id)
 	}
 	cc.mutation.id = &_node.ID
 	cc.mutation.done = true
@@ -192,7 +194,7 @@ func (cc *CertificateCreate) sqlSave(ctx context.Context) (*Certificate, error) 
 func (cc *CertificateCreate) createSpec() (*Certificate, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Certificate{config: cc.config}
-		_spec = sqlgraph.NewCreateSpec(certificate.Table, sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeString))
+		_spec = sqlgraph.NewCreateSpec(certificate.Table, sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeInt))
 	)
 	if id, ok := cc.mutation.ID(); ok {
 		_node.ID = id
@@ -226,7 +228,7 @@ func (cc *CertificateCreate) createSpec() (*Certificate, *sqlgraph.CreateSpec) {
 			Columns: []string{certificate.NamespaceRefColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -283,6 +285,10 @@ func (ccb *CertificateCreateBulk) Save(ctx context.Context) ([]*Certificate, err
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
+				if specs[i].ID.Value != nil && nodes[i].ID == 0 {
+					id := specs[i].ID.Value.(int64)
+					nodes[i].ID = int(id)
+				}
 				mutation.done = true
 				return nodes[i], nil
 			})

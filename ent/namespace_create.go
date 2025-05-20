@@ -56,20 +56,20 @@ func (nc *NamespaceCreate) SetNillableCreatedAt(t *time.Time) *NamespaceCreate {
 }
 
 // SetID sets the "id" field.
-func (nc *NamespaceCreate) SetID(s string) *NamespaceCreate {
-	nc.mutation.SetID(s)
+func (nc *NamespaceCreate) SetID(i int) *NamespaceCreate {
+	nc.mutation.SetID(i)
 	return nc
 }
 
 // AddCertificateIDs adds the "certificates" edge to the Certificate entity by IDs.
-func (nc *NamespaceCreate) AddCertificateIDs(ids ...string) *NamespaceCreate {
+func (nc *NamespaceCreate) AddCertificateIDs(ids ...int) *NamespaceCreate {
 	nc.mutation.AddCertificateIDs(ids...)
 	return nc
 }
 
 // AddCertificates adds the "certificates" edges to the Certificate entity.
 func (nc *NamespaceCreate) AddCertificates(c ...*Certificate) *NamespaceCreate {
-	ids := make([]string, len(c))
+	ids := make([]int, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
@@ -132,6 +132,11 @@ func (nc *NamespaceCreate) check() error {
 	if _, ok := nc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Namespace.created_at"`)}
 	}
+	if v, ok := nc.mutation.ID(); ok {
+		if err := namespace.IDValidator(v); err != nil {
+			return &ValidationError{Name: "id", err: fmt.Errorf(`ent: validator failed for field "Namespace.id": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -146,12 +151,9 @@ func (nc *NamespaceCreate) sqlSave(ctx context.Context) (*Namespace, error) {
 		}
 		return nil, err
 	}
-	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(string); ok {
-			_node.ID = id
-		} else {
-			return nil, fmt.Errorf("unexpected Namespace.ID type: %T", _spec.ID.Value)
-		}
+	if _spec.ID.Value != _node.ID {
+		id := _spec.ID.Value.(int64)
+		_node.ID = int(id)
 	}
 	nc.mutation.id = &_node.ID
 	nc.mutation.done = true
@@ -161,7 +163,7 @@ func (nc *NamespaceCreate) sqlSave(ctx context.Context) (*Namespace, error) {
 func (nc *NamespaceCreate) createSpec() (*Namespace, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Namespace{config: nc.config}
-		_spec = sqlgraph.NewCreateSpec(namespace.Table, sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeString))
+		_spec = sqlgraph.NewCreateSpec(namespace.Table, sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeInt))
 	)
 	if id, ok := nc.mutation.ID(); ok {
 		_node.ID = id
@@ -187,7 +189,7 @@ func (nc *NamespaceCreate) createSpec() (*Namespace, *sqlgraph.CreateSpec) {
 			Columns: []string{namespace.CertificatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -243,6 +245,10 @@ func (ncb *NamespaceCreateBulk) Save(ctx context.Context) ([]*Namespace, error) 
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
+				if specs[i].ID.Value != nil && nodes[i].ID == 0 {
+					id := specs[i].ID.Value.(int64)
+					nodes[i].ID = int(id)
+				}
 				mutation.done = true
 				return nodes[i], nil
 			})

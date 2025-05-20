@@ -30,15 +30,15 @@ func (cu *CertificateUpdate) Where(ps ...predicate.Certificate) *CertificateUpda
 }
 
 // SetNamespace sets the "namespace" field.
-func (cu *CertificateUpdate) SetNamespace(s string) *CertificateUpdate {
-	cu.mutation.SetNamespace(s)
+func (cu *CertificateUpdate) SetNamespace(i int) *CertificateUpdate {
+	cu.mutation.SetNamespace(i)
 	return cu
 }
 
 // SetNillableNamespace sets the "namespace" field if the given value is not nil.
-func (cu *CertificateUpdate) SetNillableNamespace(s *string) *CertificateUpdate {
-	if s != nil {
-		cu.SetNamespace(*s)
+func (cu *CertificateUpdate) SetNillableNamespace(i *int) *CertificateUpdate {
+	if i != nil {
+		cu.SetNamespace(*i)
 	}
 	return cu
 }
@@ -98,7 +98,7 @@ func (cu *CertificateUpdate) SetUpdatedAt(t time.Time) *CertificateUpdate {
 }
 
 // SetNamespaceRefID sets the "namespace_ref" edge to the Namespace entity by ID.
-func (cu *CertificateUpdate) SetNamespaceRefID(id string) *CertificateUpdate {
+func (cu *CertificateUpdate) SetNamespaceRefID(id int) *CertificateUpdate {
 	cu.mutation.SetNamespaceRefID(id)
 	return cu
 }
@@ -167,7 +167,7 @@ func (cu *CertificateUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := cu.check(); err != nil {
 		return n, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(certificate.Table, certificate.Columns, sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeString))
+	_spec := sqlgraph.NewUpdateSpec(certificate.Table, certificate.Columns, sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeInt))
 	if ps := cu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -198,7 +198,7 @@ func (cu *CertificateUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{certificate.NamespaceRefColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -211,7 +211,7 @@ func (cu *CertificateUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{certificate.NamespaceRefColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -240,15 +240,15 @@ type CertificateUpdateOne struct {
 }
 
 // SetNamespace sets the "namespace" field.
-func (cuo *CertificateUpdateOne) SetNamespace(s string) *CertificateUpdateOne {
-	cuo.mutation.SetNamespace(s)
+func (cuo *CertificateUpdateOne) SetNamespace(i int) *CertificateUpdateOne {
+	cuo.mutation.SetNamespace(i)
 	return cuo
 }
 
 // SetNillableNamespace sets the "namespace" field if the given value is not nil.
-func (cuo *CertificateUpdateOne) SetNillableNamespace(s *string) *CertificateUpdateOne {
-	if s != nil {
-		cuo.SetNamespace(*s)
+func (cuo *CertificateUpdateOne) SetNillableNamespace(i *int) *CertificateUpdateOne {
+	if i != nil {
+		cuo.SetNamespace(*i)
 	}
 	return cuo
 }
@@ -308,7 +308,7 @@ func (cuo *CertificateUpdateOne) SetUpdatedAt(t time.Time) *CertificateUpdateOne
 }
 
 // SetNamespaceRefID sets the "namespace_ref" edge to the Namespace entity by ID.
-func (cuo *CertificateUpdateOne) SetNamespaceRefID(id string) *CertificateUpdateOne {
+func (cuo *CertificateUpdateOne) SetNamespaceRefID(id int) *CertificateUpdateOne {
 	cuo.mutation.SetNamespaceRefID(id)
 	return cuo
 }
@@ -390,7 +390,7 @@ func (cuo *CertificateUpdateOne) sqlSave(ctx context.Context) (_node *Certificat
 	if err := cuo.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(certificate.Table, certificate.Columns, sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeString))
+	_spec := sqlgraph.NewUpdateSpec(certificate.Table, certificate.Columns, sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeInt))
 	id, ok := cuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Certificate.id" for update`)}
@@ -438,7 +438,7 @@ func (cuo *CertificateUpdateOne) sqlSave(ctx context.Context) (_node *Certificat
 			Columns: []string{certificate.NamespaceRefColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -451,7 +451,7 @@ func (cuo *CertificateUpdateOne) sqlSave(ctx context.Context) (_node *Certificat
 			Columns: []string{certificate.NamespaceRefColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

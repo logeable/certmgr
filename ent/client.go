@@ -268,7 +268,7 @@ func (c *CertificateClient) UpdateOne(ce *Certificate) *CertificateUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *CertificateClient) UpdateOneID(id string) *CertificateUpdateOne {
+func (c *CertificateClient) UpdateOneID(id int) *CertificateUpdateOne {
 	mutation := newCertificateMutation(c.config, OpUpdateOne, withCertificateID(id))
 	return &CertificateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -285,7 +285,7 @@ func (c *CertificateClient) DeleteOne(ce *Certificate) *CertificateDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *CertificateClient) DeleteOneID(id string) *CertificateDeleteOne {
+func (c *CertificateClient) DeleteOneID(id int) *CertificateDeleteOne {
 	builder := c.Delete().Where(certificate.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -302,12 +302,12 @@ func (c *CertificateClient) Query() *CertificateQuery {
 }
 
 // Get returns a Certificate entity by its id.
-func (c *CertificateClient) Get(ctx context.Context, id string) (*Certificate, error) {
+func (c *CertificateClient) Get(ctx context.Context, id int) (*Certificate, error) {
 	return c.Query().Where(certificate.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *CertificateClient) GetX(ctx context.Context, id string) *Certificate {
+func (c *CertificateClient) GetX(ctx context.Context, id int) *Certificate {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -417,7 +417,7 @@ func (c *NamespaceClient) UpdateOne(n *Namespace) *NamespaceUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *NamespaceClient) UpdateOneID(id string) *NamespaceUpdateOne {
+func (c *NamespaceClient) UpdateOneID(id int) *NamespaceUpdateOne {
 	mutation := newNamespaceMutation(c.config, OpUpdateOne, withNamespaceID(id))
 	return &NamespaceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -434,7 +434,7 @@ func (c *NamespaceClient) DeleteOne(n *Namespace) *NamespaceDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *NamespaceClient) DeleteOneID(id string) *NamespaceDeleteOne {
+func (c *NamespaceClient) DeleteOneID(id int) *NamespaceDeleteOne {
 	builder := c.Delete().Where(namespace.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -451,12 +451,12 @@ func (c *NamespaceClient) Query() *NamespaceQuery {
 }
 
 // Get returns a Namespace entity by its id.
-func (c *NamespaceClient) Get(ctx context.Context, id string) (*Namespace, error) {
+func (c *NamespaceClient) Get(ctx context.Context, id int) (*Namespace, error) {
 	return c.Query().Where(namespace.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *NamespaceClient) GetX(ctx context.Context, id string) *Namespace {
+func (c *NamespaceClient) GetX(ctx context.Context, id int) *Namespace {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)

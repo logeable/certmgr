@@ -50,14 +50,14 @@ func (nu *NamespaceUpdate) SetUpdatedAt(t time.Time) *NamespaceUpdate {
 }
 
 // AddCertificateIDs adds the "certificates" edge to the Certificate entity by IDs.
-func (nu *NamespaceUpdate) AddCertificateIDs(ids ...string) *NamespaceUpdate {
+func (nu *NamespaceUpdate) AddCertificateIDs(ids ...int) *NamespaceUpdate {
 	nu.mutation.AddCertificateIDs(ids...)
 	return nu
 }
 
 // AddCertificates adds the "certificates" edges to the Certificate entity.
 func (nu *NamespaceUpdate) AddCertificates(c ...*Certificate) *NamespaceUpdate {
-	ids := make([]string, len(c))
+	ids := make([]int, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
@@ -76,14 +76,14 @@ func (nu *NamespaceUpdate) ClearCertificates() *NamespaceUpdate {
 }
 
 // RemoveCertificateIDs removes the "certificates" edge to Certificate entities by IDs.
-func (nu *NamespaceUpdate) RemoveCertificateIDs(ids ...string) *NamespaceUpdate {
+func (nu *NamespaceUpdate) RemoveCertificateIDs(ids ...int) *NamespaceUpdate {
 	nu.mutation.RemoveCertificateIDs(ids...)
 	return nu
 }
 
 // RemoveCertificates removes "certificates" edges to Certificate entities.
 func (nu *NamespaceUpdate) RemoveCertificates(c ...*Certificate) *NamespaceUpdate {
-	ids := make([]string, len(c))
+	ids := make([]int, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
@@ -127,7 +127,7 @@ func (nu *NamespaceUpdate) defaults() {
 }
 
 func (nu *NamespaceUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(namespace.Table, namespace.Columns, sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeString))
+	_spec := sqlgraph.NewUpdateSpec(namespace.Table, namespace.Columns, sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeInt))
 	if ps := nu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -149,7 +149,7 @@ func (nu *NamespaceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{namespace.CertificatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -162,7 +162,7 @@ func (nu *NamespaceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{namespace.CertificatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -178,7 +178,7 @@ func (nu *NamespaceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{namespace.CertificatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -227,14 +227,14 @@ func (nuo *NamespaceUpdateOne) SetUpdatedAt(t time.Time) *NamespaceUpdateOne {
 }
 
 // AddCertificateIDs adds the "certificates" edge to the Certificate entity by IDs.
-func (nuo *NamespaceUpdateOne) AddCertificateIDs(ids ...string) *NamespaceUpdateOne {
+func (nuo *NamespaceUpdateOne) AddCertificateIDs(ids ...int) *NamespaceUpdateOne {
 	nuo.mutation.AddCertificateIDs(ids...)
 	return nuo
 }
 
 // AddCertificates adds the "certificates" edges to the Certificate entity.
 func (nuo *NamespaceUpdateOne) AddCertificates(c ...*Certificate) *NamespaceUpdateOne {
-	ids := make([]string, len(c))
+	ids := make([]int, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
@@ -253,14 +253,14 @@ func (nuo *NamespaceUpdateOne) ClearCertificates() *NamespaceUpdateOne {
 }
 
 // RemoveCertificateIDs removes the "certificates" edge to Certificate entities by IDs.
-func (nuo *NamespaceUpdateOne) RemoveCertificateIDs(ids ...string) *NamespaceUpdateOne {
+func (nuo *NamespaceUpdateOne) RemoveCertificateIDs(ids ...int) *NamespaceUpdateOne {
 	nuo.mutation.RemoveCertificateIDs(ids...)
 	return nuo
 }
 
 // RemoveCertificates removes "certificates" edges to Certificate entities.
 func (nuo *NamespaceUpdateOne) RemoveCertificates(c ...*Certificate) *NamespaceUpdateOne {
-	ids := make([]string, len(c))
+	ids := make([]int, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
@@ -317,7 +317,7 @@ func (nuo *NamespaceUpdateOne) defaults() {
 }
 
 func (nuo *NamespaceUpdateOne) sqlSave(ctx context.Context) (_node *Namespace, err error) {
-	_spec := sqlgraph.NewUpdateSpec(namespace.Table, namespace.Columns, sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeString))
+	_spec := sqlgraph.NewUpdateSpec(namespace.Table, namespace.Columns, sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeInt))
 	id, ok := nuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Namespace.id" for update`)}
@@ -356,7 +356,7 @@ func (nuo *NamespaceUpdateOne) sqlSave(ctx context.Context) (_node *Namespace, e
 			Columns: []string{namespace.CertificatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -369,7 +369,7 @@ func (nuo *NamespaceUpdateOne) sqlSave(ctx context.Context) (_node *Namespace, e
 			Columns: []string{namespace.CertificatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -385,7 +385,7 @@ func (nuo *NamespaceUpdateOne) sqlSave(ctx context.Context) (_node *Namespace, e
 			Columns: []string{namespace.CertificatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(certificate.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

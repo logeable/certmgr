@@ -28,11 +28,25 @@ app.whenReady().then(async () => {
     const timeout = Math.floor(Math.random() * 3000) + 1000;
     return new Promise(resolve => {
       setTimeout(() => {
-        console.log('pong');
         resolve('pong');
       }, timeout);
     });
   });
+
+  ipcMain.handle('status', async (_event, _arg) => {
+    const response = await fetch('http://localhost:8080/status');
+    const data = await response.json();
+    return data;
+  });
+
+  ipcMain.handle('path', async (_event, _arg) => {
+    return {
+      cwd: process.cwd(),
+      app: app.getAppPath(),
+      dir: __dirname,
+    };
+  });
+
   await createWindow();
 
   app.on('activate', async function () {

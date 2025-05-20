@@ -9,7 +9,14 @@ contextBridge.exposeInMainWorld('versions', {
 contextBridge.exposeInMainWorld('msg', {
   ping: async () => {
     const result = await ipcRenderer.invoke('ping');
-    console.log(result);
+    return result;
+  },
+  status: async () => {
+    const result = await ipcRenderer.invoke('status');
+    return result;
+  },
+  path: async () => {
+    const result = await ipcRenderer.invoke('path');
     return result;
   },
 });

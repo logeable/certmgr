@@ -1,9 +1,9 @@
 import { execSync, spawn } from 'child_process';
 import { AddressInfo } from 'net';
-import vite from 'vite';
+import { createServer } from 'vite';
 
 async function startVite() {
-  const server = await vite.createServer({
+  const server = await createServer({
     server: {
       host: '127.0.0.1',
     },

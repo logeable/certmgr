@@ -8,8 +8,9 @@
   "scripts": {
     "dev": "ts-node src/scripts/dev.ts",
     "build": "vite build && tsc -p .",
-    "start": "npm run build && electron .",
+    "start": "npm run build && electron-forge start",
     "make": "npm run build && electron-forge make",
+    "package": "npm run build && electron-forge package",
     "format": "prettier --write \"src/**/*.{js,ts,tsx,jsx,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{js,ts,tsx,jsx,json,css,md}\"",
     "lint": "eslint \"{src,main,scripts}/**/*.{js,ts,tsx,jsx}\"",

@@ -1,9 +1,10 @@
-const { FusesPlugin } = require('@electron-forge/plugin-fuses');
-const { FuseV1Options, FuseVersion } = require('@electron/fuses');
+import { FusesPlugin } from '@electron-forge/plugin-fuses';
+import { FuseV1Options, FuseVersion } from '@electron/fuses';
 
-module.exports = {
+export default {
   packagerConfig: {
     asar: true,
+    extraResource: ['bin'],
   },
   rebuildConfig: {},
   makers: [

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import styles from './CertificateManager.module.css';
 import CreateRootCertModal from './CreateRootCertModal';
-
+import CertTree from '../CertTree';
 interface Namespace {
   id: string;
   name: string;
@@ -12,6 +12,7 @@ export default function CertificateManager() {
   const [selectedNs, setSelectedNs] = useState('');
   const [certs, setCerts] = useState<Certificate[]>([]);
   const [showCreateRoot, setShowCreateRoot] = useState(false);
+  const [issuerId, setIssuerId] = useState(0);
 
   useEffect(() => {
     window.api.namespaces.list().then((list: Namespace[]) => {
@@ -31,6 +32,11 @@ export default function CertificateManager() {
     }
   }, [selectedNs]);
 
+  const handleIssue = (issuerId: number) => {
+    setIssuerId(issuerId);
+    setShowCreateRoot(true);
+  };
+
   return (
     <div>
       <h2 className={styles.sectionTitle}>证书管理</h2>
@@ -44,29 +50,16 @@ export default function CertificateManager() {
           ))}
         </select>
       </div>
-      <table border={1} cellPadding={8} style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            <th>证书名称</th>
-          </tr>
-        </thead>
-        <tbody>
-          {certs.map(cert => (
-            <tr key={cert.id}>
-              <td>
-                {cert.id}-{cert.subject}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <CertTree certificates={certs} onIssue={handleIssue} />
       <CreateRootCertModal
         open={showCreateRoot}
         namespaceId={selectedNs}
-        issuerId={0}
-        onClose={() => setShowCreateRoot(false)}
-        onSuccess={() => {
+        issuerId={issuerId}
+        onClose={() => {
           setShowCreateRoot(false);
+          setIssuerId(0);
+        }}
+        onSuccess={() => {
           if (selectedNs)
             window.api.certificates.list(selectedNs).then((list: Certificate[]) => setCerts(list));
         }}

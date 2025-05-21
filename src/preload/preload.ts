@@ -24,12 +24,13 @@ contextBridge.exposeInMainWorld('api', {
       const result = await ipcRenderer.invoke('certificates:list', namespaceId);
       return result;
     },
-    createRoot: async (params: {
-      namespace_id: string;
+    create: async (params: {
+      namespaceId: string;
+      issuerId: number;
       keyType: string;
       keyLen: string;
       validDays: string;
-      remark: string;
+      desc: string;
       subject: {
         country: string;
         state: string;
@@ -40,7 +41,7 @@ contextBridge.exposeInMainWorld('api', {
         email: string;
       };
     }) => {
-      const result = await ipcRenderer.invoke('certificates:createRoot', params);
+      const result = await ipcRenderer.invoke('certificates:create', params);
       return result;
     },
   },

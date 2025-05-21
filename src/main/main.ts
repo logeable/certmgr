@@ -125,21 +125,22 @@ function handleIPC(serverBaseURL: string) {
   });
 
   ipcMain.handle('certificates:list', async (_, namespaceId: string) => {
-    const response = await fetch(`${serverBaseURL}/certificates?namespace_id=${namespaceId}`);
+    const response = await fetch(`${serverBaseURL}/certificates/?namespace_id=${namespaceId}`);
     const data = await response.json();
     return data;
   });
 
   ipcMain.handle(
-    'certificates:createRoot',
+    'certificates:create',
     async (
       _,
       params: {
         namespaceId: string;
+        issuerId: number;
         keyType: string;
         keyLen: number;
         validDays: number;
-        remark: string;
+        desc: string;
         subject: {
           country: string;
           state: string;
@@ -151,7 +152,7 @@ function handleIPC(serverBaseURL: string) {
         };
       },
     ) => {
-      const response = await fetch(`${serverBaseURL}/certificates/root`, {
+      const response = await fetch(`${serverBaseURL}/certificates/`, {
         headers: {
           'Content-Type': 'application/json',
         },

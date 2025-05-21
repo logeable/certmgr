@@ -10,7 +10,7 @@ declare global {
   }
 
   interface Certificate {
-    id: string;
+    id: number;
     desc: string;
     certPem: string;
     keyPem: string;
@@ -29,13 +29,13 @@ declare global {
       };
       certificates: {
         list: (namespaceId: string) => Promise<Certificate[]>;
-        createRoot: (params: {
+        create: (params: {
           namespaceId: string;
           issuerId: number;
           keyType: string;
           keyLen: number;
           validDays: number;
-          remark: string;
+          desc: string;
           subject: {
             country: string;
             state: string;

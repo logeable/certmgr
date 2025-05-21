@@ -20,7 +20,7 @@ export default function CreateRootCertModal({
   const [keyType, setKeyType] = useState('RSA');
   const [keyLen, setKeyLen] = useState(2048);
   const [validDays, setValidDays] = useState(3650);
-  const [remark, setRemark] = useState('');
+  const [desc, setDesc] = useState('');
   // Subject
   const [country, setCountry] = useState('CN');
   const [state, setState] = useState('');
@@ -39,13 +39,14 @@ export default function CreateRootCertModal({
     }
     setLoading(true);
     setError('');
-    await window.api.certificates.createRoot({
+
+    await window.api.certificates.create({
       namespaceId,
       issuerId,
       keyType,
       keyLen,
       validDays,
-      remark,
+      desc,
       subject: {
         country,
         state,
@@ -58,6 +59,25 @@ export default function CreateRootCertModal({
     });
     setLoading(false);
     onSuccess();
+    handleClose();
+  };
+
+  const clearForm = () => {
+    setKeyType('RSA');
+    setKeyLen(2048);
+    setValidDays(3650);
+    setDesc('');
+    setCountry('CN');
+    setState('');
+    setCity('');
+    setOrg('');
+    setOu('');
+    setCommonName('');
+    setEmail('');
+  };
+
+  const handleClose = () => {
+    clearForm();
     onClose();
   };
 
@@ -67,7 +87,7 @@ export default function CreateRootCertModal({
       title="创建根证书"
       actions={
         <>
-          <button className="btn secondary" onClick={onClose} disabled={loading}>
+          <button className="btn secondary" onClick={handleClose} disabled={loading}>
             取消
           </button>
           <button
@@ -118,8 +138,8 @@ export default function CreateRootCertModal({
         <label className={styles.formLabel}>备注</label>
         <textarea
           className={styles.formTextarea}
-          value={remark}
-          onChange={e => setRemark(e.target.value)}
+          value={desc}
+          onChange={e => setDesc(e.target.value)}
           placeholder="可选，便于管理和识别"
         />
         <div className={styles.formSectionTitle}>Subject 信息</div>

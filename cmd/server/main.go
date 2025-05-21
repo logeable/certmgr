@@ -17,6 +17,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/logeable/certmgr/ent"
 	"github.com/logeable/certmgr/ent/certificate"
 	_ "github.com/mattn/go-sqlite3"
@@ -45,6 +46,8 @@ func main() {
 	log.Println("Database created")
 
 	e := echo.New()
+
+	e.Use(middleware.Logger())
 	api := e.Group("/api/v1")
 	namespaces := api.Group("/namespaces")
 	namespaces.GET("/", func(c echo.Context) error {
@@ -140,7 +143,8 @@ func main() {
 		return c.JSON(http.StatusOK, map[string]string{"message": "Namespace deleted"})
 	})
 
-	api.GET("/certificates", func(c echo.Context) error {
+	certificates := api.Group("/certificates")
+	certificates.GET("/", func(c echo.Context) error {
 		nsID := c.QueryParam("namespace_id")
 		nsIDInt, err := strconv.Atoi(nsID)
 		if err != nil {
@@ -185,7 +189,7 @@ func main() {
 		return c.JSON(http.StatusOK, resp)
 	})
 
-	api.POST("/certificates/root", func(c echo.Context) error {
+	certificates.POST("/", func(c echo.Context) error {
 		type Subject struct {
 			Country    string `json:"country"`
 			State      string `json:"state"`
@@ -197,10 +201,11 @@ func main() {
 		}
 		type Req struct {
 			NamespaceId string  `json:"namespaceId"`
+			IssuerId    int     `json:"issuerId"`
 			KeyType     string  `json:"keyType"`
 			KeyLen      int     `json:"keyLen"`
 			ValidDays   int     `json:"validDays"`
-			Remark      string  `json:"remark"`
+			Desc        string  `json:"desc"`
 			Subject     Subject `json:"subject"`
 		}
 		var req Req
@@ -240,8 +245,10 @@ func main() {
 
 		cert, err := client.Certificate.Create().
 			SetNamespaceID(nsID).
+			SetIssuerID(req.IssuerId).
 			SetCertPem(string(certPemBytes)).
 			SetKeyPem(string(keyPemBytes)).
+			SetDesc(req.Desc).
 			Save(context.Background())
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})

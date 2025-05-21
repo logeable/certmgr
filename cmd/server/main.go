@@ -279,6 +279,34 @@ func main() {
 		})
 	})
 
+	certificates.DELETE("/:id", func(c echo.Context) error {
+		id := c.Param("id")
+		idInt, err := strconv.Atoi(id)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		}
+
+		cert, err := client.Certificate.Get(context.Background(), idInt)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+		subCerts, err := findAllSubCertificates(client, cert)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+		for _, subCert := range subCerts {
+			err = client.Certificate.DeleteOneID(subCert.ID).Exec(context.Background())
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			}
+		}
+		err = client.Certificate.DeleteOneID(idInt).Exec(context.Background())
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+		return c.JSON(http.StatusOK, map[string]string{"message": "Certificate deleted"})
+	})
+
 	e.GET("/status", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 	})
@@ -291,6 +319,32 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func findAllSubCertificates(client *ent.Client, cert *ent.Certificate) ([]*ent.Certificate, error) {
+	var result []*ent.Certificate
+
+	var dfs func(cert *ent.Certificate) error
+	dfs = func(cert *ent.Certificate) error {
+		certs, err := client.Certificate.Query().Where(certificate.IssuerIDEQ(cert.ID)).All(context.Background())
+		if err != nil {
+			return err
+		}
+		for _, subCert := range certs {
+			result = append(result, subCert)
+			err = dfs(subCert)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	err := dfs(cert)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func getSubject(cert *x509.Certificate) string {

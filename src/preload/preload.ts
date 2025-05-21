@@ -44,5 +44,9 @@ contextBridge.exposeInMainWorld('api', {
       const result = await ipcRenderer.invoke('certificates:create', params);
       return result;
     },
+    delete: async (certId: number) => {
+      const result = await ipcRenderer.invoke('certificates:delete', certId);
+      return result;
+    },
   },
 });

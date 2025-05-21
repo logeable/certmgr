@@ -163,4 +163,12 @@ function handleIPC(serverBaseURL: string) {
       return data;
     },
   );
+
+  ipcMain.handle('certificates:delete', async (_, certId: number) => {
+    const response = await fetch(`${serverBaseURL}/certificates/${certId}`, {
+      method: 'DELETE',
+    });
+    const data = await response.json();
+    return data;
+  });
 }

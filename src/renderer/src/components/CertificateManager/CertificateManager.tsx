@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import styles from './CertificateManager.module.css';
 import CreateRootCertModal from './CreateRootCertModal';
 import CertTree from '../CertTree';
+import Modal from '../Modal/Modal';
 interface Namespace {
   id: string;
   name: string;
@@ -13,6 +14,8 @@ export default function CertificateManager() {
   const [certs, setCerts] = useState<Certificate[]>([]);
   const [showCreateRoot, setShowCreateRoot] = useState(false);
   const [issuerId, setIssuerId] = useState(0);
+  const [showDelete, setShowDelete] = useState(false);
+  const [certToDelete, setCertToDelete] = useState<number | null>(null);
 
   useEffect(() => {
     window.api.namespaces.list().then((list: Namespace[]) => {
@@ -32,9 +35,24 @@ export default function CertificateManager() {
     }
   }, [selectedNs]);
 
-  const handleIssue = (issuerId: number) => {
+  const onIssue = (issuerId: number) => {
     setIssuerId(issuerId);
     setShowCreateRoot(true);
+  };
+
+  const onDelete = (certId: number) => {
+    setShowDelete(true);
+    setCertToDelete(certId);
+  };
+
+  const handleDelete = async () => {
+    if (certToDelete) {
+      await window.api.certificates.delete(certToDelete);
+      setShowDelete(false);
+      setCertToDelete(null);
+      if (selectedNs)
+        window.api.certificates.list(selectedNs).then((list: Certificate[]) => setCerts(list));
+    }
   };
 
   return (
@@ -50,7 +68,7 @@ export default function CertificateManager() {
           ))}
         </select>
       </div>
-      <CertTree certificates={certs} onIssue={handleIssue} />
+      <CertTree certificates={certs} onIssue={onIssue} onDelete={onDelete} />
       <CreateRootCertModal
         open={showCreateRoot}
         namespaceId={selectedNs}
@@ -64,6 +82,25 @@ export default function CertificateManager() {
             window.api.certificates.list(selectedNs).then((list: Certificate[]) => setCerts(list));
         }}
       />
+      <Modal
+        open={showDelete}
+        title="确认删除空间"
+        actions={
+          <>
+            <button className={styles.btn + ' ' + styles.danger} onClick={handleDelete}>
+              删除
+            </button>
+            <button
+              className={styles.btn + ' ' + styles.secondary}
+              onClick={() => setShowDelete(false)}
+            >
+              取消
+            </button>
+          </>
+        }
+      >
+        <div>确定要删除该证书及所有子证书吗？此操作不可恢复。</div>
+      </Modal>
     </div>
   );
 }

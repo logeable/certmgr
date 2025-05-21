@@ -46,6 +46,7 @@ declare global {
             email: string;
           };
         }) => Promise<Certificate>;
+        delete: (certId: number) => Promise<void>;
       };
     };
   }

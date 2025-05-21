@@ -8,8 +8,6 @@
 - 后端：Golang
 - 通信：HTTP + JSON
 - 数据存储：SQLite
-- UI 组件库：Ant Design
-- 状态管理：Zustand
 
 ### 系统架构图
 

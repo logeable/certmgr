@@ -1,0 +1,24 @@
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+  color: #1890ff;
+  margin-bottom: 32px;
+  text-align: center;
+  letter-spacing: 1px;
+}
+.menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.menu-item {
+  padding: 18px 32px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background 0.2s;
+}
+.menu-item.active,
+.menu-item:hover {
+  background: #1890ff;
+  color: #fff;
+}

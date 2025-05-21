@@ -1,0 +1,6 @@
+.main {
+  flex: 1;
+  padding: 32px 40px;
+  overflow-y: auto;
+  background: #f5f6fa;
+}

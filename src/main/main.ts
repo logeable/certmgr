@@ -123,4 +123,43 @@ function handleIPC(serverBaseURL: string) {
     const data = await response.json();
     return data;
   });
+
+  ipcMain.handle('certificates:list', async (_, namespaceId: string) => {
+    const response = await fetch(`${serverBaseURL}/certificates?namespace_id=${namespaceId}`);
+    const data = await response.json();
+    return data;
+  });
+
+  ipcMain.handle(
+    'certificates:createRoot',
+    async (
+      _,
+      params: {
+        namespaceId: string;
+        keyType: string;
+        keyLen: number;
+        validDays: number;
+        remark: string;
+        subject: {
+          country: string;
+          state: string;
+          city: string;
+          org: string;
+          ou: string;
+          commonName: string;
+          email: string;
+        };
+      },
+    ) => {
+      const response = await fetch(`${serverBaseURL}/certificates/root`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+        body: JSON.stringify(params),
+      });
+      const data = await response.json();
+      return data;
+    },
+  );
 }

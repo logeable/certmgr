@@ -21,10 +21,11 @@ func (Certificate) Fields() []ent.Field {
 			Positive().
 			Unique().
 			Immutable(),
-		field.Int("namespace"),
-		field.Text("type"), // ROOT, INTERMEDIATE, LEAF
+		field.Int("namespace_id"),
 		field.Text("cert_pem"),
 		field.Text("key_pem").Optional(),
+		field.Text("desc").Optional().Default(""),
+		field.Int("issuer_id").Optional(),
 		field.Time("updated_at").
 			Default(time.Now).
 			UpdateDefault(time.Now),
@@ -37,18 +38,13 @@ func (Certificate) Fields() []ent.Field {
 // Edges of the Certificate.
 func (Certificate) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("namespace_ref", Namespace.Type).
-			Ref("certificates").
-			Field("namespace").
-			Unique().
-			Required(),
+		edge.From("namespace", Namespace.Type).Ref("certificates").Field("namespace_id").Unique().Required(),
 	}
 }
 
 // Indexes of the Certificate.
 func (Certificate) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("namespace"),
-		index.Fields("type"),
+		index.Fields("namespace_id"),
 	}
 }

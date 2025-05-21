@@ -14,38 +14,41 @@ const (
 	Label = "certificate"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldNamespace holds the string denoting the namespace field in the database.
-	FieldNamespace = "namespace"
-	// FieldType holds the string denoting the type field in the database.
-	FieldType = "type"
+	// FieldNamespaceID holds the string denoting the namespace_id field in the database.
+	FieldNamespaceID = "namespace_id"
 	// FieldCertPem holds the string denoting the cert_pem field in the database.
 	FieldCertPem = "cert_pem"
 	// FieldKeyPem holds the string denoting the key_pem field in the database.
 	FieldKeyPem = "key_pem"
+	// FieldDesc holds the string denoting the desc field in the database.
+	FieldDesc = "desc"
+	// FieldIssuerID holds the string denoting the issuer_id field in the database.
+	FieldIssuerID = "issuer_id"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
-	// EdgeNamespaceRef holds the string denoting the namespace_ref edge name in mutations.
-	EdgeNamespaceRef = "namespace_ref"
+	// EdgeNamespace holds the string denoting the namespace edge name in mutations.
+	EdgeNamespace = "namespace"
 	// Table holds the table name of the certificate in the database.
 	Table = "certificates"
-	// NamespaceRefTable is the table that holds the namespace_ref relation/edge.
-	NamespaceRefTable = "certificates"
-	// NamespaceRefInverseTable is the table name for the Namespace entity.
+	// NamespaceTable is the table that holds the namespace relation/edge.
+	NamespaceTable = "certificates"
+	// NamespaceInverseTable is the table name for the Namespace entity.
 	// It exists in this package in order to avoid circular dependency with the "namespace" package.
-	NamespaceRefInverseTable = "namespaces"
-	// NamespaceRefColumn is the table column denoting the namespace_ref relation/edge.
-	NamespaceRefColumn = "namespace"
+	NamespaceInverseTable = "namespaces"
+	// NamespaceColumn is the table column denoting the namespace relation/edge.
+	NamespaceColumn = "namespace_id"
 )
 
 // Columns holds all SQL columns for certificate fields.
 var Columns = []string{
 	FieldID,
-	FieldNamespace,
-	FieldType,
+	FieldNamespaceID,
 	FieldCertPem,
 	FieldKeyPem,
+	FieldDesc,
+	FieldIssuerID,
 	FieldUpdatedAt,
 	FieldCreatedAt,
 }
@@ -61,6 +64,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultDesc holds the default value on creation for the "desc" field.
+	DefaultDesc string
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
@@ -79,14 +84,9 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
-// ByNamespace orders the results by the namespace field.
-func ByNamespace(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldNamespace, opts...).ToFunc()
-}
-
-// ByType orders the results by the type field.
-func ByType(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldType, opts...).ToFunc()
+// ByNamespaceID orders the results by the namespace_id field.
+func ByNamespaceID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNamespaceID, opts...).ToFunc()
 }
 
 // ByCertPem orders the results by the cert_pem field.
@@ -99,6 +99,16 @@ func ByKeyPem(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldKeyPem, opts...).ToFunc()
 }
 
+// ByDesc orders the results by the desc field.
+func ByDesc(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDesc, opts...).ToFunc()
+}
+
+// ByIssuerID orders the results by the issuer_id field.
+func ByIssuerID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIssuerID, opts...).ToFunc()
+}
+
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
@@ -109,16 +119,16 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
 }
 
-// ByNamespaceRefField orders the results by namespace_ref field.
-func ByNamespaceRefField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByNamespaceField orders the results by namespace field.
+func ByNamespaceField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newNamespaceRefStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newNamespaceStep(), sql.OrderByField(field, opts...))
 	}
 }
-func newNamespaceRefStep() *sqlgraph.Step {
+func newNamespaceStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(NamespaceRefInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, NamespaceRefTable, NamespaceRefColumn),
+		sqlgraph.To(NamespaceInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, NamespaceTable, NamespaceColumn),
 	)
 }

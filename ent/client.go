@@ -315,15 +315,15 @@ func (c *CertificateClient) GetX(ctx context.Context, id int) *Certificate {
 	return obj
 }
 
-// QueryNamespaceRef queries the namespace_ref edge of a Certificate.
-func (c *CertificateClient) QueryNamespaceRef(ce *Certificate) *NamespaceQuery {
+// QueryNamespace queries the namespace edge of a Certificate.
+func (c *CertificateClient) QueryNamespace(ce *Certificate) *NamespaceQuery {
 	query := (&NamespaceClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := ce.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(certificate.Table, certificate.FieldID, id),
 			sqlgraph.To(namespace.Table, namespace.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, certificate.NamespaceRefTable, certificate.NamespaceRefColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, certificate.NamespaceTable, certificate.NamespaceColumn),
 		)
 		fromV = sqlgraph.Neighbors(ce.driver.Dialect(), step)
 		return fromV, nil

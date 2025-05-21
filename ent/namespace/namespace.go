@@ -32,7 +32,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "certificate" package.
 	CertificatesInverseTable = "certificates"
 	// CertificatesColumn is the table column denoting the certificates relation/edge.
-	CertificatesColumn = "namespace"
+	CertificatesColumn = "namespace_id"
 )
 
 // Columns holds all SQL columns for namespace fields.

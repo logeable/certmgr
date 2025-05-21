@@ -32,20 +32,22 @@ const (
 // CertificateMutation represents an operation that mutates the Certificate nodes in the graph.
 type CertificateMutation struct {
 	config
-	op                   Op
-	typ                  string
-	id                   *int
-	_type                *string
-	cert_pem             *string
-	key_pem              *string
-	updated_at           *time.Time
-	created_at           *time.Time
-	clearedFields        map[string]struct{}
-	namespace_ref        *int
-	clearednamespace_ref bool
-	done                 bool
-	oldValue             func(context.Context) (*Certificate, error)
-	predicates           []predicate.Certificate
+	op               Op
+	typ              string
+	id               *int
+	cert_pem         *string
+	key_pem          *string
+	desc             *string
+	issuer_id        *int
+	addissuer_id     *int
+	updated_at       *time.Time
+	created_at       *time.Time
+	clearedFields    map[string]struct{}
+	namespace        *int
+	clearednamespace bool
+	done             bool
+	oldValue         func(context.Context) (*Certificate, error)
+	predicates       []predicate.Certificate
 }
 
 var _ ent.Mutation = (*CertificateMutation)(nil)
@@ -152,76 +154,40 @@ func (m *CertificateMutation) IDs(ctx context.Context) ([]int, error) {
 	}
 }
 
-// SetNamespace sets the "namespace" field.
-func (m *CertificateMutation) SetNamespace(i int) {
-	m.namespace_ref = &i
+// SetNamespaceID sets the "namespace_id" field.
+func (m *CertificateMutation) SetNamespaceID(i int) {
+	m.namespace = &i
 }
 
-// Namespace returns the value of the "namespace" field in the mutation.
-func (m *CertificateMutation) Namespace() (r int, exists bool) {
-	v := m.namespace_ref
+// NamespaceID returns the value of the "namespace_id" field in the mutation.
+func (m *CertificateMutation) NamespaceID() (r int, exists bool) {
+	v := m.namespace
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldNamespace returns the old "namespace" field's value of the Certificate entity.
+// OldNamespaceID returns the old "namespace_id" field's value of the Certificate entity.
 // If the Certificate object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *CertificateMutation) OldNamespace(ctx context.Context) (v int, err error) {
+func (m *CertificateMutation) OldNamespaceID(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldNamespace is only allowed on UpdateOne operations")
+		return v, errors.New("OldNamespaceID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldNamespace requires an ID field in the mutation")
+		return v, errors.New("OldNamespaceID requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldNamespace: %w", err)
+		return v, fmt.Errorf("querying old value for OldNamespaceID: %w", err)
 	}
-	return oldValue.Namespace, nil
+	return oldValue.NamespaceID, nil
 }
 
-// ResetNamespace resets all changes to the "namespace" field.
-func (m *CertificateMutation) ResetNamespace() {
-	m.namespace_ref = nil
-}
-
-// SetType sets the "type" field.
-func (m *CertificateMutation) SetType(s string) {
-	m._type = &s
-}
-
-// GetType returns the value of the "type" field in the mutation.
-func (m *CertificateMutation) GetType() (r string, exists bool) {
-	v := m._type
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldType returns the old "type" field's value of the Certificate entity.
-// If the Certificate object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *CertificateMutation) OldType(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldType is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldType requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldType: %w", err)
-	}
-	return oldValue.Type, nil
-}
-
-// ResetType resets all changes to the "type" field.
-func (m *CertificateMutation) ResetType() {
-	m._type = nil
+// ResetNamespaceID resets all changes to the "namespace_id" field.
+func (m *CertificateMutation) ResetNamespaceID() {
+	m.namespace = nil
 }
 
 // SetCertPem sets the "cert_pem" field.
@@ -309,6 +275,125 @@ func (m *CertificateMutation) ResetKeyPem() {
 	delete(m.clearedFields, certificate.FieldKeyPem)
 }
 
+// SetDesc sets the "desc" field.
+func (m *CertificateMutation) SetDesc(s string) {
+	m.desc = &s
+}
+
+// Desc returns the value of the "desc" field in the mutation.
+func (m *CertificateMutation) Desc() (r string, exists bool) {
+	v := m.desc
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDesc returns the old "desc" field's value of the Certificate entity.
+// If the Certificate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CertificateMutation) OldDesc(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDesc is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDesc requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDesc: %w", err)
+	}
+	return oldValue.Desc, nil
+}
+
+// ClearDesc clears the value of the "desc" field.
+func (m *CertificateMutation) ClearDesc() {
+	m.desc = nil
+	m.clearedFields[certificate.FieldDesc] = struct{}{}
+}
+
+// DescCleared returns if the "desc" field was cleared in this mutation.
+func (m *CertificateMutation) DescCleared() bool {
+	_, ok := m.clearedFields[certificate.FieldDesc]
+	return ok
+}
+
+// ResetDesc resets all changes to the "desc" field.
+func (m *CertificateMutation) ResetDesc() {
+	m.desc = nil
+	delete(m.clearedFields, certificate.FieldDesc)
+}
+
+// SetIssuerID sets the "issuer_id" field.
+func (m *CertificateMutation) SetIssuerID(i int) {
+	m.issuer_id = &i
+	m.addissuer_id = nil
+}
+
+// IssuerID returns the value of the "issuer_id" field in the mutation.
+func (m *CertificateMutation) IssuerID() (r int, exists bool) {
+	v := m.issuer_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIssuerID returns the old "issuer_id" field's value of the Certificate entity.
+// If the Certificate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CertificateMutation) OldIssuerID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIssuerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIssuerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIssuerID: %w", err)
+	}
+	return oldValue.IssuerID, nil
+}
+
+// AddIssuerID adds i to the "issuer_id" field.
+func (m *CertificateMutation) AddIssuerID(i int) {
+	if m.addissuer_id != nil {
+		*m.addissuer_id += i
+	} else {
+		m.addissuer_id = &i
+	}
+}
+
+// AddedIssuerID returns the value that was added to the "issuer_id" field in this mutation.
+func (m *CertificateMutation) AddedIssuerID() (r int, exists bool) {
+	v := m.addissuer_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearIssuerID clears the value of the "issuer_id" field.
+func (m *CertificateMutation) ClearIssuerID() {
+	m.issuer_id = nil
+	m.addissuer_id = nil
+	m.clearedFields[certificate.FieldIssuerID] = struct{}{}
+}
+
+// IssuerIDCleared returns if the "issuer_id" field was cleared in this mutation.
+func (m *CertificateMutation) IssuerIDCleared() bool {
+	_, ok := m.clearedFields[certificate.FieldIssuerID]
+	return ok
+}
+
+// ResetIssuerID resets all changes to the "issuer_id" field.
+func (m *CertificateMutation) ResetIssuerID() {
+	m.issuer_id = nil
+	m.addissuer_id = nil
+	delete(m.clearedFields, certificate.FieldIssuerID)
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (m *CertificateMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
@@ -381,44 +466,31 @@ func (m *CertificateMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
-// SetNamespaceRefID sets the "namespace_ref" edge to the Namespace entity by id.
-func (m *CertificateMutation) SetNamespaceRefID(id int) {
-	m.namespace_ref = &id
+// ClearNamespace clears the "namespace" edge to the Namespace entity.
+func (m *CertificateMutation) ClearNamespace() {
+	m.clearednamespace = true
+	m.clearedFields[certificate.FieldNamespaceID] = struct{}{}
 }
 
-// ClearNamespaceRef clears the "namespace_ref" edge to the Namespace entity.
-func (m *CertificateMutation) ClearNamespaceRef() {
-	m.clearednamespace_ref = true
-	m.clearedFields[certificate.FieldNamespace] = struct{}{}
+// NamespaceCleared reports if the "namespace" edge to the Namespace entity was cleared.
+func (m *CertificateMutation) NamespaceCleared() bool {
+	return m.clearednamespace
 }
 
-// NamespaceRefCleared reports if the "namespace_ref" edge to the Namespace entity was cleared.
-func (m *CertificateMutation) NamespaceRefCleared() bool {
-	return m.clearednamespace_ref
-}
-
-// NamespaceRefID returns the "namespace_ref" edge ID in the mutation.
-func (m *CertificateMutation) NamespaceRefID() (id int, exists bool) {
-	if m.namespace_ref != nil {
-		return *m.namespace_ref, true
-	}
-	return
-}
-
-// NamespaceRefIDs returns the "namespace_ref" edge IDs in the mutation.
+// NamespaceIDs returns the "namespace" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// NamespaceRefID instead. It exists only for internal usage by the builders.
-func (m *CertificateMutation) NamespaceRefIDs() (ids []int) {
-	if id := m.namespace_ref; id != nil {
+// NamespaceID instead. It exists only for internal usage by the builders.
+func (m *CertificateMutation) NamespaceIDs() (ids []int) {
+	if id := m.namespace; id != nil {
 		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetNamespaceRef resets all changes to the "namespace_ref" edge.
-func (m *CertificateMutation) ResetNamespaceRef() {
-	m.namespace_ref = nil
-	m.clearednamespace_ref = false
+// ResetNamespace resets all changes to the "namespace" edge.
+func (m *CertificateMutation) ResetNamespace() {
+	m.namespace = nil
+	m.clearednamespace = false
 }
 
 // Where appends a list predicates to the CertificateMutation builder.
@@ -455,18 +527,21 @@ func (m *CertificateMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *CertificateMutation) Fields() []string {
-	fields := make([]string, 0, 6)
-	if m.namespace_ref != nil {
-		fields = append(fields, certificate.FieldNamespace)
-	}
-	if m._type != nil {
-		fields = append(fields, certificate.FieldType)
+	fields := make([]string, 0, 7)
+	if m.namespace != nil {
+		fields = append(fields, certificate.FieldNamespaceID)
 	}
 	if m.cert_pem != nil {
 		fields = append(fields, certificate.FieldCertPem)
 	}
 	if m.key_pem != nil {
 		fields = append(fields, certificate.FieldKeyPem)
+	}
+	if m.desc != nil {
+		fields = append(fields, certificate.FieldDesc)
+	}
+	if m.issuer_id != nil {
+		fields = append(fields, certificate.FieldIssuerID)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, certificate.FieldUpdatedAt)
@@ -482,14 +557,16 @@ func (m *CertificateMutation) Fields() []string {
 // schema.
 func (m *CertificateMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case certificate.FieldNamespace:
-		return m.Namespace()
-	case certificate.FieldType:
-		return m.GetType()
+	case certificate.FieldNamespaceID:
+		return m.NamespaceID()
 	case certificate.FieldCertPem:
 		return m.CertPem()
 	case certificate.FieldKeyPem:
 		return m.KeyPem()
+	case certificate.FieldDesc:
+		return m.Desc()
+	case certificate.FieldIssuerID:
+		return m.IssuerID()
 	case certificate.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case certificate.FieldCreatedAt:
@@ -503,14 +580,16 @@ func (m *CertificateMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *CertificateMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case certificate.FieldNamespace:
-		return m.OldNamespace(ctx)
-	case certificate.FieldType:
-		return m.OldType(ctx)
+	case certificate.FieldNamespaceID:
+		return m.OldNamespaceID(ctx)
 	case certificate.FieldCertPem:
 		return m.OldCertPem(ctx)
 	case certificate.FieldKeyPem:
 		return m.OldKeyPem(ctx)
+	case certificate.FieldDesc:
+		return m.OldDesc(ctx)
+	case certificate.FieldIssuerID:
+		return m.OldIssuerID(ctx)
 	case certificate.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case certificate.FieldCreatedAt:
@@ -524,19 +603,12 @@ func (m *CertificateMutation) OldField(ctx context.Context, name string) (ent.Va
 // type.
 func (m *CertificateMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case certificate.FieldNamespace:
+	case certificate.FieldNamespaceID:
 		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetNamespace(v)
-		return nil
-	case certificate.FieldType:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetType(v)
+		m.SetNamespaceID(v)
 		return nil
 	case certificate.FieldCertPem:
 		v, ok := value.(string)
@@ -551,6 +623,20 @@ func (m *CertificateMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetKeyPem(v)
+		return nil
+	case certificate.FieldDesc:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDesc(v)
+		return nil
+	case certificate.FieldIssuerID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIssuerID(v)
 		return nil
 	case certificate.FieldUpdatedAt:
 		v, ok := value.(time.Time)
@@ -574,6 +660,9 @@ func (m *CertificateMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *CertificateMutation) AddedFields() []string {
 	var fields []string
+	if m.addissuer_id != nil {
+		fields = append(fields, certificate.FieldIssuerID)
+	}
 	return fields
 }
 
@@ -582,6 +671,8 @@ func (m *CertificateMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *CertificateMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case certificate.FieldIssuerID:
+		return m.AddedIssuerID()
 	}
 	return nil, false
 }
@@ -591,6 +682,13 @@ func (m *CertificateMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *CertificateMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case certificate.FieldIssuerID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddIssuerID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Certificate numeric field %s", name)
 }
@@ -601,6 +699,12 @@ func (m *CertificateMutation) ClearedFields() []string {
 	var fields []string
 	if m.FieldCleared(certificate.FieldKeyPem) {
 		fields = append(fields, certificate.FieldKeyPem)
+	}
+	if m.FieldCleared(certificate.FieldDesc) {
+		fields = append(fields, certificate.FieldDesc)
+	}
+	if m.FieldCleared(certificate.FieldIssuerID) {
+		fields = append(fields, certificate.FieldIssuerID)
 	}
 	return fields
 }
@@ -619,6 +723,12 @@ func (m *CertificateMutation) ClearField(name string) error {
 	case certificate.FieldKeyPem:
 		m.ClearKeyPem()
 		return nil
+	case certificate.FieldDesc:
+		m.ClearDesc()
+		return nil
+	case certificate.FieldIssuerID:
+		m.ClearIssuerID()
+		return nil
 	}
 	return fmt.Errorf("unknown Certificate nullable field %s", name)
 }
@@ -627,17 +737,20 @@ func (m *CertificateMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *CertificateMutation) ResetField(name string) error {
 	switch name {
-	case certificate.FieldNamespace:
-		m.ResetNamespace()
-		return nil
-	case certificate.FieldType:
-		m.ResetType()
+	case certificate.FieldNamespaceID:
+		m.ResetNamespaceID()
 		return nil
 	case certificate.FieldCertPem:
 		m.ResetCertPem()
 		return nil
 	case certificate.FieldKeyPem:
 		m.ResetKeyPem()
+		return nil
+	case certificate.FieldDesc:
+		m.ResetDesc()
+		return nil
+	case certificate.FieldIssuerID:
+		m.ResetIssuerID()
 		return nil
 	case certificate.FieldUpdatedAt:
 		m.ResetUpdatedAt()
@@ -652,8 +765,8 @@ func (m *CertificateMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *CertificateMutation) AddedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.namespace_ref != nil {
-		edges = append(edges, certificate.EdgeNamespaceRef)
+	if m.namespace != nil {
+		edges = append(edges, certificate.EdgeNamespace)
 	}
 	return edges
 }
@@ -662,8 +775,8 @@ func (m *CertificateMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *CertificateMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case certificate.EdgeNamespaceRef:
-		if id := m.namespace_ref; id != nil {
+	case certificate.EdgeNamespace:
+		if id := m.namespace; id != nil {
 			return []ent.Value{*id}
 		}
 	}
@@ -685,8 +798,8 @@ func (m *CertificateMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *CertificateMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.clearednamespace_ref {
-		edges = append(edges, certificate.EdgeNamespaceRef)
+	if m.clearednamespace {
+		edges = append(edges, certificate.EdgeNamespace)
 	}
 	return edges
 }
@@ -695,8 +808,8 @@ func (m *CertificateMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *CertificateMutation) EdgeCleared(name string) bool {
 	switch name {
-	case certificate.EdgeNamespaceRef:
-		return m.clearednamespace_ref
+	case certificate.EdgeNamespace:
+		return m.clearednamespace
 	}
 	return false
 }
@@ -705,8 +818,8 @@ func (m *CertificateMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *CertificateMutation) ClearEdge(name string) error {
 	switch name {
-	case certificate.EdgeNamespaceRef:
-		m.ClearNamespaceRef()
+	case certificate.EdgeNamespace:
+		m.ClearNamespace()
 		return nil
 	}
 	return fmt.Errorf("unknown Certificate unique edge %s", name)
@@ -716,8 +829,8 @@ func (m *CertificateMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *CertificateMutation) ResetEdge(name string) error {
 	switch name {
-	case certificate.EdgeNamespaceRef:
-		m.ResetNamespaceRef()
+	case certificate.EdgeNamespace:
+		m.ResetNamespace()
 		return nil
 	}
 	return fmt.Errorf("unknown Certificate edge %s", name)

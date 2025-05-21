@@ -18,14 +18,16 @@ type Certificate struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// Namespace holds the value of the "namespace" field.
-	Namespace int `json:"namespace,omitempty"`
-	// Type holds the value of the "type" field.
-	Type string `json:"type,omitempty"`
+	// NamespaceID holds the value of the "namespace_id" field.
+	NamespaceID int `json:"namespace_id,omitempty"`
 	// CertPem holds the value of the "cert_pem" field.
 	CertPem string `json:"cert_pem,omitempty"`
 	// KeyPem holds the value of the "key_pem" field.
 	KeyPem string `json:"key_pem,omitempty"`
+	// Desc holds the value of the "desc" field.
+	Desc string `json:"desc,omitempty"`
+	// IssuerID holds the value of the "issuer_id" field.
+	IssuerID int `json:"issuer_id,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -38,22 +40,22 @@ type Certificate struct {
 
 // CertificateEdges holds the relations/edges for other nodes in the graph.
 type CertificateEdges struct {
-	// NamespaceRef holds the value of the namespace_ref edge.
-	NamespaceRef *Namespace `json:"namespace_ref,omitempty"`
+	// Namespace holds the value of the namespace edge.
+	Namespace *Namespace `json:"namespace,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
-// NamespaceRefOrErr returns the NamespaceRef value or an error if the edge
+// NamespaceOrErr returns the Namespace value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e CertificateEdges) NamespaceRefOrErr() (*Namespace, error) {
-	if e.NamespaceRef != nil {
-		return e.NamespaceRef, nil
+func (e CertificateEdges) NamespaceOrErr() (*Namespace, error) {
+	if e.Namespace != nil {
+		return e.Namespace, nil
 	} else if e.loadedTypes[0] {
 		return nil, &NotFoundError{label: namespace.Label}
 	}
-	return nil, &NotLoadedError{edge: "namespace_ref"}
+	return nil, &NotLoadedError{edge: "namespace"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -61,9 +63,9 @@ func (*Certificate) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case certificate.FieldID, certificate.FieldNamespace:
+		case certificate.FieldID, certificate.FieldNamespaceID, certificate.FieldIssuerID:
 			values[i] = new(sql.NullInt64)
-		case certificate.FieldType, certificate.FieldCertPem, certificate.FieldKeyPem:
+		case certificate.FieldCertPem, certificate.FieldKeyPem, certificate.FieldDesc:
 			values[i] = new(sql.NullString)
 		case certificate.FieldUpdatedAt, certificate.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -88,17 +90,11 @@ func (c *Certificate) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			c.ID = int(value.Int64)
-		case certificate.FieldNamespace:
+		case certificate.FieldNamespaceID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field namespace", values[i])
+				return fmt.Errorf("unexpected type %T for field namespace_id", values[i])
 			} else if value.Valid {
-				c.Namespace = int(value.Int64)
-			}
-		case certificate.FieldType:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field type", values[i])
-			} else if value.Valid {
-				c.Type = value.String
+				c.NamespaceID = int(value.Int64)
 			}
 		case certificate.FieldCertPem:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -111,6 +107,18 @@ func (c *Certificate) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field key_pem", values[i])
 			} else if value.Valid {
 				c.KeyPem = value.String
+			}
+		case certificate.FieldDesc:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field desc", values[i])
+			} else if value.Valid {
+				c.Desc = value.String
+			}
+		case certificate.FieldIssuerID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field issuer_id", values[i])
+			} else if value.Valid {
+				c.IssuerID = int(value.Int64)
 			}
 		case certificate.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -137,9 +145,9 @@ func (c *Certificate) Value(name string) (ent.Value, error) {
 	return c.selectValues.Get(name)
 }
 
-// QueryNamespaceRef queries the "namespace_ref" edge of the Certificate entity.
-func (c *Certificate) QueryNamespaceRef() *NamespaceQuery {
-	return NewCertificateClient(c.config).QueryNamespaceRef(c)
+// QueryNamespace queries the "namespace" edge of the Certificate entity.
+func (c *Certificate) QueryNamespace() *NamespaceQuery {
+	return NewCertificateClient(c.config).QueryNamespace(c)
 }
 
 // Update returns a builder for updating this Certificate.
@@ -165,17 +173,20 @@ func (c *Certificate) String() string {
 	var builder strings.Builder
 	builder.WriteString("Certificate(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", c.ID))
-	builder.WriteString("namespace=")
-	builder.WriteString(fmt.Sprintf("%v", c.Namespace))
-	builder.WriteString(", ")
-	builder.WriteString("type=")
-	builder.WriteString(c.Type)
+	builder.WriteString("namespace_id=")
+	builder.WriteString(fmt.Sprintf("%v", c.NamespaceID))
 	builder.WriteString(", ")
 	builder.WriteString("cert_pem=")
 	builder.WriteString(c.CertPem)
 	builder.WriteString(", ")
 	builder.WriteString("key_pem=")
 	builder.WriteString(c.KeyPem)
+	builder.WriteString(", ")
+	builder.WriteString("desc=")
+	builder.WriteString(c.Desc)
+	builder.WriteString(", ")
+	builder.WriteString("issuer_id=")
+	builder.WriteString(fmt.Sprintf("%v", c.IssuerID))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(c.UpdatedAt.Format(time.ANSIC))

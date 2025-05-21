@@ -29,30 +29,16 @@ func (cu *CertificateUpdate) Where(ps ...predicate.Certificate) *CertificateUpda
 	return cu
 }
 
-// SetNamespace sets the "namespace" field.
-func (cu *CertificateUpdate) SetNamespace(i int) *CertificateUpdate {
-	cu.mutation.SetNamespace(i)
+// SetNamespaceID sets the "namespace_id" field.
+func (cu *CertificateUpdate) SetNamespaceID(i int) *CertificateUpdate {
+	cu.mutation.SetNamespaceID(i)
 	return cu
 }
 
-// SetNillableNamespace sets the "namespace" field if the given value is not nil.
-func (cu *CertificateUpdate) SetNillableNamespace(i *int) *CertificateUpdate {
+// SetNillableNamespaceID sets the "namespace_id" field if the given value is not nil.
+func (cu *CertificateUpdate) SetNillableNamespaceID(i *int) *CertificateUpdate {
 	if i != nil {
-		cu.SetNamespace(*i)
-	}
-	return cu
-}
-
-// SetType sets the "type" field.
-func (cu *CertificateUpdate) SetType(s string) *CertificateUpdate {
-	cu.mutation.SetType(s)
-	return cu
-}
-
-// SetNillableType sets the "type" field if the given value is not nil.
-func (cu *CertificateUpdate) SetNillableType(s *string) *CertificateUpdate {
-	if s != nil {
-		cu.SetType(*s)
+		cu.SetNamespaceID(*i)
 	}
 	return cu
 }
@@ -91,21 +77,62 @@ func (cu *CertificateUpdate) ClearKeyPem() *CertificateUpdate {
 	return cu
 }
 
+// SetDesc sets the "desc" field.
+func (cu *CertificateUpdate) SetDesc(s string) *CertificateUpdate {
+	cu.mutation.SetDesc(s)
+	return cu
+}
+
+// SetNillableDesc sets the "desc" field if the given value is not nil.
+func (cu *CertificateUpdate) SetNillableDesc(s *string) *CertificateUpdate {
+	if s != nil {
+		cu.SetDesc(*s)
+	}
+	return cu
+}
+
+// ClearDesc clears the value of the "desc" field.
+func (cu *CertificateUpdate) ClearDesc() *CertificateUpdate {
+	cu.mutation.ClearDesc()
+	return cu
+}
+
+// SetIssuerID sets the "issuer_id" field.
+func (cu *CertificateUpdate) SetIssuerID(i int) *CertificateUpdate {
+	cu.mutation.ResetIssuerID()
+	cu.mutation.SetIssuerID(i)
+	return cu
+}
+
+// SetNillableIssuerID sets the "issuer_id" field if the given value is not nil.
+func (cu *CertificateUpdate) SetNillableIssuerID(i *int) *CertificateUpdate {
+	if i != nil {
+		cu.SetIssuerID(*i)
+	}
+	return cu
+}
+
+// AddIssuerID adds i to the "issuer_id" field.
+func (cu *CertificateUpdate) AddIssuerID(i int) *CertificateUpdate {
+	cu.mutation.AddIssuerID(i)
+	return cu
+}
+
+// ClearIssuerID clears the value of the "issuer_id" field.
+func (cu *CertificateUpdate) ClearIssuerID() *CertificateUpdate {
+	cu.mutation.ClearIssuerID()
+	return cu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (cu *CertificateUpdate) SetUpdatedAt(t time.Time) *CertificateUpdate {
 	cu.mutation.SetUpdatedAt(t)
 	return cu
 }
 
-// SetNamespaceRefID sets the "namespace_ref" edge to the Namespace entity by ID.
-func (cu *CertificateUpdate) SetNamespaceRefID(id int) *CertificateUpdate {
-	cu.mutation.SetNamespaceRefID(id)
-	return cu
-}
-
-// SetNamespaceRef sets the "namespace_ref" edge to the Namespace entity.
-func (cu *CertificateUpdate) SetNamespaceRef(n *Namespace) *CertificateUpdate {
-	return cu.SetNamespaceRefID(n.ID)
+// SetNamespace sets the "namespace" edge to the Namespace entity.
+func (cu *CertificateUpdate) SetNamespace(n *Namespace) *CertificateUpdate {
+	return cu.SetNamespaceID(n.ID)
 }
 
 // Mutation returns the CertificateMutation object of the builder.
@@ -113,9 +140,9 @@ func (cu *CertificateUpdate) Mutation() *CertificateMutation {
 	return cu.mutation
 }
 
-// ClearNamespaceRef clears the "namespace_ref" edge to the Namespace entity.
-func (cu *CertificateUpdate) ClearNamespaceRef() *CertificateUpdate {
-	cu.mutation.ClearNamespaceRef()
+// ClearNamespace clears the "namespace" edge to the Namespace entity.
+func (cu *CertificateUpdate) ClearNamespace() *CertificateUpdate {
+	cu.mutation.ClearNamespace()
 	return cu
 }
 
@@ -157,8 +184,8 @@ func (cu *CertificateUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (cu *CertificateUpdate) check() error {
-	if cu.mutation.NamespaceRefCleared() && len(cu.mutation.NamespaceRefIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "Certificate.namespace_ref"`)
+	if cu.mutation.NamespaceCleared() && len(cu.mutation.NamespaceIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Certificate.namespace"`)
 	}
 	return nil
 }
@@ -175,9 +202,6 @@ func (cu *CertificateUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := cu.mutation.GetType(); ok {
-		_spec.SetField(certificate.FieldType, field.TypeString, value)
-	}
 	if value, ok := cu.mutation.CertPem(); ok {
 		_spec.SetField(certificate.FieldCertPem, field.TypeString, value)
 	}
@@ -187,15 +211,30 @@ func (cu *CertificateUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if cu.mutation.KeyPemCleared() {
 		_spec.ClearField(certificate.FieldKeyPem, field.TypeString)
 	}
+	if value, ok := cu.mutation.Desc(); ok {
+		_spec.SetField(certificate.FieldDesc, field.TypeString, value)
+	}
+	if cu.mutation.DescCleared() {
+		_spec.ClearField(certificate.FieldDesc, field.TypeString)
+	}
+	if value, ok := cu.mutation.IssuerID(); ok {
+		_spec.SetField(certificate.FieldIssuerID, field.TypeInt, value)
+	}
+	if value, ok := cu.mutation.AddedIssuerID(); ok {
+		_spec.AddField(certificate.FieldIssuerID, field.TypeInt, value)
+	}
+	if cu.mutation.IssuerIDCleared() {
+		_spec.ClearField(certificate.FieldIssuerID, field.TypeInt)
+	}
 	if value, ok := cu.mutation.UpdatedAt(); ok {
 		_spec.SetField(certificate.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if cu.mutation.NamespaceRefCleared() {
+	if cu.mutation.NamespaceCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   certificate.NamespaceRefTable,
-			Columns: []string{certificate.NamespaceRefColumn},
+			Table:   certificate.NamespaceTable,
+			Columns: []string{certificate.NamespaceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeInt),
@@ -203,12 +242,12 @@ func (cu *CertificateUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cu.mutation.NamespaceRefIDs(); len(nodes) > 0 {
+	if nodes := cu.mutation.NamespaceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   certificate.NamespaceRefTable,
-			Columns: []string{certificate.NamespaceRefColumn},
+			Table:   certificate.NamespaceTable,
+			Columns: []string{certificate.NamespaceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeInt),
@@ -239,30 +278,16 @@ type CertificateUpdateOne struct {
 	mutation *CertificateMutation
 }
 
-// SetNamespace sets the "namespace" field.
-func (cuo *CertificateUpdateOne) SetNamespace(i int) *CertificateUpdateOne {
-	cuo.mutation.SetNamespace(i)
+// SetNamespaceID sets the "namespace_id" field.
+func (cuo *CertificateUpdateOne) SetNamespaceID(i int) *CertificateUpdateOne {
+	cuo.mutation.SetNamespaceID(i)
 	return cuo
 }
 
-// SetNillableNamespace sets the "namespace" field if the given value is not nil.
-func (cuo *CertificateUpdateOne) SetNillableNamespace(i *int) *CertificateUpdateOne {
+// SetNillableNamespaceID sets the "namespace_id" field if the given value is not nil.
+func (cuo *CertificateUpdateOne) SetNillableNamespaceID(i *int) *CertificateUpdateOne {
 	if i != nil {
-		cuo.SetNamespace(*i)
-	}
-	return cuo
-}
-
-// SetType sets the "type" field.
-func (cuo *CertificateUpdateOne) SetType(s string) *CertificateUpdateOne {
-	cuo.mutation.SetType(s)
-	return cuo
-}
-
-// SetNillableType sets the "type" field if the given value is not nil.
-func (cuo *CertificateUpdateOne) SetNillableType(s *string) *CertificateUpdateOne {
-	if s != nil {
-		cuo.SetType(*s)
+		cuo.SetNamespaceID(*i)
 	}
 	return cuo
 }
@@ -301,21 +326,62 @@ func (cuo *CertificateUpdateOne) ClearKeyPem() *CertificateUpdateOne {
 	return cuo
 }
 
+// SetDesc sets the "desc" field.
+func (cuo *CertificateUpdateOne) SetDesc(s string) *CertificateUpdateOne {
+	cuo.mutation.SetDesc(s)
+	return cuo
+}
+
+// SetNillableDesc sets the "desc" field if the given value is not nil.
+func (cuo *CertificateUpdateOne) SetNillableDesc(s *string) *CertificateUpdateOne {
+	if s != nil {
+		cuo.SetDesc(*s)
+	}
+	return cuo
+}
+
+// ClearDesc clears the value of the "desc" field.
+func (cuo *CertificateUpdateOne) ClearDesc() *CertificateUpdateOne {
+	cuo.mutation.ClearDesc()
+	return cuo
+}
+
+// SetIssuerID sets the "issuer_id" field.
+func (cuo *CertificateUpdateOne) SetIssuerID(i int) *CertificateUpdateOne {
+	cuo.mutation.ResetIssuerID()
+	cuo.mutation.SetIssuerID(i)
+	return cuo
+}
+
+// SetNillableIssuerID sets the "issuer_id" field if the given value is not nil.
+func (cuo *CertificateUpdateOne) SetNillableIssuerID(i *int) *CertificateUpdateOne {
+	if i != nil {
+		cuo.SetIssuerID(*i)
+	}
+	return cuo
+}
+
+// AddIssuerID adds i to the "issuer_id" field.
+func (cuo *CertificateUpdateOne) AddIssuerID(i int) *CertificateUpdateOne {
+	cuo.mutation.AddIssuerID(i)
+	return cuo
+}
+
+// ClearIssuerID clears the value of the "issuer_id" field.
+func (cuo *CertificateUpdateOne) ClearIssuerID() *CertificateUpdateOne {
+	cuo.mutation.ClearIssuerID()
+	return cuo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (cuo *CertificateUpdateOne) SetUpdatedAt(t time.Time) *CertificateUpdateOne {
 	cuo.mutation.SetUpdatedAt(t)
 	return cuo
 }
 
-// SetNamespaceRefID sets the "namespace_ref" edge to the Namespace entity by ID.
-func (cuo *CertificateUpdateOne) SetNamespaceRefID(id int) *CertificateUpdateOne {
-	cuo.mutation.SetNamespaceRefID(id)
-	return cuo
-}
-
-// SetNamespaceRef sets the "namespace_ref" edge to the Namespace entity.
-func (cuo *CertificateUpdateOne) SetNamespaceRef(n *Namespace) *CertificateUpdateOne {
-	return cuo.SetNamespaceRefID(n.ID)
+// SetNamespace sets the "namespace" edge to the Namespace entity.
+func (cuo *CertificateUpdateOne) SetNamespace(n *Namespace) *CertificateUpdateOne {
+	return cuo.SetNamespaceID(n.ID)
 }
 
 // Mutation returns the CertificateMutation object of the builder.
@@ -323,9 +389,9 @@ func (cuo *CertificateUpdateOne) Mutation() *CertificateMutation {
 	return cuo.mutation
 }
 
-// ClearNamespaceRef clears the "namespace_ref" edge to the Namespace entity.
-func (cuo *CertificateUpdateOne) ClearNamespaceRef() *CertificateUpdateOne {
-	cuo.mutation.ClearNamespaceRef()
+// ClearNamespace clears the "namespace" edge to the Namespace entity.
+func (cuo *CertificateUpdateOne) ClearNamespace() *CertificateUpdateOne {
+	cuo.mutation.ClearNamespace()
 	return cuo
 }
 
@@ -380,8 +446,8 @@ func (cuo *CertificateUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (cuo *CertificateUpdateOne) check() error {
-	if cuo.mutation.NamespaceRefCleared() && len(cuo.mutation.NamespaceRefIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "Certificate.namespace_ref"`)
+	if cuo.mutation.NamespaceCleared() && len(cuo.mutation.NamespaceIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Certificate.namespace"`)
 	}
 	return nil
 }
@@ -415,9 +481,6 @@ func (cuo *CertificateUpdateOne) sqlSave(ctx context.Context) (_node *Certificat
 			}
 		}
 	}
-	if value, ok := cuo.mutation.GetType(); ok {
-		_spec.SetField(certificate.FieldType, field.TypeString, value)
-	}
 	if value, ok := cuo.mutation.CertPem(); ok {
 		_spec.SetField(certificate.FieldCertPem, field.TypeString, value)
 	}
@@ -427,15 +490,30 @@ func (cuo *CertificateUpdateOne) sqlSave(ctx context.Context) (_node *Certificat
 	if cuo.mutation.KeyPemCleared() {
 		_spec.ClearField(certificate.FieldKeyPem, field.TypeString)
 	}
+	if value, ok := cuo.mutation.Desc(); ok {
+		_spec.SetField(certificate.FieldDesc, field.TypeString, value)
+	}
+	if cuo.mutation.DescCleared() {
+		_spec.ClearField(certificate.FieldDesc, field.TypeString)
+	}
+	if value, ok := cuo.mutation.IssuerID(); ok {
+		_spec.SetField(certificate.FieldIssuerID, field.TypeInt, value)
+	}
+	if value, ok := cuo.mutation.AddedIssuerID(); ok {
+		_spec.AddField(certificate.FieldIssuerID, field.TypeInt, value)
+	}
+	if cuo.mutation.IssuerIDCleared() {
+		_spec.ClearField(certificate.FieldIssuerID, field.TypeInt)
+	}
 	if value, ok := cuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(certificate.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if cuo.mutation.NamespaceRefCleared() {
+	if cuo.mutation.NamespaceCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   certificate.NamespaceRefTable,
-			Columns: []string{certificate.NamespaceRefColumn},
+			Table:   certificate.NamespaceTable,
+			Columns: []string{certificate.NamespaceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeInt),
@@ -443,12 +521,12 @@ func (cuo *CertificateUpdateOne) sqlSave(ctx context.Context) (_node *Certificat
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cuo.mutation.NamespaceRefIDs(); len(nodes) > 0 {
+	if nodes := cuo.mutation.NamespaceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   certificate.NamespaceRefTable,
-			Columns: []string{certificate.NamespaceRefColumn},
+			Table:   certificate.NamespaceTable,
+			Columns: []string{certificate.NamespaceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeInt),

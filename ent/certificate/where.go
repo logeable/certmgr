@@ -55,14 +55,9 @@ func IDLTE(id int) predicate.Certificate {
 	return predicate.Certificate(sql.FieldLTE(FieldID, id))
 }
 
-// Namespace applies equality check predicate on the "namespace" field. It's identical to NamespaceEQ.
-func Namespace(v int) predicate.Certificate {
-	return predicate.Certificate(sql.FieldEQ(FieldNamespace, v))
-}
-
-// Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
-func Type(v string) predicate.Certificate {
-	return predicate.Certificate(sql.FieldEQ(FieldType, v))
+// NamespaceID applies equality check predicate on the "namespace_id" field. It's identical to NamespaceIDEQ.
+func NamespaceID(v int) predicate.Certificate {
+	return predicate.Certificate(sql.FieldEQ(FieldNamespaceID, v))
 }
 
 // CertPem applies equality check predicate on the "cert_pem" field. It's identical to CertPemEQ.
@@ -75,6 +70,16 @@ func KeyPem(v string) predicate.Certificate {
 	return predicate.Certificate(sql.FieldEQ(FieldKeyPem, v))
 }
 
+// Desc applies equality check predicate on the "desc" field. It's identical to DescEQ.
+func Desc(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldEQ(FieldDesc, v))
+}
+
+// IssuerID applies equality check predicate on the "issuer_id" field. It's identical to IssuerIDEQ.
+func IssuerID(v int) predicate.Certificate {
+	return predicate.Certificate(sql.FieldEQ(FieldIssuerID, v))
+}
+
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Certificate {
 	return predicate.Certificate(sql.FieldEQ(FieldUpdatedAt, v))
@@ -85,89 +90,24 @@ func CreatedAt(v time.Time) predicate.Certificate {
 	return predicate.Certificate(sql.FieldEQ(FieldCreatedAt, v))
 }
 
-// NamespaceEQ applies the EQ predicate on the "namespace" field.
-func NamespaceEQ(v int) predicate.Certificate {
-	return predicate.Certificate(sql.FieldEQ(FieldNamespace, v))
+// NamespaceIDEQ applies the EQ predicate on the "namespace_id" field.
+func NamespaceIDEQ(v int) predicate.Certificate {
+	return predicate.Certificate(sql.FieldEQ(FieldNamespaceID, v))
 }
 
-// NamespaceNEQ applies the NEQ predicate on the "namespace" field.
-func NamespaceNEQ(v int) predicate.Certificate {
-	return predicate.Certificate(sql.FieldNEQ(FieldNamespace, v))
+// NamespaceIDNEQ applies the NEQ predicate on the "namespace_id" field.
+func NamespaceIDNEQ(v int) predicate.Certificate {
+	return predicate.Certificate(sql.FieldNEQ(FieldNamespaceID, v))
 }
 
-// NamespaceIn applies the In predicate on the "namespace" field.
-func NamespaceIn(vs ...int) predicate.Certificate {
-	return predicate.Certificate(sql.FieldIn(FieldNamespace, vs...))
+// NamespaceIDIn applies the In predicate on the "namespace_id" field.
+func NamespaceIDIn(vs ...int) predicate.Certificate {
+	return predicate.Certificate(sql.FieldIn(FieldNamespaceID, vs...))
 }
 
-// NamespaceNotIn applies the NotIn predicate on the "namespace" field.
-func NamespaceNotIn(vs ...int) predicate.Certificate {
-	return predicate.Certificate(sql.FieldNotIn(FieldNamespace, vs...))
-}
-
-// TypeEQ applies the EQ predicate on the "type" field.
-func TypeEQ(v string) predicate.Certificate {
-	return predicate.Certificate(sql.FieldEQ(FieldType, v))
-}
-
-// TypeNEQ applies the NEQ predicate on the "type" field.
-func TypeNEQ(v string) predicate.Certificate {
-	return predicate.Certificate(sql.FieldNEQ(FieldType, v))
-}
-
-// TypeIn applies the In predicate on the "type" field.
-func TypeIn(vs ...string) predicate.Certificate {
-	return predicate.Certificate(sql.FieldIn(FieldType, vs...))
-}
-
-// TypeNotIn applies the NotIn predicate on the "type" field.
-func TypeNotIn(vs ...string) predicate.Certificate {
-	return predicate.Certificate(sql.FieldNotIn(FieldType, vs...))
-}
-
-// TypeGT applies the GT predicate on the "type" field.
-func TypeGT(v string) predicate.Certificate {
-	return predicate.Certificate(sql.FieldGT(FieldType, v))
-}
-
-// TypeGTE applies the GTE predicate on the "type" field.
-func TypeGTE(v string) predicate.Certificate {
-	return predicate.Certificate(sql.FieldGTE(FieldType, v))
-}
-
-// TypeLT applies the LT predicate on the "type" field.
-func TypeLT(v string) predicate.Certificate {
-	return predicate.Certificate(sql.FieldLT(FieldType, v))
-}
-
-// TypeLTE applies the LTE predicate on the "type" field.
-func TypeLTE(v string) predicate.Certificate {
-	return predicate.Certificate(sql.FieldLTE(FieldType, v))
-}
-
-// TypeContains applies the Contains predicate on the "type" field.
-func TypeContains(v string) predicate.Certificate {
-	return predicate.Certificate(sql.FieldContains(FieldType, v))
-}
-
-// TypeHasPrefix applies the HasPrefix predicate on the "type" field.
-func TypeHasPrefix(v string) predicate.Certificate {
-	return predicate.Certificate(sql.FieldHasPrefix(FieldType, v))
-}
-
-// TypeHasSuffix applies the HasSuffix predicate on the "type" field.
-func TypeHasSuffix(v string) predicate.Certificate {
-	return predicate.Certificate(sql.FieldHasSuffix(FieldType, v))
-}
-
-// TypeEqualFold applies the EqualFold predicate on the "type" field.
-func TypeEqualFold(v string) predicate.Certificate {
-	return predicate.Certificate(sql.FieldEqualFold(FieldType, v))
-}
-
-// TypeContainsFold applies the ContainsFold predicate on the "type" field.
-func TypeContainsFold(v string) predicate.Certificate {
-	return predicate.Certificate(sql.FieldContainsFold(FieldType, v))
+// NamespaceIDNotIn applies the NotIn predicate on the "namespace_id" field.
+func NamespaceIDNotIn(vs ...int) predicate.Certificate {
+	return predicate.Certificate(sql.FieldNotIn(FieldNamespaceID, vs...))
 }
 
 // CertPemEQ applies the EQ predicate on the "cert_pem" field.
@@ -310,6 +250,131 @@ func KeyPemContainsFold(v string) predicate.Certificate {
 	return predicate.Certificate(sql.FieldContainsFold(FieldKeyPem, v))
 }
 
+// DescEQ applies the EQ predicate on the "desc" field.
+func DescEQ(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldEQ(FieldDesc, v))
+}
+
+// DescNEQ applies the NEQ predicate on the "desc" field.
+func DescNEQ(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldNEQ(FieldDesc, v))
+}
+
+// DescIn applies the In predicate on the "desc" field.
+func DescIn(vs ...string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldIn(FieldDesc, vs...))
+}
+
+// DescNotIn applies the NotIn predicate on the "desc" field.
+func DescNotIn(vs ...string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldNotIn(FieldDesc, vs...))
+}
+
+// DescGT applies the GT predicate on the "desc" field.
+func DescGT(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldGT(FieldDesc, v))
+}
+
+// DescGTE applies the GTE predicate on the "desc" field.
+func DescGTE(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldGTE(FieldDesc, v))
+}
+
+// DescLT applies the LT predicate on the "desc" field.
+func DescLT(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldLT(FieldDesc, v))
+}
+
+// DescLTE applies the LTE predicate on the "desc" field.
+func DescLTE(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldLTE(FieldDesc, v))
+}
+
+// DescContains applies the Contains predicate on the "desc" field.
+func DescContains(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldContains(FieldDesc, v))
+}
+
+// DescHasPrefix applies the HasPrefix predicate on the "desc" field.
+func DescHasPrefix(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldHasPrefix(FieldDesc, v))
+}
+
+// DescHasSuffix applies the HasSuffix predicate on the "desc" field.
+func DescHasSuffix(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldHasSuffix(FieldDesc, v))
+}
+
+// DescIsNil applies the IsNil predicate on the "desc" field.
+func DescIsNil() predicate.Certificate {
+	return predicate.Certificate(sql.FieldIsNull(FieldDesc))
+}
+
+// DescNotNil applies the NotNil predicate on the "desc" field.
+func DescNotNil() predicate.Certificate {
+	return predicate.Certificate(sql.FieldNotNull(FieldDesc))
+}
+
+// DescEqualFold applies the EqualFold predicate on the "desc" field.
+func DescEqualFold(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldEqualFold(FieldDesc, v))
+}
+
+// DescContainsFold applies the ContainsFold predicate on the "desc" field.
+func DescContainsFold(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldContainsFold(FieldDesc, v))
+}
+
+// IssuerIDEQ applies the EQ predicate on the "issuer_id" field.
+func IssuerIDEQ(v int) predicate.Certificate {
+	return predicate.Certificate(sql.FieldEQ(FieldIssuerID, v))
+}
+
+// IssuerIDNEQ applies the NEQ predicate on the "issuer_id" field.
+func IssuerIDNEQ(v int) predicate.Certificate {
+	return predicate.Certificate(sql.FieldNEQ(FieldIssuerID, v))
+}
+
+// IssuerIDIn applies the In predicate on the "issuer_id" field.
+func IssuerIDIn(vs ...int) predicate.Certificate {
+	return predicate.Certificate(sql.FieldIn(FieldIssuerID, vs...))
+}
+
+// IssuerIDNotIn applies the NotIn predicate on the "issuer_id" field.
+func IssuerIDNotIn(vs ...int) predicate.Certificate {
+	return predicate.Certificate(sql.FieldNotIn(FieldIssuerID, vs...))
+}
+
+// IssuerIDGT applies the GT predicate on the "issuer_id" field.
+func IssuerIDGT(v int) predicate.Certificate {
+	return predicate.Certificate(sql.FieldGT(FieldIssuerID, v))
+}
+
+// IssuerIDGTE applies the GTE predicate on the "issuer_id" field.
+func IssuerIDGTE(v int) predicate.Certificate {
+	return predicate.Certificate(sql.FieldGTE(FieldIssuerID, v))
+}
+
+// IssuerIDLT applies the LT predicate on the "issuer_id" field.
+func IssuerIDLT(v int) predicate.Certificate {
+	return predicate.Certificate(sql.FieldLT(FieldIssuerID, v))
+}
+
+// IssuerIDLTE applies the LTE predicate on the "issuer_id" field.
+func IssuerIDLTE(v int) predicate.Certificate {
+	return predicate.Certificate(sql.FieldLTE(FieldIssuerID, v))
+}
+
+// IssuerIDIsNil applies the IsNil predicate on the "issuer_id" field.
+func IssuerIDIsNil() predicate.Certificate {
+	return predicate.Certificate(sql.FieldIsNull(FieldIssuerID))
+}
+
+// IssuerIDNotNil applies the NotNil predicate on the "issuer_id" field.
+func IssuerIDNotNil() predicate.Certificate {
+	return predicate.Certificate(sql.FieldNotNull(FieldIssuerID))
+}
+
 // UpdatedAtEQ applies the EQ predicate on the "updated_at" field.
 func UpdatedAtEQ(v time.Time) predicate.Certificate {
 	return predicate.Certificate(sql.FieldEQ(FieldUpdatedAt, v))
@@ -390,21 +455,21 @@ func CreatedAtLTE(v time.Time) predicate.Certificate {
 	return predicate.Certificate(sql.FieldLTE(FieldCreatedAt, v))
 }
 
-// HasNamespaceRef applies the HasEdge predicate on the "namespace_ref" edge.
-func HasNamespaceRef() predicate.Certificate {
+// HasNamespace applies the HasEdge predicate on the "namespace" edge.
+func HasNamespace() predicate.Certificate {
 	return predicate.Certificate(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, NamespaceRefTable, NamespaceRefColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, NamespaceTable, NamespaceColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasNamespaceRefWith applies the HasEdge predicate on the "namespace_ref" edge with a given conditions (other predicates).
-func HasNamespaceRefWith(preds ...predicate.Namespace) predicate.Certificate {
+// HasNamespaceWith applies the HasEdge predicate on the "namespace" edge with a given conditions (other predicates).
+func HasNamespaceWith(preds ...predicate.Namespace) predicate.Certificate {
 	return predicate.Certificate(func(s *sql.Selector) {
-		step := newNamespaceRefStep()
+		step := newNamespaceStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

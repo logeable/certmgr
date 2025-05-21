@@ -19,4 +19,29 @@ contextBridge.exposeInMainWorld('api', {
       return result;
     },
   },
+  certificates: {
+    list: async (namespaceId: string) => {
+      const result = await ipcRenderer.invoke('certificates:list', namespaceId);
+      return result;
+    },
+    createRoot: async (params: {
+      namespace_id: string;
+      keyType: string;
+      keyLen: string;
+      validDays: string;
+      remark: string;
+      subject: {
+        country: string;
+        state: string;
+        city: string;
+        org: string;
+        ou: string;
+        common_name: string;
+        email: string;
+      };
+    }) => {
+      const result = await ipcRenderer.invoke('certificates:createRoot', params);
+      return result;
+    },
+  },
 });

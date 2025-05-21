@@ -21,15 +21,9 @@ type CertificateCreate struct {
 	hooks    []Hook
 }
 
-// SetNamespace sets the "namespace" field.
-func (cc *CertificateCreate) SetNamespace(i int) *CertificateCreate {
-	cc.mutation.SetNamespace(i)
-	return cc
-}
-
-// SetType sets the "type" field.
-func (cc *CertificateCreate) SetType(s string) *CertificateCreate {
-	cc.mutation.SetType(s)
+// SetNamespaceID sets the "namespace_id" field.
+func (cc *CertificateCreate) SetNamespaceID(i int) *CertificateCreate {
+	cc.mutation.SetNamespaceID(i)
 	return cc
 }
 
@@ -49,6 +43,34 @@ func (cc *CertificateCreate) SetKeyPem(s string) *CertificateCreate {
 func (cc *CertificateCreate) SetNillableKeyPem(s *string) *CertificateCreate {
 	if s != nil {
 		cc.SetKeyPem(*s)
+	}
+	return cc
+}
+
+// SetDesc sets the "desc" field.
+func (cc *CertificateCreate) SetDesc(s string) *CertificateCreate {
+	cc.mutation.SetDesc(s)
+	return cc
+}
+
+// SetNillableDesc sets the "desc" field if the given value is not nil.
+func (cc *CertificateCreate) SetNillableDesc(s *string) *CertificateCreate {
+	if s != nil {
+		cc.SetDesc(*s)
+	}
+	return cc
+}
+
+// SetIssuerID sets the "issuer_id" field.
+func (cc *CertificateCreate) SetIssuerID(i int) *CertificateCreate {
+	cc.mutation.SetIssuerID(i)
+	return cc
+}
+
+// SetNillableIssuerID sets the "issuer_id" field if the given value is not nil.
+func (cc *CertificateCreate) SetNillableIssuerID(i *int) *CertificateCreate {
+	if i != nil {
+		cc.SetIssuerID(*i)
 	}
 	return cc
 }
@@ -87,15 +109,9 @@ func (cc *CertificateCreate) SetID(i int) *CertificateCreate {
 	return cc
 }
 
-// SetNamespaceRefID sets the "namespace_ref" edge to the Namespace entity by ID.
-func (cc *CertificateCreate) SetNamespaceRefID(id int) *CertificateCreate {
-	cc.mutation.SetNamespaceRefID(id)
-	return cc
-}
-
-// SetNamespaceRef sets the "namespace_ref" edge to the Namespace entity.
-func (cc *CertificateCreate) SetNamespaceRef(n *Namespace) *CertificateCreate {
-	return cc.SetNamespaceRefID(n.ID)
+// SetNamespace sets the "namespace" edge to the Namespace entity.
+func (cc *CertificateCreate) SetNamespace(n *Namespace) *CertificateCreate {
+	return cc.SetNamespaceID(n.ID)
 }
 
 // Mutation returns the CertificateMutation object of the builder.
@@ -133,6 +149,10 @@ func (cc *CertificateCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (cc *CertificateCreate) defaults() {
+	if _, ok := cc.mutation.Desc(); !ok {
+		v := certificate.DefaultDesc
+		cc.mutation.SetDesc(v)
+	}
 	if _, ok := cc.mutation.UpdatedAt(); !ok {
 		v := certificate.DefaultUpdatedAt()
 		cc.mutation.SetUpdatedAt(v)
@@ -145,11 +165,8 @@ func (cc *CertificateCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (cc *CertificateCreate) check() error {
-	if _, ok := cc.mutation.Namespace(); !ok {
-		return &ValidationError{Name: "namespace", err: errors.New(`ent: missing required field "Certificate.namespace"`)}
-	}
-	if _, ok := cc.mutation.GetType(); !ok {
-		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Certificate.type"`)}
+	if _, ok := cc.mutation.NamespaceID(); !ok {
+		return &ValidationError{Name: "namespace_id", err: errors.New(`ent: missing required field "Certificate.namespace_id"`)}
 	}
 	if _, ok := cc.mutation.CertPem(); !ok {
 		return &ValidationError{Name: "cert_pem", err: errors.New(`ent: missing required field "Certificate.cert_pem"`)}
@@ -165,8 +182,8 @@ func (cc *CertificateCreate) check() error {
 			return &ValidationError{Name: "id", err: fmt.Errorf(`ent: validator failed for field "Certificate.id": %w`, err)}
 		}
 	}
-	if len(cc.mutation.NamespaceRefIDs()) == 0 {
-		return &ValidationError{Name: "namespace_ref", err: errors.New(`ent: missing required edge "Certificate.namespace_ref"`)}
+	if len(cc.mutation.NamespaceIDs()) == 0 {
+		return &ValidationError{Name: "namespace", err: errors.New(`ent: missing required edge "Certificate.namespace"`)}
 	}
 	return nil
 }
@@ -200,10 +217,6 @@ func (cc *CertificateCreate) createSpec() (*Certificate, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = id
 	}
-	if value, ok := cc.mutation.GetType(); ok {
-		_spec.SetField(certificate.FieldType, field.TypeString, value)
-		_node.Type = value
-	}
 	if value, ok := cc.mutation.CertPem(); ok {
 		_spec.SetField(certificate.FieldCertPem, field.TypeString, value)
 		_node.CertPem = value
@@ -211,6 +224,14 @@ func (cc *CertificateCreate) createSpec() (*Certificate, *sqlgraph.CreateSpec) {
 	if value, ok := cc.mutation.KeyPem(); ok {
 		_spec.SetField(certificate.FieldKeyPem, field.TypeString, value)
 		_node.KeyPem = value
+	}
+	if value, ok := cc.mutation.Desc(); ok {
+		_spec.SetField(certificate.FieldDesc, field.TypeString, value)
+		_node.Desc = value
+	}
+	if value, ok := cc.mutation.IssuerID(); ok {
+		_spec.SetField(certificate.FieldIssuerID, field.TypeInt, value)
+		_node.IssuerID = value
 	}
 	if value, ok := cc.mutation.UpdatedAt(); ok {
 		_spec.SetField(certificate.FieldUpdatedAt, field.TypeTime, value)
@@ -220,12 +241,12 @@ func (cc *CertificateCreate) createSpec() (*Certificate, *sqlgraph.CreateSpec) {
 		_spec.SetField(certificate.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if nodes := cc.mutation.NamespaceRefIDs(); len(nodes) > 0 {
+	if nodes := cc.mutation.NamespaceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   certificate.NamespaceRefTable,
-			Columns: []string{certificate.NamespaceRefColumn},
+			Table:   certificate.NamespaceTable,
+			Columns: []string{certificate.NamespaceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(namespace.FieldID, field.TypeInt),
@@ -234,7 +255,7 @@ func (cc *CertificateCreate) createSpec() (*Certificate, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.Namespace = nodes[0]
+		_node.NamespaceID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

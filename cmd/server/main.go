@@ -2,8 +2,15 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"flag"
+	"fmt"
 	"log"
+	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -11,6 +18,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/logeable/certmgr/ent"
+	"github.com/logeable/certmgr/ent/certificate"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -132,6 +140,132 @@ func main() {
 		return c.JSON(http.StatusOK, map[string]string{"message": "Namespace deleted"})
 	})
 
+	api.GET("/certificates", func(c echo.Context) error {
+		nsID := c.QueryParam("namespace_id")
+		nsIDInt, err := strconv.Atoi(nsID)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid namespace_id"})
+		}
+		certs, err := client.Certificate.Query().Where(certificate.NamespaceIDEQ(nsIDInt)).All(context.Background())
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+
+		type CertificateResponse struct {
+			ID        int    `json:"id"`
+			Desc      string `json:"desc"`
+			CertPem   string `json:"certPem"`
+			KeyPem    string `json:"keyPem"`
+			UpdatedAt int64  `json:"updatedAt"`
+			CreatedAt int64  `json:"createdAt"`
+			Subject   string `json:"subject"`
+			IssuerID  int    `json:"issuerId"`
+		}
+		resp := make([]CertificateResponse, 0, len(certs))
+		for _, cert := range certs {
+			certPem, _ := pem.Decode([]byte(cert.CertPem))
+			if certPem == nil {
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "invalid certPem"})
+			}
+			x509Cert, err := x509.ParseCertificate(certPem.Bytes)
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			}
+			resp = append(resp, CertificateResponse{
+				ID:        cert.ID,
+				Desc:      cert.Desc,
+				CertPem:   cert.CertPem,
+				KeyPem:    cert.KeyPem,
+				UpdatedAt: cert.UpdatedAt.Unix(),
+				CreatedAt: cert.CreatedAt.Unix(),
+				Subject:   getSubject(x509Cert),
+				IssuerID:  cert.IssuerID,
+			})
+		}
+		return c.JSON(http.StatusOK, resp)
+	})
+
+	api.POST("/certificates/root", func(c echo.Context) error {
+		type Subject struct {
+			Country    string `json:"country"`
+			State      string `json:"state"`
+			City       string `json:"city"`
+			Org        string `json:"org"`
+			Ou         string `json:"ou"`
+			CommonName string `json:"commonName"`
+			Email      string `json:"email"`
+		}
+		type Req struct {
+			NamespaceId string  `json:"namespaceId"`
+			KeyType     string  `json:"keyType"`
+			KeyLen      int     `json:"keyLen"`
+			ValidDays   int     `json:"validDays"`
+			Remark      string  `json:"remark"`
+			Subject     Subject `json:"subject"`
+		}
+		var req Req
+		if err := c.Bind(&req); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		}
+		nsID, err := strconv.Atoi(req.NamespaceId)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid namespaceId"})
+		}
+
+		var certPemBytes []byte
+		var keyPemBytes []byte
+		if req.KeyType == "RSA" {
+			key, err := rsa.GenerateKey(rand.Reader, req.KeyLen)
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			}
+			certTemplate := &x509.Certificate{
+				SerialNumber: big.NewInt(1),
+				Subject: pkix.Name{
+					Country:            []string{req.Subject.Country},
+					Province:           []string{req.Subject.State},
+					Locality:           []string{req.Subject.City},
+					CommonName:         req.Subject.CommonName,
+					Organization:       []string{req.Subject.Org},
+					OrganizationalUnit: []string{req.Subject.Ou},
+				},
+			}
+			cert, err := x509.CreateCertificate(rand.Reader, certTemplate, certTemplate, key.Public(), key)
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			}
+			certPemBytes = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert})
+			keyPemBytes = pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)})
+		}
+
+		cert, err := client.Certificate.Create().
+			SetNamespaceID(nsID).
+			SetCertPem(string(certPemBytes)).
+			SetKeyPem(string(keyPemBytes)).
+			Save(context.Background())
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+
+		certPem, _ := pem.Decode(certPemBytes)
+		if certPem == nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "invalid certPem"})
+		}
+		x509Cert, err := x509.ParseCertificate(certPem.Bytes)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"id":        cert.ID,
+			"desc":      cert.Desc,
+			"certPem":   cert.CertPem,
+			"keyPem":    cert.KeyPem,
+			"createdAt": cert.CreatedAt.Unix(),
+			"updatedAt": cert.UpdatedAt.Unix(),
+			"subject":   getSubject(x509Cert),
+		})
+	})
+
 	e.GET("/status", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 	})
@@ -144,4 +278,26 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func getSubject(cert *x509.Certificate) string {
+	subject := cert.Subject
+	var subjectStr string
+	for _, v := range subject.Country {
+		subjectStr += fmt.Sprintf("C=%s", v)
+	}
+	for _, v := range subject.Province {
+		subjectStr += fmt.Sprintf(", ST=%s", v)
+	}
+	for _, v := range subject.Locality {
+		subjectStr += fmt.Sprintf(", L=%s", v)
+	}
+	for _, v := range subject.Organization {
+		subjectStr += fmt.Sprintf(", O=%s", v)
+	}
+	for _, v := range subject.OrganizationalUnit {
+		subjectStr += fmt.Sprintf(", OU=%s", v)
+	}
+	subjectStr += fmt.Sprintf(", CN=%s", subject.CommonName)
+	return subjectStr
 }

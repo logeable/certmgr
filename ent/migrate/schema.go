@@ -11,12 +11,13 @@ var (
 	// CertificatesColumns holds the columns for the "certificates" table.
 	CertificatesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "type", Type: field.TypeString, Size: 2147483647},
 		{Name: "cert_pem", Type: field.TypeString, Size: 2147483647},
 		{Name: "key_pem", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "desc", Type: field.TypeString, Nullable: true, Size: 2147483647, Default: ""},
+		{Name: "issuer_id", Type: field.TypeInt, Nullable: true},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
-		{Name: "namespace", Type: field.TypeInt},
+		{Name: "namespace_id", Type: field.TypeInt},
 	}
 	// CertificatesTable holds the schema information for the "certificates" table.
 	CertificatesTable = &schema.Table{
@@ -26,21 +27,16 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "certificates_namespaces_certificates",
-				Columns:    []*schema.Column{CertificatesColumns[6]},
+				Columns:    []*schema.Column{CertificatesColumns[7]},
 				RefColumns: []*schema.Column{NamespacesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "certificate_namespace",
+				Name:    "certificate_namespace_id",
 				Unique:  false,
-				Columns: []*schema.Column{CertificatesColumns[6]},
-			},
-			{
-				Name:    "certificate_type",
-				Unique:  false,
-				Columns: []*schema.Column{CertificatesColumns[1]},
+				Columns: []*schema.Column{CertificatesColumns[7]},
 			},
 		},
 	}

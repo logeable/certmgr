@@ -19,11 +19,11 @@ import (
 // CertificateQuery is the builder for querying Certificate entities.
 type CertificateQuery struct {
 	config
-	ctx              *QueryContext
-	order            []certificate.OrderOption
-	inters           []Interceptor
-	predicates       []predicate.Certificate
-	withNamespaceRef *NamespaceQuery
+	ctx           *QueryContext
+	order         []certificate.OrderOption
+	inters        []Interceptor
+	predicates    []predicate.Certificate
+	withNamespace *NamespaceQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -60,8 +60,8 @@ func (cq *CertificateQuery) Order(o ...certificate.OrderOption) *CertificateQuer
 	return cq
 }
 
-// QueryNamespaceRef chains the current query on the "namespace_ref" edge.
-func (cq *CertificateQuery) QueryNamespaceRef() *NamespaceQuery {
+// QueryNamespace chains the current query on the "namespace" edge.
+func (cq *CertificateQuery) QueryNamespace() *NamespaceQuery {
 	query := (&NamespaceClient{config: cq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := cq.prepareQuery(ctx); err != nil {
@@ -74,7 +74,7 @@ func (cq *CertificateQuery) QueryNamespaceRef() *NamespaceQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(certificate.Table, certificate.FieldID, selector),
 			sqlgraph.To(namespace.Table, namespace.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, certificate.NamespaceRefTable, certificate.NamespaceRefColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, certificate.NamespaceTable, certificate.NamespaceColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
 		return fromU, nil
@@ -269,26 +269,26 @@ func (cq *CertificateQuery) Clone() *CertificateQuery {
 		return nil
 	}
 	return &CertificateQuery{
-		config:           cq.config,
-		ctx:              cq.ctx.Clone(),
-		order:            append([]certificate.OrderOption{}, cq.order...),
-		inters:           append([]Interceptor{}, cq.inters...),
-		predicates:       append([]predicate.Certificate{}, cq.predicates...),
-		withNamespaceRef: cq.withNamespaceRef.Clone(),
+		config:        cq.config,
+		ctx:           cq.ctx.Clone(),
+		order:         append([]certificate.OrderOption{}, cq.order...),
+		inters:        append([]Interceptor{}, cq.inters...),
+		predicates:    append([]predicate.Certificate{}, cq.predicates...),
+		withNamespace: cq.withNamespace.Clone(),
 		// clone intermediate query.
 		sql:  cq.sql.Clone(),
 		path: cq.path,
 	}
 }
 
-// WithNamespaceRef tells the query-builder to eager-load the nodes that are connected to
-// the "namespace_ref" edge. The optional arguments are used to configure the query builder of the edge.
-func (cq *CertificateQuery) WithNamespaceRef(opts ...func(*NamespaceQuery)) *CertificateQuery {
+// WithNamespace tells the query-builder to eager-load the nodes that are connected to
+// the "namespace" edge. The optional arguments are used to configure the query builder of the edge.
+func (cq *CertificateQuery) WithNamespace(opts ...func(*NamespaceQuery)) *CertificateQuery {
 	query := (&NamespaceClient{config: cq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	cq.withNamespaceRef = query
+	cq.withNamespace = query
 	return cq
 }
 
@@ -298,12 +298,12 @@ func (cq *CertificateQuery) WithNamespaceRef(opts ...func(*NamespaceQuery)) *Cer
 // Example:
 //
 //	var v []struct {
-//		Namespace int `json:"namespace,omitempty"`
+//		NamespaceID int `json:"namespace_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Certificate.Query().
-//		GroupBy(certificate.FieldNamespace).
+//		GroupBy(certificate.FieldNamespaceID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (cq *CertificateQuery) GroupBy(field string, fields ...string) *CertificateGroupBy {
@@ -321,11 +321,11 @@ func (cq *CertificateQuery) GroupBy(field string, fields ...string) *Certificate
 // Example:
 //
 //	var v []struct {
-//		Namespace int `json:"namespace,omitempty"`
+//		NamespaceID int `json:"namespace_id,omitempty"`
 //	}
 //
 //	client.Certificate.Query().
-//		Select(certificate.FieldNamespace).
+//		Select(certificate.FieldNamespaceID).
 //		Scan(ctx, &v)
 func (cq *CertificateQuery) Select(fields ...string) *CertificateSelect {
 	cq.ctx.Fields = append(cq.ctx.Fields, fields...)
@@ -371,7 +371,7 @@ func (cq *CertificateQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 		nodes       = []*Certificate{}
 		_spec       = cq.querySpec()
 		loadedTypes = [1]bool{
-			cq.withNamespaceRef != nil,
+			cq.withNamespace != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -392,20 +392,20 @@ func (cq *CertificateQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := cq.withNamespaceRef; query != nil {
-		if err := cq.loadNamespaceRef(ctx, query, nodes, nil,
-			func(n *Certificate, e *Namespace) { n.Edges.NamespaceRef = e }); err != nil {
+	if query := cq.withNamespace; query != nil {
+		if err := cq.loadNamespace(ctx, query, nodes, nil,
+			func(n *Certificate, e *Namespace) { n.Edges.Namespace = e }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (cq *CertificateQuery) loadNamespaceRef(ctx context.Context, query *NamespaceQuery, nodes []*Certificate, init func(*Certificate), assign func(*Certificate, *Namespace)) error {
+func (cq *CertificateQuery) loadNamespace(ctx context.Context, query *NamespaceQuery, nodes []*Certificate, init func(*Certificate), assign func(*Certificate, *Namespace)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*Certificate)
 	for i := range nodes {
-		fk := nodes[i].Namespace
+		fk := nodes[i].NamespaceID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -422,7 +422,7 @@ func (cq *CertificateQuery) loadNamespaceRef(ctx context.Context, query *Namespa
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "namespace" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "namespace_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -456,8 +456,8 @@ func (cq *CertificateQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if cq.withNamespaceRef != nil {
-			_spec.Node.AddColumnOnce(certificate.FieldNamespace)
+		if cq.withNamespace != nil {
+			_spec.Node.AddColumnOnce(certificate.FieldNamespaceID)
 		}
 	}
 	if ps := cq.predicates; len(ps) > 0 {

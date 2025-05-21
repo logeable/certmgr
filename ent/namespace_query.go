@@ -414,7 +414,7 @@ func (nq *NamespaceQuery) loadCertificates(ctx context.Context, query *Certifica
 		}
 	}
 	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(certificate.FieldNamespace)
+		query.ctx.AppendFieldOnce(certificate.FieldNamespaceID)
 	}
 	query.Where(predicate.Certificate(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(namespace.CertificatesColumn), fks...))
@@ -424,10 +424,10 @@ func (nq *NamespaceQuery) loadCertificates(ctx context.Context, query *Certifica
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.Namespace
+		fk := n.NamespaceID
 		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "namespace" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "namespace_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

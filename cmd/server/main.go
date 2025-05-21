@@ -61,14 +61,20 @@ func main() {
 			Name      string `json:"name"`
 			Desc      string `json:"desc"`
 			CreatedAt int64  `json:"createdAt"`
+			CertCount int    `json:"certCount"`
 		}
 		resp := make([]NamespaceResponse, 0, len(namespaces))
 		for _, namespace := range namespaces {
+			certCount, err := client.Certificate.Query().Where(certificate.NamespaceIDEQ(namespace.ID)).Count(context.Background())
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			}
 			resp = append(resp, NamespaceResponse{
 				ID:        namespace.ID,
 				Name:      namespace.Name,
 				Desc:      namespace.Desc,
 				CreatedAt: namespace.CreatedAt.Unix(),
+				CertCount: certCount,
 			})
 		}
 		return c.JSON(http.StatusOK, resp)

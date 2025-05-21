@@ -27,6 +27,20 @@ func (nc *NamespaceCreate) SetName(s string) *NamespaceCreate {
 	return nc
 }
 
+// SetDesc sets the "desc" field.
+func (nc *NamespaceCreate) SetDesc(s string) *NamespaceCreate {
+	nc.mutation.SetDesc(s)
+	return nc
+}
+
+// SetNillableDesc sets the "desc" field if the given value is not nil.
+func (nc *NamespaceCreate) SetNillableDesc(s *string) *NamespaceCreate {
+	if s != nil {
+		nc.SetDesc(*s)
+	}
+	return nc
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (nc *NamespaceCreate) SetUpdatedAt(t time.Time) *NamespaceCreate {
 	nc.mutation.SetUpdatedAt(t)
@@ -111,6 +125,10 @@ func (nc *NamespaceCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (nc *NamespaceCreate) defaults() {
+	if _, ok := nc.mutation.Desc(); !ok {
+		v := namespace.DefaultDesc
+		nc.mutation.SetDesc(v)
+	}
 	if _, ok := nc.mutation.UpdatedAt(); !ok {
 		v := namespace.DefaultUpdatedAt()
 		nc.mutation.SetUpdatedAt(v)
@@ -172,6 +190,10 @@ func (nc *NamespaceCreate) createSpec() (*Namespace, *sqlgraph.CreateSpec) {
 	if value, ok := nc.mutation.Name(); ok {
 		_spec.SetField(namespace.FieldName, field.TypeString, value)
 		_node.Name = value
+	}
+	if value, ok := nc.mutation.Desc(); ok {
+		_spec.SetField(namespace.FieldDesc, field.TypeString, value)
+		_node.Desc = value
 	}
 	if value, ok := nc.mutation.UpdatedAt(); ok {
 		_spec.SetField(namespace.FieldUpdatedAt, field.TypeTime, value)

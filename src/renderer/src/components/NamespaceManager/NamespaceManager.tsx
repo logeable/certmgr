@@ -1,34 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './NamespaceManager.module.css';
 import Modal from '../Modal/Modal';
 
-interface Namespace {
-  id: string;
-  name: string;
-  createdAt: string;
-  certCount: number;
-  desc: string;
-}
-
-const initialNamespaces: Namespace[] = [
-  {
-    id: '1',
-    name: 'dev',
-    createdAt: '2024-05-01',
-    certCount: 5,
-    desc: '开发环境空间',
-  },
-  {
-    id: '2',
-    name: 'prod',
-    createdAt: '2024-04-15',
-    certCount: 12,
-    desc: '生产环境空间',
-  },
-];
-
 export default function NamespaceManager() {
-  const [namespaces, setNamespaces] = useState<Namespace[]>(initialNamespaces);
+  const [namespaces, setNamespaces] = useState<Namespace[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -36,24 +11,36 @@ export default function NamespaceManager() {
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
 
+  // 拉取空间列表
+  const fetchNamespaces = async () => {
+    if (window.api.namespaces?.list) {
+      const list = await window.api.namespaces.list();
+      // 兼容 desc 字段后端未返回的情况
+      setNamespaces(
+        list.map((ns: Namespace) => ({
+          ...ns,
+          desc: ns.desc ?? '',
+        })),
+      );
+    }
+  };
+
+  useEffect(() => {
+    fetchNamespaces();
+  }, []);
+
   // 新建
   const handleOpenCreate = () => {
     setName('');
     setDesc('');
     setShowCreate(true);
   };
-  const handleCreate = () => {
-    setNamespaces([
-      ...namespaces,
-      {
-        id: Date.now().toString(),
-        name,
-        desc,
-        createdAt: new Date().toISOString().slice(0, 10),
-        certCount: 0,
-      },
-    ]);
-    setShowCreate(false);
+  const handleCreate = async () => {
+    if (window.api.namespaces.create) {
+      await window.api.namespaces.create(name, desc);
+      setShowCreate(false);
+      fetchNamespaces(); // 新建后刷新
+    }
   };
 
   // 编辑
@@ -63,10 +50,13 @@ export default function NamespaceManager() {
     setDesc(ns.desc);
     setShowEdit(true);
   };
-  const handleEdit = () => {
+  const handleEdit = async () => {
     if (!current) return;
-    setNamespaces(namespaces.map(ns => (ns.id === current.id ? { ...ns, name, desc } : ns)));
-    setShowEdit(false);
+    if (window.api.namespaces.edit) {
+      await window.api.namespaces.edit(current.id, name, desc);
+      setShowEdit(false);
+      fetchNamespaces(); // 编辑后刷新
+    }
   };
 
   // 删除
@@ -74,10 +64,13 @@ export default function NamespaceManager() {
     setCurrent(ns);
     setShowDelete(true);
   };
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!current) return;
-    setNamespaces(namespaces.filter(ns => ns.id !== current.id));
-    setShowDelete(false);
+    if (window.api.namespaces.delete) {
+      await window.api.namespaces.delete(current.id);
+      setShowDelete(false);
+      fetchNamespaces(); // 删除后刷新
+    }
   };
 
   return (
@@ -102,7 +95,7 @@ export default function NamespaceManager() {
           {namespaces.map(ns => (
             <tr key={ns.id}>
               <td>{ns.name}</td>
-              <td>{ns.createdAt}</td>
+              <td>{new Date(ns.createdAt * 1000).toLocaleString()}</td>
               <td>{ns.certCount}</td>
               <td>{ns.desc}</td>
               <td>

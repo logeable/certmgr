@@ -22,6 +22,7 @@ func (Namespace) Fields() []ent.Field {
 			Unique().
 			Immutable(),
 		field.Text("name").Unique(),
+		field.Text("desc").Optional().Default(""),
 		field.Time("updated_at").
 			Default(time.Now).
 			UpdateDefault(time.Now),

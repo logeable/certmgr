@@ -1,19 +1,21 @@
 import { contextBridge, ipcRenderer } from 'electron/renderer';
 
-contextBridge.exposeInMainWorld('versions', {
-  node: () => process.versions.node,
-  chrome: () => process.versions.chrome,
-  electron: () => process.versions.electron,
-});
-
 contextBridge.exposeInMainWorld('api', {
   namespaces: {
     list: async () => {
       const result = await ipcRenderer.invoke('namespaces:list');
       return result;
     },
-    create: async (name: string) => {
-      const result = await ipcRenderer.invoke('namespaces:create', name);
+    create: async (name: string, desc: string) => {
+      const result = await ipcRenderer.invoke('namespaces:create', name, desc);
+      return result;
+    },
+    edit: async (id: string, name: string, desc: string) => {
+      const result = await ipcRenderer.invoke('namespaces:edit', { id, name, desc });
+      return result;
+    },
+    delete: async (id: string) => {
+      const result = await ipcRenderer.invoke('namespaces:delete', id);
       return result;
     },
   },

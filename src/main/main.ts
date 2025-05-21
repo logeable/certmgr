@@ -87,24 +87,40 @@ app.whenReady().then(async () => {
 
 function handleIPC(serverBaseURL: string) {
   ipcMain.handle('namespaces:list', async () => {
-    console.log(`list namespaces`);
     const response = await fetch(`${serverBaseURL}/namespaces/`);
     const data = await response.json();
-    console.log(`list namespaces result: ${JSON.stringify(data)}`);
     return data;
   });
 
-  ipcMain.handle('namespaces:create', async (_, name: string) => {
-    console.log(`create namespace: ${name}`);
+  ipcMain.handle('namespaces:create', async (_, name: string, desc: string) => {
     const response = await fetch(`${serverBaseURL}/namespaces/`, {
       headers: {
         'Content-Type': 'application/json',
       },
       method: 'POST',
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, desc }),
     });
     const data = await response.json();
-    console.log(`create namespace result: ${JSON.stringify(data)}`);
+    return data;
+  });
+
+  ipcMain.handle('namespaces:edit', async (_, { id, name, desc }) => {
+    const response = await fetch(`${serverBaseURL}/namespaces/${id}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      method: 'PUT',
+      body: JSON.stringify({ name, desc }),
+    });
+    const data = await response.json();
+    return data;
+  });
+
+  ipcMain.handle('namespaces:delete', async (_, id: string) => {
+    const response = await fetch(`${serverBaseURL}/namespaces/${id}`, {
+      method: 'DELETE',
+    });
+    const data = await response.json();
     return data;
   });
 }

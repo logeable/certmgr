@@ -19,6 +19,8 @@ type Namespace struct {
 	ID int `json:"id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
+	// Desc holds the value of the "desc" field.
+	Desc string `json:"desc,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -54,7 +56,7 @@ func (*Namespace) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case namespace.FieldID:
 			values[i] = new(sql.NullInt64)
-		case namespace.FieldName:
+		case namespace.FieldName, namespace.FieldDesc:
 			values[i] = new(sql.NullString)
 		case namespace.FieldUpdatedAt, namespace.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -84,6 +86,12 @@ func (n *Namespace) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				n.Name = value.String
+			}
+		case namespace.FieldDesc:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field desc", values[i])
+			} else if value.Valid {
+				n.Desc = value.String
 			}
 		case namespace.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -140,6 +148,9 @@ func (n *Namespace) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", n.ID))
 	builder.WriteString("name=")
 	builder.WriteString(n.Name)
+	builder.WriteString(", ")
+	builder.WriteString("desc=")
+	builder.WriteString(n.Desc)
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(n.UpdatedAt.Format(time.ANSIC))

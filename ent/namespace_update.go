@@ -43,6 +43,26 @@ func (nu *NamespaceUpdate) SetNillableName(s *string) *NamespaceUpdate {
 	return nu
 }
 
+// SetDesc sets the "desc" field.
+func (nu *NamespaceUpdate) SetDesc(s string) *NamespaceUpdate {
+	nu.mutation.SetDesc(s)
+	return nu
+}
+
+// SetNillableDesc sets the "desc" field if the given value is not nil.
+func (nu *NamespaceUpdate) SetNillableDesc(s *string) *NamespaceUpdate {
+	if s != nil {
+		nu.SetDesc(*s)
+	}
+	return nu
+}
+
+// ClearDesc clears the value of the "desc" field.
+func (nu *NamespaceUpdate) ClearDesc() *NamespaceUpdate {
+	nu.mutation.ClearDesc()
+	return nu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (nu *NamespaceUpdate) SetUpdatedAt(t time.Time) *NamespaceUpdate {
 	nu.mutation.SetUpdatedAt(t)
@@ -138,6 +158,12 @@ func (nu *NamespaceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := nu.mutation.Name(); ok {
 		_spec.SetField(namespace.FieldName, field.TypeString, value)
 	}
+	if value, ok := nu.mutation.Desc(); ok {
+		_spec.SetField(namespace.FieldDesc, field.TypeString, value)
+	}
+	if nu.mutation.DescCleared() {
+		_spec.ClearField(namespace.FieldDesc, field.TypeString)
+	}
 	if value, ok := nu.mutation.UpdatedAt(); ok {
 		_spec.SetField(namespace.FieldUpdatedAt, field.TypeTime, value)
 	}
@@ -217,6 +243,26 @@ func (nuo *NamespaceUpdateOne) SetNillableName(s *string) *NamespaceUpdateOne {
 	if s != nil {
 		nuo.SetName(*s)
 	}
+	return nuo
+}
+
+// SetDesc sets the "desc" field.
+func (nuo *NamespaceUpdateOne) SetDesc(s string) *NamespaceUpdateOne {
+	nuo.mutation.SetDesc(s)
+	return nuo
+}
+
+// SetNillableDesc sets the "desc" field if the given value is not nil.
+func (nuo *NamespaceUpdateOne) SetNillableDesc(s *string) *NamespaceUpdateOne {
+	if s != nil {
+		nuo.SetDesc(*s)
+	}
+	return nuo
+}
+
+// ClearDesc clears the value of the "desc" field.
+func (nuo *NamespaceUpdateOne) ClearDesc() *NamespaceUpdateOne {
+	nuo.mutation.ClearDesc()
 	return nuo
 }
 
@@ -344,6 +390,12 @@ func (nuo *NamespaceUpdateOne) sqlSave(ctx context.Context) (_node *Namespace, e
 	}
 	if value, ok := nuo.mutation.Name(); ok {
 		_spec.SetField(namespace.FieldName, field.TypeString, value)
+	}
+	if value, ok := nuo.mutation.Desc(); ok {
+		_spec.SetField(namespace.FieldDesc, field.TypeString, value)
+	}
+	if nuo.mutation.DescCleared() {
+		_spec.ClearField(namespace.FieldDesc, field.TypeString)
 	}
 	if value, ok := nuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(namespace.FieldUpdatedAt, field.TypeTime, value)

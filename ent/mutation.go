@@ -730,6 +730,7 @@ type NamespaceMutation struct {
 	typ                 string
 	id                  *int
 	name                *string
+	desc                *string
 	updated_at          *time.Time
 	created_at          *time.Time
 	clearedFields       map[string]struct{}
@@ -879,6 +880,55 @@ func (m *NamespaceMutation) OldName(ctx context.Context) (v string, err error) {
 // ResetName resets all changes to the "name" field.
 func (m *NamespaceMutation) ResetName() {
 	m.name = nil
+}
+
+// SetDesc sets the "desc" field.
+func (m *NamespaceMutation) SetDesc(s string) {
+	m.desc = &s
+}
+
+// Desc returns the value of the "desc" field in the mutation.
+func (m *NamespaceMutation) Desc() (r string, exists bool) {
+	v := m.desc
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDesc returns the old "desc" field's value of the Namespace entity.
+// If the Namespace object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NamespaceMutation) OldDesc(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDesc is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDesc requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDesc: %w", err)
+	}
+	return oldValue.Desc, nil
+}
+
+// ClearDesc clears the value of the "desc" field.
+func (m *NamespaceMutation) ClearDesc() {
+	m.desc = nil
+	m.clearedFields[namespace.FieldDesc] = struct{}{}
+}
+
+// DescCleared returns if the "desc" field was cleared in this mutation.
+func (m *NamespaceMutation) DescCleared() bool {
+	_, ok := m.clearedFields[namespace.FieldDesc]
+	return ok
+}
+
+// ResetDesc resets all changes to the "desc" field.
+func (m *NamespaceMutation) ResetDesc() {
+	m.desc = nil
+	delete(m.clearedFields, namespace.FieldDesc)
 }
 
 // SetUpdatedAt sets the "updated_at" field.
@@ -1041,9 +1091,12 @@ func (m *NamespaceMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *NamespaceMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 4)
 	if m.name != nil {
 		fields = append(fields, namespace.FieldName)
+	}
+	if m.desc != nil {
+		fields = append(fields, namespace.FieldDesc)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, namespace.FieldUpdatedAt)
@@ -1061,6 +1114,8 @@ func (m *NamespaceMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case namespace.FieldName:
 		return m.Name()
+	case namespace.FieldDesc:
+		return m.Desc()
 	case namespace.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case namespace.FieldCreatedAt:
@@ -1076,6 +1131,8 @@ func (m *NamespaceMutation) OldField(ctx context.Context, name string) (ent.Valu
 	switch name {
 	case namespace.FieldName:
 		return m.OldName(ctx)
+	case namespace.FieldDesc:
+		return m.OldDesc(ctx)
 	case namespace.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case namespace.FieldCreatedAt:
@@ -1095,6 +1152,13 @@ func (m *NamespaceMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetName(v)
+		return nil
+	case namespace.FieldDesc:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDesc(v)
 		return nil
 	case namespace.FieldUpdatedAt:
 		v, ok := value.(time.Time)
@@ -1139,7 +1203,11 @@ func (m *NamespaceMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *NamespaceMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(namespace.FieldDesc) {
+		fields = append(fields, namespace.FieldDesc)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -1152,6 +1220,11 @@ func (m *NamespaceMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *NamespaceMutation) ClearField(name string) error {
+	switch name {
+	case namespace.FieldDesc:
+		m.ClearDesc()
+		return nil
+	}
 	return fmt.Errorf("unknown Namespace nullable field %s", name)
 }
 
@@ -1161,6 +1234,9 @@ func (m *NamespaceMutation) ResetField(name string) error {
 	switch name {
 	case namespace.FieldName:
 		m.ResetName()
+		return nil
+	case namespace.FieldDesc:
+		m.ResetDesc()
 		return nil
 	case namespace.FieldUpdatedAt:
 		m.ResetUpdatedAt()

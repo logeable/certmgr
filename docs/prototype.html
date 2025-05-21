@@ -45,6 +45,7 @@
         padding: 32px 40px;
         overflow-y: auto;
         background: #f5f6fa;
+        margin-left: 180px;
       }
       .section-title {
         font-size: 24px;
@@ -301,10 +302,43 @@
           padding: 18px 6px;
         }
       }
+      html {
+        scroll-behavior: smooth;
+      }
     </style>
   </head>
   <body>
+    <!-- 左侧锚点导航栏 -->
+    <div
+      style="
+        position: fixed;
+        left: 24px;
+        top: 100px;
+        z-index: 999;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        padding: 18px 22px;
+        min-width: 120px;
+        font-size: 16px;
+        color: #222;
+      "
+    >
+      <div style="font-weight: bold; color: #1890ff; margin-bottom: 12px; letter-spacing: 1px">
+        原型导航
+      </div>
+      <div style="margin-bottom: 10px">
+        <a href="#layout" style="color: #1890ff; text-decoration: none">整体布局</a>
+      </div>
+      <div style="margin-bottom: 10px">
+        <a href="#space" style="color: #1890ff; text-decoration: none">空间管理</a>
+      </div>
+      <div><a href="#cert" style="color: #1890ff; text-decoration: none">证书管理</a></div>
+    </div>
+
+    <!-- 主内容区 -->
     <main class="main">
+      <a id="layout"></a>
       <h1>CertMgr 原型图</h1>
       <div class="section-title">整体布局</div>
       <!-- 整体界面原型说明 -->
@@ -386,6 +420,7 @@
         </div>
       </div>
       <!-- 空间管理模块原型 -->
+      <a id="space"></a>
       <div class="section-title">空间管理</div>
       <div class="top-bar">
         <div>
@@ -494,6 +529,7 @@
         </div>
       </div>
       <!-- 证书管理模块原型 -->
+      <a id="cert"></a>
       <div class="section-title">证书管理</div>
       <div class="cert-header">
         <div>

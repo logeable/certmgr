@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>CertMgr 原型图</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        margin: 0;
+        font-family: 'Segoe UI', 'PingFang SC', 'Hiragino Sans', Arial, sans-serif;
+        background: #f5f6fa;
+        color: #222;
+      }
+      .container {
+        display: flex;
+        height: 100vh;
+      }
+      .sidebar {
+        width: 220px;
+        background: #23272f;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        padding-top: 32px;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+      }
+      .menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .menu-item {
+        padding: 18px 32px;
+        cursor: pointer;
+        font-size: 18px;
+        transition: background 0.2s;
+      }
+      .menu-item.active,
+      .menu-item:hover {
+        background: #1890ff;
+        color: #fff;
+      }
+      .main {
+        flex: 1;
+        padding: 32px 40px;
+        overflow-y: auto;
+        background: #f5f6fa;
+      }
+      .section-title {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 24px;
+        color: #222;
+      }
+      /* 空间管理表格 */
+      .space-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        margin-bottom: 32px;
+      }
+      .space-table th,
+      .space-table td {
+        padding: 14px 18px;
+        border-bottom: 1px solid #f0f0f0;
+        text-align: left;
+      }
+      .space-table th {
+        background: #fafbfc;
+        font-weight: 500;
+        color: #555;
+      }
+      .space-table tr:last-child td {
+        border-bottom: none;
+      }
+      .btn {
+        display: inline-block;
+        padding: 6px 18px;
+        border-radius: 4px;
+        border: none;
+        background: #1890ff;
+        color: #fff;
+        font-size: 15px;
+        cursor: pointer;
+        margin-right: 8px;
+        transition: background 0.2s;
+      }
+      .btn.danger {
+        background: #ff4d4f;
+      }
+      .btn.secondary {
+        background: #f0f0f0;
+        color: #222;
+      }
+      .btn:disabled {
+        background: #d6e4ff;
+        color: #888;
+        cursor: not-allowed;
+      }
+      .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+      .desc {
+        color: #888;
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+      /* 证书管理 */
+      .cert-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+      }
+      .space-select {
+        font-size: 17px;
+        padding: 10px 24px;
+        border-radius: 8px;
+        border: 1.5px solid #1890ff;
+        background: #fff;
+        margin-left: 8px;
+        box-shadow: 0 2px 8px rgba(24, 144, 255, 0.08);
+        transition:
+          border 0.2s,
+          box-shadow 0.2s;
+        outline: none;
+        color: #222;
+        font-weight: 500;
+        min-width: 120px;
+        appearance: none;
+        cursor: pointer;
+      }
+      .space-select:hover,
+      .space-select:focus {
+        border-color: #40a9ff;
+        box-shadow: 0 4px 16px rgba(24, 144, 255, 0.16);
+      }
+      .cert-tree {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        padding: 24px 32px;
+        min-height: 320px;
+        position: relative;
+      }
+      .tree-root {
+        margin-left: 0;
+      }
+      .tree-node {
+        margin-left: 24px;
+        position: relative;
+        padding: 6px 0;
+        cursor: pointer;
+        user-select: none;
+      }
+      .tree-node .subject {
+        font-weight: 500;
+        color: #222;
+        background: #e6f7ff;
+        padding: 4px 12px;
+        border-radius: 4px;
+        display: inline-block;
+        margin-right: 8px;
+      }
+      .tree-node .actions {
+        display: inline-block;
+        margin-left: 8px;
+        color: #888;
+        font-size: 13px;
+      }
+      .tree-node .actions span {
+        margin-right: 8px;
+        cursor: pointer;
+        color: #1890ff;
+      }
+      .tree-node .actions span.danger {
+        color: #ff4d4f;
+      }
+      .empty-state {
+        text-align: center;
+        color: #aaa;
+        padding: 60px 0;
+        font-size: 18px;
+      }
+      /* 模态框原型 */
+      .modal-mask {
+        position: fixed;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.18);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal {
+        background: #fff;
+        border-radius: 8px;
+        min-width: 380px;
+        max-width: 90vw;
+        padding: 32px 36px 24px 36px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        position: relative;
+      }
+      .modal-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 18px;
+      }
+      .modal-content label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-size: 15px;
+      }
+      .modal-content input,
+      .modal-content textarea,
+      .modal-content select {
+        width: 100%;
+        padding: 7px 12px;
+        margin-bottom: 16px;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        font-size: 15px;
+        background: #fafbfc;
+      }
+      .modal-actions {
+        text-align: right;
+        margin-top: 12px;
+      }
+      .modal-close {
+        position: absolute;
+        right: 18px;
+        top: 18px;
+        font-size: 20px;
+        color: #aaa;
+        cursor: pointer;
+      }
+      /* 右键菜单原型 */
+      .context-menu {
+        position: absolute;
+        left: 180px;
+        top: 0;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        z-index: 2000;
+        min-width: 160px;
+        padding: 8px 0;
+      }
+      .context-menu-item {
+        padding: 10px 24px;
+        font-size: 15px;
+        color: #222;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .context-menu-item:hover {
+        background: #e6f7ff;
+        color: #1890ff;
+      }
+      /* 详情展示 */
+      .detail-list {
+        font-size: 15px;
+        color: #444;
+        margin-bottom: 8px;
+      }
+      .detail-list dt {
+        font-weight: 500;
+        margin-top: 10px;
+      }
+      .detail-list dd {
+        margin: 0 0 6px 0;
+        color: #666;
+      }
+      /* 响应式 */
+      @media (max-width: 900px) {
+        .container {
+          flex-direction: column;
+        }
+        .sidebar {
+          width: 100%;
+          flex-direction: row;
+          height: 60px;
+          padding-top: 0;
+        }
+        .menu-item {
+          flex: 1;
+          text-align: center;
+          padding: 16px 0;
+        }
+        .main {
+          padding: 18px 6px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- 左侧菜单栏 -->
+      <aside class="sidebar">
+        <ul class="menu">
+          <li class="menu-item active">空间管理</li>
+          <li class="menu-item">证书管理</li>
+        </ul>
+      </aside>
+      <!-- 主内容区 -->
+      <main class="main">
+        <!-- 整体界面原型说明 -->
+        <div class="section-title">CertMgr 原型图 - 整体布局</div>
+        <div class="desc">
+          左侧为主菜单，右侧为主内容区。主内容区根据菜单切换显示空间管理或证书管理界面。
+        </div>
+        <!-- 空间管理模块原型 -->
+        <div class="section-title">空间管理</div>
+        <div class="top-bar">
+          <div>
+            <button class="btn">新建空间</button>
+          </div>
+          <div class="desc">展示所有空间，可进行增删改查操作。</div>
+        </div>
+        <table class="space-table">
+          <thead>
+            <tr>
+              <th>空间名称</th>
+              <th>创建时间</th>
+              <th>证书数量</th>
+              <th>描述</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>dev</td>
+              <td>2024-05-01</td>
+              <td>5</td>
+              <td>开发环境空间</td>
+              <td>
+                <button class="btn secondary">编辑</button>
+                <button class="btn danger">删除</button>
+              </td>
+            </tr>
+            <tr>
+              <td>prod</td>
+              <td>2024-04-15</td>
+              <td>12</td>
+              <td>生产环境空间</td>
+              <td>
+                <button class="btn secondary">编辑</button>
+                <button class="btn danger">删除</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <!-- 新建空间模态框区域 -->
+        <div style="font-size: 18px; font-weight: 500; color: #444; margin-bottom: 12px">
+          新建空间模态框区域
+        </div>
+        <div
+          class="modal"
+          style="position: static; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); margin-bottom: 24px"
+        >
+          <div class="modal-title">新建空间</div>
+          <div class="modal-content">
+            <label>空间名称<span style="color: #ff4d4f">*</span></label>
+            <input type="text" placeholder="请输入空间名称，必填" required />
+            <label>描述</label>
+            <textarea placeholder="可选，空间描述"></textarea>
+          </div>
+          <div class="modal-actions">
+            <button class="btn">确定</button>
+            <button class="btn secondary">取消</button>
+          </div>
+        </div>
+        <!-- 区域分割线 -->
+        <hr
+          class="divider"
+          style="margin: 36px 0 24px 0; border: none; border-top: 1.5px dashed #e0e0e0"
+        />
+        <!-- 编辑空间模态框区域 -->
+        <div style="font-size: 18px; font-weight: 500; color: #444; margin-bottom: 12px">
+          编辑空间模态框区域
+        </div>
+        <div
+          class="modal"
+          style="position: static; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); margin-bottom: 24px"
+        >
+          <div class="modal-title">编辑空间</div>
+          <div class="modal-content">
+            <label>空间名称<span style="color: #ff4d4f">*</span></label>
+            <input type="text" value="dev" placeholder="请输入空间名称，必填" required />
+            <label>描述</label>
+            <textarea>开发环境空间</textarea>
+          </div>
+          <div class="modal-actions">
+            <button class="btn">保存</button>
+            <button class="btn secondary">取消</button>
+          </div>
+        </div>
+        <!-- 区域分割线 -->
+        <hr
+          class="divider"
+          style="margin: 36px 0 24px 0; border: none; border-top: 1.5px dashed #e0e0e0"
+        />
+        <!-- 删除空间确认模态框区域 -->
+        <div style="font-size: 18px; font-weight: 500; color: #444; margin-bottom: 12px">
+          删除空间确认模态框区域
+        </div>
+        <div
+          class="modal"
+          style="position: static; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); margin-bottom: 24px"
+        >
+          <div class="modal-title">确认删除空间</div>
+          <div class="modal-content">
+            <div>确定要删除该空间及其下所有证书和私钥吗？此操作不可恢复。</div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn danger">删除</button>
+            <button class="btn secondary">取消</button>
+          </div>
+        </div>
+        <!-- 证书管理模块原型 -->
+        <div class="section-title">证书管理</div>
+        <div class="cert-header">
+          <div>
+            <label for="space-select">空间：</label>
+            <select id="space-select" class="space-select">
+              <option>dev</option>
+              <option>prod</option>
+            </select>
+          </div>
+          <div class="desc">选择空间后，展示该空间下的证书树。</div>
+        </div>
+        <!-- 证书树区域 -->
+        <div style="font-size: 18px; font-weight: 500; color: #444; margin-bottom: 12px">
+          证书树区域
+        </div>
+        <div class="cert-tree">
+          <div class="tree-root">
+            <div class="tree-node">
+              <span class="subject">Root CA</span>
+              <div class="tree-node">
+                <span class="subject">Intermediate CA</span>
+                <div class="tree-node">
+                  <span class="subject">example.com</span>
+                </div>
+                <div class="tree-node">
+                  <span class="subject">api.example.com</span>
+                </div>
+              </div>
+              <div class="tree-node">
+                <span class="subject">Intermediate CA 2</span>
+                <div class="tree-node">
+                  <span class="subject">client1</span>
+                </div>
+                <div class="tree-node">
+                  <span class="subject">client2</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="empty-state" style="display: none">
+            当前空间下无证书，自动弹出"创建根证书"模态框
+          </div>
+        </div>
+        <!-- 区域分割线 -->
+        <hr
+          class="divider"
+          style="margin: 36px 0 24px 0; border: none; border-top: 1.5px dashed #e0e0e0"
+        />
+        <!-- 证书节点右键菜单区域 -->
+        <div style="font-size: 18px; font-weight: 500; color: #444; margin-bottom: 12px">
+          证书节点右键菜单区域
+        </div>
+        <div style="font-weight: 600; font-size: 16px; padding: 10px 24px 6px 24px; color: #1890ff">
+          证书节点右键菜单
+        </div>
+        <div
+          class="context-menu"
+          style="
+            margin-top: 12px;
+            position: static;
+            max-width: 160px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-radius: 6px;
+          "
+        >
+          <div class="context-menu-item">签发新证书</div>
+          <div class="context-menu-item">删除证书</div>
+          <div class="context-menu-item">查看详情</div>
+          <div class="context-menu-item">查看私钥</div>
+          <div class="context-menu-item">续签</div>
+        </div>
+        <!-- 区域分割线 -->
+        <hr
+          class="divider"
+          style="margin: 36px 0 24px 0; border: none; border-top: 1.5px dashed #e0e0e0"
+        />
+        <!-- 创建根证书模态框区域 -->
+        <div style="font-size: 18px; font-weight: 500; color: #444; margin-bottom: 12px">
+          创建根证书模态框区域
+        </div>
+        <div
+          class="modal"
+          style="position: static; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); margin-bottom: 24px"
+        >
+          <div class="modal-title">创建根证书</div>
+          <div class="modal-content">
+            <label>密钥类型<span style="color: #ff4d4f">*</span></label>
+            <select required>
+              <option>RSA</option>
+              <option>ECC</option>
+            </select>
+            <label>密钥长度<span style="color: #ff4d4f">*</span></label>
+            <input type="text" placeholder="如 2048，必填" required />
+            <label>有效期（天）<span style="color: #ff4d4f">*</span></label>
+            <input type="text" placeholder="如 3650，必填" required />
+            <label>备注</label>
+            <textarea placeholder="可选，便于管理和识别"></textarea>
+            <div style="margin: 18px 0 8px 0; font-weight: 500; color: #1890ff">Subject 信息</div>
+            <label>国家 (Country Name, 2字母代码)<span style="color: #ff4d4f">*</span></label>
+            <input type="text" placeholder="如 CN，必填" maxlength="2" required />
+            <label>省份 (State or Province Name)</label>
+            <input type="text" placeholder="如 Jiangsu" />
+            <label>城市 (Locality Name)</label>
+            <input type="text" placeholder="如 Nanjing" />
+            <label>组织 (Organization Name)</label>
+            <input type="text" placeholder="如 Example Corp" />
+            <label>部门 (Organizational Unit Name)</label>
+            <input type="text" placeholder="如 IT" />
+            <label
+              >通用名 (Common Name, 如服务器FQDN或姓名)<span style="color: #ff4d4f">*</span></label
+            >
+            <input type="text" placeholder="如 example.com，必填" required />
+            <label>邮箱 (Email Address)</label>
+            <input type="email" placeholder="如 admin@example.com" />
+          </div>
+          <div class="modal-actions">
+            <button class="btn">创建</button>
+            <button class="btn secondary">取消</button>
+          </div>
+        </div>
+        <!-- 区域分割线 -->
+        <hr
+          class="divider"
+          style="margin: 36px 0 24px 0; border: none; border-top: 1.5px dashed #e0e0e0"
+        />
+        <!-- 签发新证书模态框区域 -->
+        <div style="font-size: 18px; font-weight: 500; color: #444; margin-bottom: 12px">
+          签发新证书模态框区域
+        </div>
+        <div
+          class="modal"
+          style="position: static; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); margin-bottom: 24px"
+        >
+          <div class="modal-title">签发新证书</div>
+          <div class="modal-content">
+            <label>证书类型<span style="color: #ff4d4f">*</span></label>
+            <select required>
+              <option>中间 CA</option>
+              <option>服务器证书</option>
+              <option>客户端证书</option>
+            </select>
+            <label>密钥类型<span style="color: #ff4d4f">*</span></label>
+            <select required>
+              <option>RSA</option>
+              <option>ECC</option>
+            </select>
+            <label>密钥长度<span style="color: #ff4d4f">*</span></label>
+            <input type="text" placeholder="如 2048，必填" required />
+            <label>有效期（天）<span style="color: #ff4d4f">*</span></label>
+            <input type="text" placeholder="如 365，必填" required />
+            <label>备注</label>
+            <textarea placeholder="可选，便于管理和识别"></textarea>
+            <div style="margin: 18px 0 8px 0; font-weight: 500; color: #1890ff">Subject 信息</div>
+            <label>国家 (Country Name, 2字母代码)<span style="color: #ff4d4f">*</span></label>
+            <input type="text" placeholder="如 CN，必填" maxlength="2" required />
+            <label>省份 (State or Province Name)</label>
+            <input type="text" placeholder="如 Jiangsu" />
+            <label>城市 (Locality Name)</label>
+            <input type="text" placeholder="如 Nanjing" />
+            <label>组织 (Organization Name)</label>
+            <input type="text" placeholder="如 Example Corp" />
+            <label>部门 (Organizational Unit Name)</label>
+            <input type="text" placeholder="如 IT" />
+            <label
+              >通用名 (Common Name, 如服务器FQDN或姓名)<span style="color: #ff4d4f">*</span></label
+            >
+            <input type="text" placeholder="如 example.com，必填" required />
+            <label>邮箱 (Email Address)</label>
+            <input type="email" placeholder="如 admin@example.com" />
+          </div>
+          <div class="modal-actions">
+            <button class="btn">签发</button>
+            <button class="btn secondary">取消</button>
+          </div>
+        </div>
+        <!-- 区域分割线 -->
+        <hr
+          class="divider"
+          style="margin: 36px 0 24px 0; border: none; border-top: 1.5px dashed #e0e0e0"
+        />
+        <!-- 查看证书详情模态框区域 -->
+        <div style="font-size: 18px; font-weight: 500; color: #444; margin-bottom: 12px">
+          查看证书详情模态框区域
+        </div>
+        <div
+          class="modal"
+          style="
+            position: static;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 24px;
+            max-width: 520px;
+          "
+        >
+          <div class="modal-title">证书详情</div>
+          <div class="modal-content">
+            <dl class="detail-list">
+              <dt>Subject</dt>
+              <dd>
+                <div>国家(C): CN</div>
+                <div>省份(ST): Jiangsu</div>
+                <div>城市(L): Nanjing</div>
+                <div>组织(O): Example Corp</div>
+                <div>部门(OU): IT</div>
+                <div>通用名(CN): example.com</div>
+                <div>邮箱: admin@example.com</div>
+              </dd>
+              <dt>Issuer</dt>
+              <dd>Root CA</dd>
+              <dt>序列号</dt>
+              <dd>01:23:45:67:89:AB:CD:EF</dd>
+              <dt>签名算法</dt>
+              <dd>SHA256withRSA</dd>
+              <dt>证书用途</dt>
+              <dd>CA:TRUE, 证书签发, 数字签名</dd>
+              <dt>有效期</dt>
+              <dd>2024-05-01 ~ 2029-05-01</dd>
+              <dt>颁发时间</dt>
+              <dd>2024-05-01 10:00:00</dd>
+              <dt>到期时间</dt>
+              <dd>2029-05-01 10:00:00</dd>
+              <dt>指纹</dt>
+              <dd>AB:CD:EF:12:34:56:78:90:12:34:56:78:90:AB:CD:EF</dd>
+              <dt>状态</dt>
+              <dd>有效</dd>
+            </dl>
+          </div>
+          <div class="modal-actions">
+            <button class="btn secondary">关闭</button>
+          </div>
+        </div>
+        <!-- 区域分割线 -->
+        <hr
+          class="divider"
+          style="margin: 36px 0 24px 0; border: none; border-top: 1.5px dashed #e0e0e0"
+        />
+        <!-- 查看私钥模态框区域 -->
+        <div style="font-size: 18px; font-weight: 500; color: #444; margin-bottom: 12px">
+          查看私钥模态框区域
+        </div>
+        <div
+          class="modal"
+          style="
+            position: static;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 24px;
+            max-width: 520px;
+          "
+        >
+          <div class="modal-title">查看私钥</div>
+          <div class="modal-content">
+            <div style="color: #1890ff; font-size: 15px; font-weight: 500; margin-bottom: 8px">
+              私钥类型：RSA
+            </div>
+            <div style="color: #ff4d4f; font-size: 14px; margin-bottom: 10px">
+              安全提示：请妥善保管私钥，切勿泄露给无关人员！
+            </div>
+            <textarea
+              readonly
+              style="height: 140px; width: 100%; font-family: monospace; font-size: 14px"
+            >
+-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASC...
+-----END PRIVATE KEY-----</textarea
+            >
+          </div>
+          <div class="modal-actions">
+            <button class="btn secondary">关闭</button>
+          </div>
+        </div>
+        <!-- 区域分割线 -->
+        <hr
+          class="divider"
+          style="margin: 36px 0 24px 0; border: none; border-top: 1.5px dashed #e0e0e0"
+        />
+        <!-- 续签证书模态框区域 -->
+        <div style="font-size: 18px; font-weight: 500; color: #444; margin-bottom: 12px">
+          续签证书模态框区域
+        </div>
+        <div
+          class="modal"
+          style="
+            position: static;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 24px;
+            max-width: 520px;
+          "
+        >
+          <div class="modal-title">续签证书</div>
+          <div class="modal-content">
+            <label>有效期（天）<span style="color: #ff4d4f">*</span></label>
+            <input type="text" placeholder="如 365，必填" required />
+            <label>备注</label>
+            <textarea placeholder="可选，便于管理和识别"></textarea>
+          </div>
+          <div class="modal-actions">
+            <button class="btn">续签</button>
+            <button class="btn secondary">取消</button>
+          </div>
+        </div>
+        <!-- 模态框原型：新建/编辑空间 -->
+        <div class="modal-mask" style="display: none">
+          <div class="modal">
+            <span class="modal-close">×</span>
+            <div class="modal-title">新建空间</div>
+            <div class="modal-content">
+              <label>空间名称</label>
+              <input type="text" placeholder="请输入空间名称" />
+              <label>描述</label>
+              <textarea placeholder="可选，空间描述"></textarea>
+            </div>
+            <div class="modal-actions">
+              <button class="btn">确定</button>
+              <button class="btn secondary">取消</button>
+            </div>
+          </div>
+        </div>
+        <!-- 模态框原型：删除空间/证书确认 -->
+        <div class="modal-mask" style="display: none">
+          <div class="modal">
+            <span class="modal-close">×</span>
+            <div class="modal-title">确认删除</div>
+            <div class="modal-content">
+              <div>确定要删除该空间/证书及其下所有内容吗？此操作不可恢复。</div>
+            </div>
+            <div class="modal-actions">
+              <button class="btn danger">删除</button>
+              <button class="btn secondary">取消</button>
+            </div>
+          </div>
+        </div>
+        <!-- 模态框原型：签发新证书/续签 -->
+        <div class="modal-mask" style="display: none">
+          <div class="modal">
+            <span class="modal-close">×</span>
+            <div class="modal-title">签发新证书</div>
+            <div class="modal-content">
+              <label>证书类型<span style="color: #ff4d4f">*</span></label>
+              <select required>
+                <option>中间 CA</option>
+                <option>服务器证书</option>
+                <option>客户端证书</option>
+              </select>
+              <label>Subject<span style="color: #ff4d4f">*</span></label>
+              <input type="text" placeholder="请输入 subject，必填" required />
+              <label>有效期</label>
+              <input type="text" placeholder="如 365 天" />
+            </div>
+            <div class="modal-actions">
+              <button class="btn">签发</button>
+              <button class="btn secondary">取消</button>
+            </div>
+          </div>
+        </div>
+        <!-- 模态框原型：证书详情 -->
+        <div class="modal-mask" style="display: none">
+          <div class="modal">
+            <span class="modal-close">×</span>
+            <div class="modal-title">证书详情</div>
+            <dl class="detail-list">
+              <dt>Subject</dt>
+              <dd>example.com</dd>
+              <dt>Issuer</dt>
+              <dd>Root CA</dd>
+              <dt>有效期</dt>
+              <dd>2024-05-01 ~ 2025-05-01</dd>
+              <dt>指纹</dt>
+              <dd>AB:CD:EF:12:34:56</dd>
+              <dt>状态</dt>
+              <dd>有效</dd>
+            </dl>
+            <div class="modal-actions">
+              <button class="btn secondary">关闭</button>
+            </div>
+          </div>
+        </div>
+        <!-- 模态框原型：续签证书 -->
+        <div class="modal-mask" style="display: none">
+          <div class="modal">
+            <span class="modal-close">×</span>
+            <div class="modal-title">续签证书</div>
+            <div class="modal-content">
+              <label>有效期<span style="color: #ff4d4f">*</span></label>
+              <input type="text" placeholder="如 365 天，必填" required />
+            </div>
+            <div class="modal-actions">
+              <button class="btn">续签</button>
+              <button class="btn secondary">取消</button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

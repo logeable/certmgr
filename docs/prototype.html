@@ -725,36 +725,32 @@
       >
         <div class="modal-title">证书详情</div>
         <div class="modal-content">
-          <dl class="detail-list">
-            <dt>Subject</dt>
-            <dd>
-              <div>国家(C): CN</div>
-              <div>省份(ST): Jiangsu</div>
-              <div>城市(L): Nanjing</div>
-              <div>组织(O): Example Corp</div>
-              <div>部门(OU): IT</div>
-              <div>通用名(CN): example.com</div>
-              <div>邮箱: admin@example.com</div>
-            </dd>
-            <dt>Issuer</dt>
-            <dd>Root CA</dd>
-            <dt>序列号</dt>
-            <dd>01:23:45:67:89:AB:CD:EF</dd>
-            <dt>签名算法</dt>
-            <dd>SHA256withRSA</dd>
-            <dt>证书用途</dt>
-            <dd>CA:TRUE, 证书签发, 数字签名</dd>
-            <dt>有效期</dt>
-            <dd>2024-05-01 ~ 2029-05-01</dd>
-            <dt>颁发时间</dt>
-            <dd>2024-05-01 10:00:00</dd>
-            <dt>到期时间</dt>
-            <dd>2029-05-01 10:00:00</dd>
-            <dt>指纹</dt>
-            <dd>AB:CD:EF:12:34:56:78:90:12:34:56:78:90:AB:CD:EF</dd>
-            <dt>状态</dt>
-            <dd>有效</dd>
-          </dl>
+          <div style="color: #888; font-size: 14px; margin-bottom: 10px">
+            可复制下方证书内容用于导入或验证。
+          </div>
+          <textarea
+            readonly
+            style="height: 180px; width: 100%; font-family: monospace; font-size: 14px"
+          >
+-----BEGIN CERTIFICATE-----
+MIIDdzCCAl+gAwIBAgIEb1Zb0DANBgkqhkiG9w0BAQsFADBvMQswCQYDVQQGEwJD
+TjELMAkGA1UECAwCS1MxEDAOBgNVBAcMB05hbmppbmcxFjAUBgNVBAoMDUV4YW1w
+bGUgQ29ycDEQMA4GA1UECwwHSVQxGDAWBgNVBAMMD2V4YW1wbGUuY29tIENBMB4X
+DTI0MDUwMTA5MDAwMFoXDTI5MDUwMTA5MDAwMFowgYExCzAJBgNVBAYTAkNOMQsw
+CQYDVQQIDAJLUzEQMA4GA1UEBwwHTmFuamluZzEWMBQGA1UECgwNRXhhbXBsZSBD
+b3JwMRAwDgYDVQQLDAdJVDESMBAGA1UEAwwJZXhhbXBsZS5jb20xHzAdBgkqhkiG
+9w0BCQEWEGFkbWluQGV4YW1wbGUuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
+MIIBCgKCAQEA7v8n1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw
+1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1
+Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw
+1QIDAQABo1AwTjAdBgNVHQ4EFgQUw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1QwHwYDVR0j
+BBgwFoAUw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1QwDAYDVR0TBAUwAwEB/zANBgkqhkiG
+9w0BAQsFAAOCAQEAAw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1
+Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw
+1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw
+1Q==
+-----END CERTIFICATE-----
+          </textarea>
         </div>
         <div class="modal-actions">
           <button class="btn secondary">关闭</button>

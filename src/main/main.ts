@@ -171,4 +171,20 @@ function handleIPC(serverBaseURL: string) {
     const data = await response.json();
     return data;
   });
+
+  ipcMain.handle('certificates:renew', async (_, certId: number, validDays: number) => {
+    const response = await fetch(`${serverBaseURL}/certificates/${certId}/renew`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+      body: JSON.stringify({ validDays: validDays }),
+    });
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error);
+    }
+    const data = await response.json();
+    return data;
+  });
 }

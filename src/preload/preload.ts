@@ -37,7 +37,7 @@ contextBridge.exposeInMainWorld('api', {
         city: string;
         org: string;
         ou: string;
-        common_name: string;
+        commonName: string;
         email: string;
       };
     }) => {
@@ -46,6 +46,10 @@ contextBridge.exposeInMainWorld('api', {
     },
     delete: async (certId: number) => {
       const result = await ipcRenderer.invoke('certificates:delete', certId);
+      return result;
+    },
+    renew: async (certId: number, validDays: number) => {
+      const result = await ipcRenderer.invoke('certificates:renew', certId, validDays);
       return result;
     },
   },

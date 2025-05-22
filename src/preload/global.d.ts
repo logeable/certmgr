@@ -47,6 +47,7 @@ declare global {
           };
         }) => Promise<Certificate>;
         delete: (certId: number) => Promise<void>;
+        renew: (certId: number, validDays: number) => Promise<void>;
       };
     };
   }

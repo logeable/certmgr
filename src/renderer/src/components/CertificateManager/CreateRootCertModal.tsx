@@ -19,7 +19,7 @@ export default function CreateRootCertModal({
 }: Props) {
   const [keyType, setKeyType] = useState('RSA');
   const [keyLen, setKeyLen] = useState(2048);
-  const [validDays, setValidDays] = useState(3650);
+  const [validDays, setValidDays] = useState(365);
   const [desc, setDesc] = useState('');
   // Subject
   const [country, setCountry] = useState('CN');
@@ -65,7 +65,7 @@ export default function CreateRootCertModal({
   const clearForm = () => {
     setKeyType('RSA');
     setKeyLen(2048);
-    setValidDays(3650);
+    setValidDays(365);
     setDesc('');
     setCountry('CN');
     setState('');
@@ -132,7 +132,7 @@ export default function CreateRootCertModal({
           type="number"
           value={validDays}
           onChange={e => setValidDays(Number(e.target.value))}
-          placeholder="如 3650，必填"
+          placeholder="如 365，必填"
           required
         />
         <label className={styles.formLabel}>备注</label>

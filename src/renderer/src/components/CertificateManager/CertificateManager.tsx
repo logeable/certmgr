@@ -5,6 +5,7 @@ import CertTree from '../CertTree';
 import Modal from '../Modal/Modal';
 import CertificateDetailModal from './CertificateDetailModal';
 import PrivateKeyModal from './PrivateKeyModal';
+import RenewCertModal from './RenewCertModal';
 
 interface Namespace {
   id: string;
@@ -23,6 +24,8 @@ export default function CertificateManager() {
   const [detailCert, setDetailCert] = useState<Certificate | null>(null);
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [privateKeyCert, setPrivateKeyCert] = useState<Certificate | null>(null);
+  const [showRenew, setShowRenew] = useState(false);
+  const [renewCert, setRenewCert] = useState<Certificate | null>(null);
 
   useEffect(() => {
     window.api.namespaces.list().then((list: Namespace[]) => {
@@ -78,6 +81,14 @@ export default function CertificateManager() {
     }
   };
 
+  const onRenew = (certId: number) => {
+    const cert = certs.find(c => c.id === certId);
+    if (cert) {
+      setRenewCert(cert);
+      setShowRenew(true);
+    }
+  };
+
   return (
     <div>
       <h2 className={styles.sectionTitle}>证书管理</h2>
@@ -97,6 +108,7 @@ export default function CertificateManager() {
         onDelete={onDelete}
         onViewDetails={onViewDetails}
         onViewPrivateKey={onViewPrivateKey}
+        onRenew={onRenew}
       />
       <CreateRootCertModal
         open={showCreateRoot}
@@ -139,6 +151,15 @@ export default function CertificateManager() {
         open={showPrivateKey}
         cert={privateKeyCert}
         onClose={() => setShowPrivateKey(false)}
+      />
+      <RenewCertModal
+        open={showRenew}
+        cert={renewCert}
+        onClose={() => setShowRenew(false)}
+        onSuccess={() => {
+          if (selectedNs)
+            window.api.certificates.list(selectedNs).then((list: Certificate[]) => setCerts(list));
+        }}
       />
     </div>
   );

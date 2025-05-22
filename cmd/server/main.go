@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -305,6 +306,71 @@ func main() {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusOK, map[string]string{"message": "Certificate deleted"})
+	})
+
+	certificates.POST("/:id/renew", func(c echo.Context) error {
+		id := c.Param("id")
+		idInt, err := strconv.Atoi(id)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		}
+
+		type Req struct {
+			ValidDays int `json:"validDays"`
+		}
+
+		var req Req
+		if err := c.Bind(&req); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		}
+
+		certData, err := client.Certificate.Get(context.Background(), idInt)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+
+		keyPem, _ := pem.Decode([]byte(certData.KeyPem))
+		key, err := x509.ParsePKCS1PrivateKey(keyPem.Bytes)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+
+		certPem, _ := pem.Decode([]byte(certData.CertPem))
+		cert, err := x509.ParseCertificate(certPem.Bytes)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+
+		now := time.Now()
+
+		certTemplate := &x509.Certificate{
+			SerialNumber: big.NewInt(1),
+			Subject: pkix.Name{
+				Country:            cert.Subject.Country,
+				Province:           cert.Subject.Province,
+				Locality:           cert.Subject.Locality,
+				CommonName:         cert.Subject.CommonName,
+				Organization:       cert.Subject.Organization,
+				OrganizationalUnit: cert.Subject.OrganizationalUnit,
+			},
+			NotBefore: now,
+			NotAfter:  now.AddDate(0, 0, req.ValidDays),
+		}
+
+		newCert, err := x509.CreateCertificate(rand.Reader, certTemplate, certTemplate, key.Public(), key)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+
+		certPemBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: newCert})
+
+		err = client.Certificate.UpdateOne(certData).SetCertPem(string(certPemBytes)).Exec(context.Background())
+
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+
+		return c.JSON(http.StatusOK, map[string]string{"message": "succeed"})
 	})
 
 	e.GET("/status", func(c echo.Context) error {

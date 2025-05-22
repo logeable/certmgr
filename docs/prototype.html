@@ -598,8 +598,7 @@
         <div class="context-menu-item">签发新证书</div>
         <div class="context-menu-item">删除证书</div>
         <div class="context-menu-item">查看详情</div>
-        <div class="context-menu-item">查看私钥</div>
-        <div class="context-menu-item">续签</div>
+        <div class="context-menu-item">查看PEM</div>
       </div>
       <!-- 区域分割线 -->
       <hr
@@ -710,9 +709,9 @@
         class="divider"
         style="margin: 36px 0 24px 0; border: none; border-top: 1.5px dashed #e0e0e0"
       />
-      <!-- 查看证书详情模态框区域 -->
+      <!-- 查看私钥模态框区域 -->
       <div style="font-size: 18px; font-weight: 500; color: #444; margin-bottom: 12px">
-        查看证书详情模态框区域
+        查看PEM模态框区域
       </div>
       <div
         class="modal"
@@ -723,14 +722,20 @@
           max-width: 520px;
         "
       >
-        <div class="modal-title">证书详情</div>
+        <div class="modal-title">查看PEM</div>
         <div class="modal-content">
-          <div style="color: #888; font-size: 14px; margin-bottom: 10px">
-            可复制下方证书内容用于导入或验证。
+          <div style="color: #1890ff; font-size: 15px; font-weight: 500; margin-bottom: 8px">
+            证书PEM
           </div>
           <textarea
             readonly
-            style="height: 180px; width: 100%; font-family: monospace; font-size: 14px"
+            style="
+              height: 120px;
+              width: 100%;
+              font-family: monospace;
+              font-size: 14px;
+              margin-bottom: 16px;
+            "
           >
 -----BEGIN CERTIFICATE-----
 MIIDdzCCAl+gAwIBAgIEb1Zb0DANBgkqhkiG9w0BAQsFADBvMQswCQYDVQQGEwJD
@@ -751,78 +756,23 @@ Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw
 1Q==
 -----END CERTIFICATE-----
           </textarea>
-        </div>
-        <div class="modal-actions">
-          <button class="btn secondary">关闭</button>
-        </div>
-      </div>
-      <!-- 区域分割线 -->
-      <hr
-        class="divider"
-        style="margin: 36px 0 24px 0; border: none; border-top: 1.5px dashed #e0e0e0"
-      />
-      <!-- 查看私钥模态框区域 -->
-      <div style="font-size: 18px; font-weight: 500; color: #444; margin-bottom: 12px">
-        查看私钥模态框区域
-      </div>
-      <div
-        class="modal"
-        style="
-          position: static;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-          margin-bottom: 24px;
-          max-width: 520px;
-        "
-      >
-        <div class="modal-title">查看私钥</div>
-        <div class="modal-content">
-          <div style="color: #1890ff; font-size: 15px; font-weight: 500; margin-bottom: 8px">
-            私钥类型：RSA
-          </div>
           <div style="color: #ff4d4f; font-size: 14px; margin-bottom: 10px">
             安全提示：请妥善保管私钥，切勿泄露给无关人员！
           </div>
+          <div style="color: #1890ff; font-size: 15px; font-weight: 500; margin-bottom: 8px">
+            私钥PEM
+          </div>
           <textarea
             readonly
-            style="height: 140px; width: 100%; font-family: monospace; font-size: 14px"
+            style="height: 120px; width: 100%; font-family: monospace; font-size: 14px"
           >
 -----BEGIN PRIVATE KEY-----
 MIIEvQIBADANBgkqhkiG9w0BAQEFAASC...
------END PRIVATE KEY-----</textarea
-          >
+-----END PRIVATE KEY-----
+          </textarea>
         </div>
         <div class="modal-actions">
           <button class="btn secondary">关闭</button>
-        </div>
-      </div>
-      <!-- 区域分割线 -->
-      <hr
-        class="divider"
-        style="margin: 36px 0 24px 0; border: none; border-top: 1.5px dashed #e0e0e0"
-      />
-      <!-- 续签证书模态框区域 -->
-      <div style="font-size: 18px; font-weight: 500; color: #444; margin-bottom: 12px">
-        续签证书模态框区域
-      </div>
-      <div
-        class="modal"
-        style="
-          position: static;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-          margin-bottom: 24px;
-          max-width: 520px;
-        "
-      >
-        <div class="modal-title">续签证书</div>
-        <div class="modal-content">
-          <label>有效期（天）<span style="color: #ff4d4f">*</span></label>
-          <input type="text" placeholder="如 365，必填" required />
-          <label>备注</label>
-          <textarea placeholder="可选，便于管理和识别"></textarea>
-        </div>
-        <div class="modal-actions">
-          <button class="btn">续签</button>
-          <button class="btn secondary">取消</button>
         </div>
       </div>
       <!-- 模态框原型：新建/编辑空间 -->
@@ -898,21 +848,6 @@ MIIEvQIBADANBgkqhkiG9w0BAQEFAASC...
           </dl>
           <div class="modal-actions">
             <button class="btn secondary">关闭</button>
-          </div>
-        </div>
-      </div>
-      <!-- 模态框原型：续签证书 -->
-      <div class="modal-mask" style="display: none">
-        <div class="modal">
-          <span class="modal-close">×</span>
-          <div class="modal-title">续签证书</div>
-          <div class="modal-content">
-            <label>有效期<span style="color: #ff4d4f">*</span></label>
-            <input type="text" placeholder="如 365 天，必填" required />
-          </div>
-          <div class="modal-actions">
-            <button class="btn">续签</button>
-            <button class="btn secondary">取消</button>
           </div>
         </div>
       </div>

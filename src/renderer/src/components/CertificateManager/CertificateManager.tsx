@@ -3,6 +3,8 @@ import styles from './CertificateManager.module.css';
 import CreateRootCertModal from './CreateRootCertModal';
 import CertTree from '../CertTree';
 import Modal from '../Modal/Modal';
+import CertificateDetailModal from './CertificateDetailModal';
+
 interface Namespace {
   id: string;
   name: string;
@@ -16,6 +18,8 @@ export default function CertificateManager() {
   const [issuerId, setIssuerId] = useState(0);
   const [showDelete, setShowDelete] = useState(false);
   const [certToDelete, setCertToDelete] = useState<number | null>(null);
+  const [showDetail, setShowDetail] = useState(false);
+  const [detailCert, setDetailCert] = useState<Certificate | null>(null);
 
   useEffect(() => {
     window.api.namespaces.list().then((list: Namespace[]) => {
@@ -55,6 +59,14 @@ export default function CertificateManager() {
     }
   };
 
+  const onViewDetails = (certId: number) => {
+    const cert = certs.find(c => c.id === certId);
+    if (cert) {
+      setDetailCert(cert);
+      setShowDetail(true);
+    }
+  };
+
   return (
     <div>
       <h2 className={styles.sectionTitle}>证书管理</h2>
@@ -68,7 +80,12 @@ export default function CertificateManager() {
           ))}
         </select>
       </div>
-      <CertTree certificates={certs} onIssue={onIssue} onDelete={onDelete} />
+      <CertTree
+        certificates={certs}
+        onIssue={onIssue}
+        onDelete={onDelete}
+        onViewDetails={onViewDetails}
+      />
       <CreateRootCertModal
         open={showCreateRoot}
         namespaceId={selectedNs}
@@ -101,6 +118,11 @@ export default function CertificateManager() {
       >
         <div>确定要删除该证书及所有子证书吗？此操作不可恢复。</div>
       </Modal>
+      <CertificateDetailModal
+        open={showDetail}
+        cert={detailCert}
+        onClose={() => setShowDetail(false)}
+      />
     </div>
   );
 }

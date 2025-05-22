@@ -599,6 +599,7 @@
         <div class="context-menu-item">删除证书</div>
         <div class="context-menu-item">查看详情</div>
         <div class="context-menu-item">查看PEM</div>
+        <div class="context-menu-item">续签</div>
       </div>
       <!-- 区域分割线 -->
       <hr
@@ -775,6 +776,36 @@ MIIEvQIBADANBgkqhkiG9w0BAQEFAASC...
           <button class="btn secondary">关闭</button>
         </div>
       </div>
+      <!-- 续签证书模态框区域 -->
+      <div style="font-size: 18px; font-weight: 500; color: #444; margin-bottom: 12px">
+        续签证书模态框区域
+      </div>
+      <div
+        class="modal"
+        style="
+          position: static;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+          margin-bottom: 24px;
+          max-width: 520px;
+        "
+      >
+        <div class="modal-title">续签证书</div>
+        <div class="modal-content">
+          <label>有效期（天）<span style="color: #ff4d4f">*</span></label>
+          <input type="text" placeholder="如 365，必填" required />
+          <label>备注</label>
+          <textarea placeholder="可选，便于管理和识别"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn">续签</button>
+          <button class="btn secondary">取消</button>
+        </div>
+      </div>
+      <!-- 区域分割线 -->
+      <hr
+        class="divider"
+        style="margin: 36px 0 24px 0; border: none; border-top: 1.5px dashed #e0e0e0"
+      />
       <!-- 模态框原型：新建/编辑空间 -->
       <div class="modal-mask" style="display: none">
         <div class="modal">

@@ -38,7 +38,7 @@ export const CertNode = ({
     { label: '签发证书', onClick: onIssue },
     { label: '删除证书', onClick: onDelete },
     { label: '查看详情', onClick: onViewDetails },
-    { label: '查看私钥', onClick: onViewPrivateKey },
+    { label: '查看PEM', onClick: onViewPrivateKey },
     { label: '续签', onClick: onRenew },
   ];
 

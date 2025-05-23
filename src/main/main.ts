@@ -148,7 +148,6 @@ function handleIPC(serverBaseURL: string) {
           org: string;
           ou: string;
           commonName: string;
-          email: string;
         };
       },
     ) => {

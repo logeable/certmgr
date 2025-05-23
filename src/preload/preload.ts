@@ -38,7 +38,6 @@ contextBridge.exposeInMainWorld('api', {
         org: string;
         ou: string;
         commonName: string;
-        email: string;
       };
     }) => {
       const result = await ipcRenderer.invoke('certificates:create', params);

@@ -204,7 +204,6 @@ func main() {
 			Org        string `json:"org"`
 			Ou         string `json:"ou"`
 			CommonName string `json:"commonName"`
-			Email      string `json:"email"`
 		}
 		type Req struct {
 			NamespaceId string  `json:"namespaceId"`

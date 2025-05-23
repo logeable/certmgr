@@ -28,7 +28,6 @@ export default function CreateCertModal({
   const [org, setOrg] = useState('');
   const [ou, setOu] = useState('');
   const [commonName, setCommonName] = useState('');
-  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -54,7 +53,6 @@ export default function CreateCertModal({
         org,
         ou,
         commonName,
-        email,
       },
     });
     setLoading(false);
@@ -73,7 +71,6 @@ export default function CreateCertModal({
     setOrg('');
     setOu('');
     setCommonName('');
-    setEmail('');
   };
 
   const handleClose = () => {
@@ -212,14 +209,6 @@ export default function CreateCertModal({
           value={ou}
           onChange={e => setOu(e.target.value)}
           placeholder="如 IT"
-        />
-        <label className={styles.formLabel}>邮箱 (Email Address)</label>
-        <input
-          className={styles.formInput}
-          type="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          placeholder="如 admin@example.com"
         />
         {error && <div className={styles.formError}>{error}</div>}
       </div>

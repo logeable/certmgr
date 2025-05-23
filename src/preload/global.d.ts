@@ -43,7 +43,6 @@ declare global {
             org: string;
             ou: string;
             commonName: string;
-            email: string;
           };
         }) => Promise<Certificate>;
         delete: (certId: number) => Promise<void>;

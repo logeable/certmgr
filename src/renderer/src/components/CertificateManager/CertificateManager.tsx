@@ -16,7 +16,7 @@ export default function CertificateManager() {
   const [namespaces, setNamespaces] = useState<Namespace[]>([]);
   const [selectedNs, setSelectedNs] = useState('');
   const [certs, setCerts] = useState<Certificate[]>([]);
-  const [showCreateRoot, setShowCreateRoot] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
   const [issuerId, setIssuerId] = useState(0);
   const [showDelete, setShowDelete] = useState(false);
   const [certToDelete, setCertToDelete] = useState<number | null>(null);
@@ -40,14 +40,14 @@ export default function CertificateManager() {
         setCerts(list);
         // 检查是否有根证书
         const hasRoot = list.some(cert => cert.issuerId === 0);
-        if (!hasRoot) setShowCreateRoot(true);
+        if (!hasRoot) setShowCreate(true);
       });
     }
   }, [selectedNs]);
 
   const onIssue = (issuerId: number) => {
     setIssuerId(issuerId);
-    setShowCreateRoot(true);
+    setShowCreate(true);
   };
 
   const onDelete = (certId: number) => {
@@ -111,11 +111,11 @@ export default function CertificateManager() {
         onRenew={onRenew}
       />
       <CreateCertModal
-        open={showCreateRoot}
+        open={showCreate}
         namespaceId={selectedNs}
         issuerId={issuerId}
         onClose={() => {
-          setShowCreateRoot(false);
+          setShowCreate(false);
           setIssuerId(0);
         }}
         onSuccess={() => {

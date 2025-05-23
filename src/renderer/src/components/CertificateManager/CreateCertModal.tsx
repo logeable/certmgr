@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Modal from '../Modal/Modal';
-import styles from './CreateRootCertModal.module.css';
+import styles from './CreateCertModal.module.css';
 
 interface Props {
   open: boolean;
@@ -84,7 +84,7 @@ export default function CreateCertModal({
   return (
     <Modal
       open={open}
-      title="创建根证书"
+      title="创建证书"
       actions={
         <>
           <button className="btn secondary" onClick={handleClose} disabled={loading}>
@@ -116,14 +116,29 @@ export default function CreateCertModal({
         <label className={styles.formLabel}>
           密钥长度<span style={{ color: '#ff4d4f' }}>*</span>
         </label>
-        <input
-          className={styles.formInput}
-          type="number"
-          value={keyLen}
-          onChange={e => setKeyLen(Number(e.target.value))}
-          placeholder="如 2048，必填"
-          required
-        />
+        {keyType === 'RSA' ? (
+          <select
+            className={styles.formSelect}
+            value={keyLen}
+            onChange={e => setKeyLen(Number(e.target.value))}
+            required
+          >
+            <option value={2048}>2048</option>
+            <option value={3072}>3072</option>
+            <option value={4096}>4096</option>
+            <option value={8192}>8192</option>
+          </select>
+        ) : (
+          <input
+            className={styles.formInput}
+            type="number"
+            value={keyLen}
+            onChange={e => setKeyLen(Number(e.target.value))}
+            placeholder="如 2048，必填"
+            required
+            disabled
+          />
+        )}
         <label className={styles.formLabel}>
           有效期（天）<span style={{ color: '#ff4d4f' }}>*</span>
         </label>

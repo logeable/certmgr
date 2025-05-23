@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import styles from './CertificateManager.module.css';
-import CreateRootCertModal from './CreateRootCertModal';
+import CreateCertModal from './CreateCertModal';
 import CertTree from '../CertTree';
 import Modal from '../Modal/Modal';
 import CertificateDetailModal from './CertificateDetailModal';
@@ -110,7 +110,7 @@ export default function CertificateManager() {
         onViewPrivateKey={onViewPrivateKey}
         onRenew={onRenew}
       />
-      <CreateRootCertModal
+      <CreateCertModal
         open={showCreateRoot}
         namespaceId={selectedNs}
         issuerId={issuerId}

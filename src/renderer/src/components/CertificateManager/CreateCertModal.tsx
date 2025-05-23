@@ -10,7 +10,7 @@ interface Props {
   onSuccess: () => void;
 }
 
-export default function CreateRootCertModal({
+export default function CreateCertModal({
   open,
   namespaceId,
   issuerId,

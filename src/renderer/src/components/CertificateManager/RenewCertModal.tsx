@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Modal from '../Modal/Modal';
-import styles from './CreateRootCertModal.module.css';
+import styles from './CreateCertModal.module.css';
 
 interface Props {
   open: boolean;

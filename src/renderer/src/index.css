@@ -1,6 +1,1 @@
-body {
-  margin: 0;
-  font-family: 'Segoe UI', 'PingFang SC', 'Hiragino Sans', Arial, sans-serif;
-  background: #f5f6fa;
-  color: #222;
-}
+@import 'tailwindcss';

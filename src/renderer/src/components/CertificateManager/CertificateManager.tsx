@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Select, Space, Typography, App, Card, Empty, Button } from 'antd';
 import { DatabaseOutlined } from '@ant-design/icons';
-import styles from './CertificateManager.module.css';
 import CreateCertModal from './CreateCertModal';
 import CertTree from '../CertTree';
 import Modal from '../Modal/Modal';
@@ -37,9 +36,6 @@ export default function CertificateManager() {
       try {
         const list = await api.namespaces.list();
         setNamespaces(list);
-        if (list.length > 0) {
-          setSelectedNs(list[0].id.toString());
-        }
       } catch (error) {
         message.error('获取空间列表失败');
         console.error('Failed to fetch namespaces:', error);
@@ -160,9 +156,8 @@ export default function CertificateManager() {
         {/* 空间选择区域 */}
         <Card size="small" style={{ marginBottom: 16 }}>
           <Space align="center" size="middle">
-            <span style={{ fontWeight: 500, color: '#262626' }}>选择空间：</span>
+            <span style={{ fontWeight: 500, color: '#262626' }}>空间：</span>
             <Select
-              value={selectedNs}
               onChange={setSelectedNs}
               loading={namespacesLoading}
               style={{ minWidth: 200 }}
@@ -240,15 +235,10 @@ export default function CertificateManager() {
         title="确认删除证书"
         actions={
           <>
-            <button className={styles.btn + ' ' + styles.danger} onClick={handleDelete}>
+            <Button type="primary" danger onClick={handleDelete}>
               删除
-            </button>
-            <button
-              className={styles.btn + ' ' + styles.secondary}
-              onClick={() => setShowDelete(false)}
-            >
-              取消
-            </button>
+            </Button>
+            <Button onClick={() => setShowDelete(false)}>取消</Button>
           </>
         }
       >

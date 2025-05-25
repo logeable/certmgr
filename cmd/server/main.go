@@ -206,7 +206,7 @@ func main() {
 			CommonName string `json:"commonName"`
 		}
 		type Req struct {
-			NamespaceId string  `json:"namespaceId"`
+			NamespaceId int     `json:"namespaceId"`
 			IssuerId    int     `json:"issuerId"`
 			KeyType     string  `json:"keyType"`
 			KeyLen      int     `json:"keyLen"`
@@ -217,10 +217,6 @@ func main() {
 		var req Req
 		if err := c.Bind(&req); err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
-		}
-		nsID, err := strconv.Atoi(req.NamespaceId)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid namespaceId"})
 		}
 
 		var certPemBytes []byte
@@ -250,7 +246,7 @@ func main() {
 		}
 
 		cert, err := client.Certificate.Create().
-			SetNamespaceID(nsID).
+			SetNamespaceID(req.NamespaceId).
 			SetIssuerID(req.IssuerId).
 			SetCertPem(string(certPemBytes)).
 			SetKeyPem(string(keyPemBytes)).

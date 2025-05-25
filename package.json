@@ -55,11 +55,9 @@
     "vite": "^6.3.5"
   },
   "dependencies": {
-    "@tailwindcss/postcss": "^4.1.7",
+    "antd": "^5.25.2",
     "electron-squirrel-startup": "^1.0.1",
-    "postcss": "^8.5.3",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "tailwindcss": "^4.1.7"
+    "react-dom": "^19.1.0"
   }
 }

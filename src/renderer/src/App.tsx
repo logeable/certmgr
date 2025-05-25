@@ -3,6 +3,7 @@ import { Layout, Menu, Typography, theme, ConfigProvider } from 'antd';
 import { AppstoreOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import NamespaceManager from './components/NamespaceManager/NamespaceManager';
 import CertificateManager from './components/CertificateManager/CertificateManager';
+import './App.css';
 
 const { Sider, Content } = Layout;
 const { Title } = Typography;
@@ -47,7 +48,12 @@ function App() {
       }}
     >
       <Layout style={{ minHeight: '100vh' }}>
-        <Sider theme="light" width={180} style={{ borderRight: '1px solid #f0f0f0' }}>
+        <Sider
+          theme="light"
+          width={180}
+          className="drag-region"
+          style={{ borderRight: '1px solid #f0f0f0', paddingTop: '1rem' }}
+        >
           <div
             style={{
               height: 64,
@@ -61,14 +67,16 @@ function App() {
             </Title>
           </div>
           <Menu
+            className="no-drag-region"
             mode="inline"
             selectedKeys={[activeMenu]}
             items={MENU_ITEMS}
             onClick={({ key }) => setActiveMenu(key as MenuKey)}
           />
         </Sider>
-        <Layout>
+        <Layout className="drag-region">
           <Content
+            className="no-drag-region"
             style={{
               margin: '1.5rem',
               padding: '1.5rem',

@@ -9,6 +9,7 @@ async function createWindow() {
     height: 768,
     minWidth: 800,
     minHeight: 600,
+    titleBarStyle: 'hiddenInset',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

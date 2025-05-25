@@ -132,12 +132,7 @@ export default function NamespaceManager() {
       title: '空间名称',
       dataIndex: 'name',
       key: 'name',
-      render: (name: string) => (
-        <Space>
-          <FolderOutlined style={{ color: '#1890ff' }} />
-          <span style={{ fontWeight: 500 }}>{name}</span>
-        </Space>
-      ),
+      render: (name: string) => <span style={{ fontWeight: 500 }}>{name}</span>,
     },
     {
       title: '创建时间',

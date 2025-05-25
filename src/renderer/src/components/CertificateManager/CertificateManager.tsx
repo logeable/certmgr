@@ -6,6 +6,7 @@ import Modal from '../Modal/Modal';
 import CertificateDetailModal from './CertificateDetailModal';
 import PrivateKeyModal from './PrivateKeyModal';
 import RenewCertModal from './RenewCertModal';
+import api, { Certificate } from '../../api';
 
 interface Namespace {
   id: string;
@@ -28,7 +29,7 @@ export default function CertificateManager() {
   const [renewCert, setRenewCert] = useState<Certificate | null>(null);
 
   useEffect(() => {
-    window.api.namespaces.list().then((list: Namespace[]) => {
+    api.namespaces.list().then((list: Namespace[]) => {
       setNamespaces(list);
       if (list.length > 0) setSelectedNs(list[0].id.toString());
     });
@@ -36,7 +37,7 @@ export default function CertificateManager() {
 
   useEffect(() => {
     if (selectedNs) {
-      window.api.certificates.list(selectedNs).then((list: Certificate[]) => {
+      api.certificates.list(selectedNs).then((list: Certificate[]) => {
         setCerts(list);
         // 检查是否有根证书
         const hasRoot = list.some(cert => cert.issuerId === 0);
@@ -57,11 +58,11 @@ export default function CertificateManager() {
 
   const handleDelete = async () => {
     if (certToDelete) {
-      await window.api.certificates.delete(certToDelete);
+      await api.certificates.delete(certToDelete);
       setShowDelete(false);
       setCertToDelete(null);
       if (selectedNs)
-        window.api.certificates.list(selectedNs).then((list: Certificate[]) => setCerts(list));
+        api.certificates.list(selectedNs).then((list: Certificate[]) => setCerts(list));
     }
   };
 
@@ -120,7 +121,7 @@ export default function CertificateManager() {
         }}
         onSuccess={() => {
           if (selectedNs)
-            window.api.certificates.list(selectedNs).then((list: Certificate[]) => setCerts(list));
+            api.certificates.list(selectedNs).then((list: Certificate[]) => setCerts(list));
         }}
       />
       <Modal
@@ -158,7 +159,7 @@ export default function CertificateManager() {
         onClose={() => setShowRenew(false)}
         onSuccess={() => {
           if (selectedNs)
-            window.api.certificates.list(selectedNs).then((list: Certificate[]) => setCerts(list));
+            api.certificates.list(selectedNs).then((list: Certificate[]) => setCerts(list));
         }}
       />
     </div>

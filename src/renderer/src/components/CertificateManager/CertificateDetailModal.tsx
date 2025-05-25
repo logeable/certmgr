@@ -1,3 +1,4 @@
+import { Certificate } from '../../api';
 import Modal from '../Modal/Modal';
 import styles from './CreateCertModal.module.css';
 

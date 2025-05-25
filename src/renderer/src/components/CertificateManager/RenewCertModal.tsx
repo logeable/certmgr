@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Modal from '../Modal/Modal';
 import styles from './CreateCertModal.module.css';
+import api, { Certificate } from '../../api';
 
 interface Props {
   open: boolean;
@@ -23,7 +24,7 @@ export default function RenewCertModal({ open, cert, onClose, onSuccess }: Props
     }
     setLoading(true);
     setError('');
-    await window.api.certificates.renew(cert.id, validDays);
+    await api.certificates.renew(cert.id, validDays);
     setLoading(false);
     onSuccess();
     handleClose();

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Modal from '../Modal/Modal';
 import styles from './CreateCertModal.module.css';
+import api from '../../api';
 
 interface Props {
   open: boolean;
@@ -39,21 +40,13 @@ export default function CreateCertModal({
     setLoading(true);
     setError('');
 
-    await window.api.certificates.create({
-      namespaceId,
-      issuerId,
-      keyType,
-      keyLen,
-      validDays,
-      desc,
-      subject: {
-        country,
-        state,
-        city,
-        org,
-        ou,
-        commonName,
-      },
+    await api.certificates.create(namespaceId, issuerId, keyType, keyLen, validDays, desc, {
+      country,
+      state,
+      city,
+      org,
+      ou,
+      commonName,
     });
     setLoading(false);
     onSuccess();

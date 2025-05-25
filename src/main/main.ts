@@ -1,6 +1,7 @@
 import { ChildProcess, spawn } from 'child_process';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
+import { URLSearchParams } from 'url';
 
 async function createWindow() {
   // 创建浏览器窗口
@@ -87,104 +88,103 @@ app.whenReady().then(async () => {
 });
 
 function handleIPC(serverBaseURL: string) {
-  ipcMain.handle('namespaces:list', async () => {
-    const response = await fetch(`${serverBaseURL}/namespaces/`);
-    const data = await response.json();
-    return data;
-  });
-
-  ipcMain.handle('namespaces:create', async (_, name: string, desc: string) => {
-    const response = await fetch(`${serverBaseURL}/namespaces/`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      method: 'POST',
-      body: JSON.stringify({ name, desc }),
+  function handleWrapper(channel: string, handler: (...args: unknown[]) => Promise<unknown>) {
+    ipcMain.handle(channel, async (...args) => {
+      try {
+        const data = await handler(...args);
+        return { success: true, data };
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`handler "${channel}" error: ${errorMessage}`);
+        return { success: false, error: errorMessage };
+      }
     });
-    const data = await response.json();
-    return data;
-  });
+  }
 
-  ipcMain.handle('namespaces:edit', async (_, { id, name, desc }) => {
-    const response = await fetch(`${serverBaseURL}/namespaces/${id}`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      method: 'PUT',
-      body: JSON.stringify({ name, desc }),
-    });
-    const data = await response.json();
-    return data;
-  });
+  async function handleResponse(response: Promise<Response>) {
+    const res = await response;
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error);
+    }
+    return res.json();
+  }
 
-  ipcMain.handle('namespaces:delete', async (_, id: string) => {
-    const response = await fetch(`${serverBaseURL}/namespaces/${id}`, {
-      method: 'DELETE',
-    });
-    const data = await response.json();
-    return data;
-  });
+  async function doGet(path: string) {
+    return await handleResponse(fetch(`${serverBaseURL}/${path}`));
+  }
 
-  ipcMain.handle('certificates:list', async (_, namespaceId: string) => {
-    const response = await fetch(`${serverBaseURL}/certificates/?namespace_id=${namespaceId}`);
-    const data = await response.json();
-    return data;
-  });
-
-  ipcMain.handle(
-    'certificates:create',
-    async (
-      _,
-      params: {
-        namespaceId: string;
-        issuerId: number;
-        keyType: string;
-        keyLen: number;
-        validDays: number;
-        desc: string;
-        subject: {
-          country: string;
-          state: string;
-          city: string;
-          org: string;
-          ou: string;
-          commonName: string;
-        };
-      },
-    ) => {
-      const response = await fetch(`${serverBaseURL}/certificates/`, {
+  async function doPost(path: string, body: unknown) {
+    return await handleResponse(
+      fetch(`${serverBaseURL}/${path}`, {
         headers: {
           'Content-Type': 'application/json',
         },
         method: 'POST',
-        body: JSON.stringify(params),
-      });
-      const data = await response.json();
-      return data;
-    },
-  );
+        body: JSON.stringify(body),
+      }),
+    );
+  }
 
-  ipcMain.handle('certificates:delete', async (_, certId: number) => {
-    const response = await fetch(`${serverBaseURL}/certificates/${certId}`, {
-      method: 'DELETE',
-    });
-    const data = await response.json();
-    return data;
+  async function doPut(path: string, body: unknown) {
+    return await handleResponse(
+      fetch(`${serverBaseURL}/${path}`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'PUT',
+        body: JSON.stringify(body),
+      }),
+    );
+  }
+
+  async function doDelete(path: string) {
+    return await handleResponse(fetch(`${serverBaseURL}/${path}`, { method: 'DELETE' }));
+  }
+
+  handleWrapper('namespaces:list', async () => {
+    return await doGet('namespaces/');
   });
 
-  ipcMain.handle('certificates:renew', async (_, certId: number, validDays: number) => {
-    const response = await fetch(`${serverBaseURL}/certificates/${certId}/renew`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      method: 'POST',
-      body: JSON.stringify({ validDays: validDays }),
-    });
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.error);
-    }
-    const data = await response.json();
-    return data;
+  handleWrapper('namespaces:get', async (...args: unknown[]) => {
+    const [id] = args;
+    return await doGet(`namespaces/${id}`);
+  });
+
+  handleWrapper('namespaces:create', async (...args: unknown[]) => {
+    const [body] = args;
+    return await doPost('namespaces/', body);
+  });
+
+  handleWrapper('namespaces:update', async (...args: unknown[]) => {
+    const [id, body] = args;
+    return await doPut(`namespaces/${id}`, body);
+  });
+
+  handleWrapper('namespaces:delete', async (...args: unknown[]) => {
+    const [id] = args;
+    return await doDelete(`namespaces/${id}`);
+  });
+
+  handleWrapper('certificates:list', async (...args: unknown[]) => {
+    const [namespaceId] = args;
+    return await doGet(
+      `certificates/?${new URLSearchParams({ namespaceId: String(namespaceId) })}`,
+    );
+  });
+
+  handleWrapper('certificates:create', async (...args: unknown[]) => {
+    const [body] = args;
+    return await doPost('certificates/', body);
+  });
+
+  handleWrapper('certificates:delete', async (...args: unknown[]) => {
+    const [certId] = args;
+    return await doDelete(`certificates/${certId}`);
+  });
+
+  handleWrapper('certificates:renew', async (...args: unknown[]) => {
+    const [body] = args;
+    return await doPost(`certificates/renew/`, body);
   });
 }

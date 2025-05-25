@@ -10,9 +10,11 @@ import {
   message,
   Popconfirm,
   Tag,
+  App,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, FolderOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import api, { Namespace } from '../../api';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -29,21 +31,14 @@ export default function NamespaceManager() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingNamespace, setEditingNamespace] = useState<Namespace | null>(null);
   const [form] = Form.useForm<NamespaceFormData>();
+  const { message } = App.useApp();
 
   // 拉取空间列表
   const fetchNamespaces = async () => {
     setTableLoading(true);
     try {
-      if (window.api.namespaces?.list) {
-        const list = await window.api.namespaces.list();
-        // 兼容 desc 字段后端未返回的情况
-        setNamespaces(
-          list.map((ns: Namespace) => ({
-            ...ns,
-            desc: ns.desc ?? '',
-          })),
-        );
-      }
+      const list = await api.namespaces.list();
+      setNamespaces(list);
     } catch (error) {
       message.error('获取空间列表失败');
       console.error('Failed to fetch namespaces:', error);
@@ -85,16 +80,24 @@ export default function NamespaceManager() {
 
       if (editingNamespace) {
         // 编辑
-        if (window.api.namespaces.edit) {
-          await window.api.namespaces.edit(editingNamespace.id, values.name, values.desc);
-          message.success('空间编辑成功');
+        try {
+          await api.namespaces.update(editingNamespace.id, values.name, values.desc);
+        } catch (error) {
+          message.error('编辑空间失败');
+          console.error('Failed to update namespace:', error);
+          return;
         }
+        message.success('空间编辑成功');
       } else {
         // 新建
-        if (window.api.namespaces.create) {
-          await window.api.namespaces.create(values.name, values.desc);
-          message.success('空间创建成功');
+        try {
+          await api.namespaces.create(values.name, values.desc);
+        } catch (error) {
+          message.error('创建空间失败');
+          console.error('Failed to create namespace:', error);
+          return;
         }
+        message.success('空间创建成功');
       }
 
       handleCloseModal();
@@ -114,11 +117,9 @@ export default function NamespaceManager() {
   // 删除空间
   const handleDelete = async (namespace: Namespace) => {
     try {
-      if (window.api.namespaces.delete) {
-        await window.api.namespaces.delete(namespace.id);
-        message.success('空间删除成功');
-        fetchNamespaces();
-      }
+      await api.namespaces.delete(namespace.id);
+      message.success('空间删除成功');
+      fetchNamespaces();
     } catch (error) {
       message.error('删除空间失败');
       console.error('Failed to delete namespace:', error);

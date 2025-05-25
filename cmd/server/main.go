@@ -147,7 +147,7 @@ func main() {
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
-		return c.JSON(http.StatusOK, map[string]string{"message": "Namespace deleted"})
+		return c.JSON(http.StatusOK, nil)
 	})
 
 	certificates := api.Group("/certificates")
@@ -307,7 +307,7 @@ func main() {
 		return c.JSON(http.StatusOK, map[string]string{"message": "Certificate deleted"})
 	})
 
-	certificates.POST("/:id/renew", func(c echo.Context) error {
+	certificates.POST("/:id/renew/", func(c echo.Context) error {
 		id := c.Param("id")
 		idInt, err := strconv.Atoi(id)
 		if err != nil {

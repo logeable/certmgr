@@ -1,3 +1,4 @@
+import { Certificate } from '../../api';
 import { CertNode } from './CertNode';
 import styles from './CertTree.module.css';
 

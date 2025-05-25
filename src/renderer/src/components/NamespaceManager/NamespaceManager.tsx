@@ -24,14 +24,15 @@ interface NamespaceFormData {
 
 export default function NamespaceManager() {
   const [namespaces, setNamespaces] = useState<Namespace[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [tableLoading, setTableLoading] = useState(false);
+  const [modalConfirmLoading, setModalConfirmLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingNamespace, setEditingNamespace] = useState<Namespace | null>(null);
   const [form] = Form.useForm<NamespaceFormData>();
 
   // 拉取空间列表
   const fetchNamespaces = async () => {
-    setLoading(true);
+    setTableLoading(true);
     try {
       if (window.api.namespaces?.list) {
         const list = await window.api.namespaces.list();
@@ -47,7 +48,7 @@ export default function NamespaceManager() {
       message.error('获取空间列表失败');
       console.error('Failed to fetch namespaces:', error);
     } finally {
-      setLoading(false);
+      setTableLoading(false);
     }
   };
 
@@ -78,6 +79,7 @@ export default function NamespaceManager() {
 
   // 提交表单
   const handleSubmit = async () => {
+    setModalConfirmLoading(true);
     try {
       const values = await form.validateFields();
 
@@ -104,6 +106,8 @@ export default function NamespaceManager() {
       }
       message.error(editingNamespace ? '编辑空间失败' : '创建空间失败');
       console.error('Failed to save namespace:', error);
+    } finally {
+      setModalConfirmLoading(false);
     }
   };
 
@@ -217,7 +221,7 @@ export default function NamespaceManager() {
           columns={columns}
           dataSource={namespaces}
           rowKey="id"
-          loading={loading}
+          loading={tableLoading}
           locale={{
             emptyText: '暂无空间数据',
           }}
@@ -233,6 +237,7 @@ export default function NamespaceManager() {
         okText={editingNamespace ? '保存' : '创建'}
         cancelText="取消"
         destroyOnHidden
+        confirmLoading={modalConfirmLoading}
       >
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item

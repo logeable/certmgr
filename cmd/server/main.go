@@ -152,7 +152,7 @@ func main() {
 
 	certificates := api.Group("/certificates")
 	certificates.GET("/", func(c echo.Context) error {
-		nsID := c.QueryParam("namespace_id")
+		nsID := c.QueryParam("namespaceId")
 		nsIDInt, err := strconv.Atoi(nsID)
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid namespace_id"})

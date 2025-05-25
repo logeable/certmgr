@@ -4,7 +4,7 @@ import { AppstoreOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import NamespaceManager from './components/NamespaceManager/NamespaceManager';
 import CertificateManager from './components/CertificateManager/CertificateManager';
 
-const { Sider, Header, Content } = Layout;
+const { Sider, Content } = Layout;
 const { Title } = Typography;
 
 enum MenuKey {

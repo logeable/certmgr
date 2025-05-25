@@ -9,12 +9,11 @@ import {
   Button,
   Tree,
   TreeDataNode,
-  Menu,
   Dropdown,
+  MenuProps,
 } from 'antd';
-import { DatabaseOutlined } from '@ant-design/icons';
+import { DatabaseOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import CreateCertModal from './CreateCertModal';
-import Modal from '../Modal/Modal';
 import CertificateDetailModal from './CertificateDetailModal';
 import PrivateKeyModal from './PrivateKeyModal';
 import RenewCertModal from './RenewCertModal';
@@ -29,8 +28,6 @@ export default function CertificateManager() {
   const [certs, setCerts] = useState<Certificate[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [issuerId, setIssuerId] = useState(0);
-  const [showDelete, setShowDelete] = useState(false);
-  const [certToDelete, setCertToDelete] = useState<number | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [detailCert, setDetailCert] = useState<Certificate | null>(null);
   const [showPrivateKey, setShowPrivateKey] = useState(false);
@@ -39,7 +36,7 @@ export default function CertificateManager() {
   const [renewCert, setRenewCert] = useState<Certificate | null>(null);
   const [namespacesLoading, setNamespacesLoading] = useState(false);
   const [certsLoading, setCertsLoading] = useState(false);
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
 
   useEffect(() => {
     const fetchNamespaces = async () => {
@@ -87,29 +84,6 @@ export default function CertificateManager() {
     setShowCreate(true);
   };
 
-  const onDelete = (certId: number) => {
-    setShowDelete(true);
-    setCertToDelete(certId);
-  };
-
-  const handleDelete = async () => {
-    if (certToDelete) {
-      try {
-        await api.certificates.delete(certToDelete);
-        message.success('证书删除成功');
-        setShowDelete(false);
-        setCertToDelete(null);
-        if (selectedNs) {
-          const list = await api.certificates.list(selectedNs);
-          setCerts(list);
-        }
-      } catch (error) {
-        message.error('删除证书失败');
-        console.error('Failed to delete certificate:', error);
-      }
-    }
-  };
-
   const onViewDetails = (certId: number) => {
     const cert = certs.find(c => c.id === certId);
     if (cert) {
@@ -132,6 +106,33 @@ export default function CertificateManager() {
       setRenewCert(cert);
       setShowRenew(true);
     }
+  };
+
+  // 删除证书确认
+  const onDelete = (certId: number) => {
+    modal.confirm({
+      title: '确认删除证书',
+      icon: <ExclamationCircleOutlined />,
+      content: (
+        <div>
+          <p>确定要删除该证书及所有子证书吗？</p>
+          <p style={{ color: '#ff4d4f', fontSize: '12px' }}>此操作不可恢复，请谨慎操作！</p>
+        </div>
+      ),
+      okText: '确认删除',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          await api.certificates.delete(certId);
+          message.success('证书删除成功');
+          refreshCertificates();
+        } catch (error) {
+          message.error('删除证书失败');
+          console.error('Failed to delete certificate:', error);
+        }
+      },
+    });
   };
 
   const refreshCertificates = async () => {
@@ -220,10 +221,10 @@ export default function CertificateManager() {
                 <TreeWithContextMenu
                   treeData={convertCert(certs)}
                   onIssue={onIssue}
-                  onDelete={onDelete}
                   onViewDetails={onViewDetails}
                   onViewPrivateKey={onViewPrivateKey}
                   onRenew={onRenew}
+                  onDelete={onDelete}
                 />
               )}
             </Card>
@@ -241,20 +242,6 @@ export default function CertificateManager() {
         }}
         onSuccess={refreshCertificates}
       />
-      <Modal
-        open={showDelete}
-        title="确认删除证书"
-        actions={
-          <>
-            <Button type="primary" danger onClick={handleDelete}>
-              删除
-            </Button>
-            <Button onClick={() => setShowDelete(false)}>取消</Button>
-          </>
-        }
-      >
-        <div>确定要删除该证书及所有子证书吗？此操作不可恢复。</div>
-      </Modal>
       <CertificateDetailModal
         open={showDetail}
         cert={detailCert}
@@ -278,17 +265,17 @@ export default function CertificateManager() {
 const TreeWithContextMenu = ({
   treeData,
   onIssue,
-  onDelete,
   onViewDetails,
   onViewPrivateKey,
   onRenew,
+  onDelete,
 }: {
   treeData: TreeDataNode[];
   onIssue: (id: number) => void;
-  onDelete: (id: number) => void;
   onViewDetails: (id: number) => void;
   onViewPrivateKey: (id: number) => void;
   onRenew: (id: number) => void;
+  onDelete: (id: number) => void;
 }) => {
   const [contextMenuInfo, setContextMenuInfo] = useState({
     visible: false,
@@ -313,11 +300,6 @@ const TreeWithContextMenu = ({
       onClick: () => onIssue(contextMenuInfo.node?.key as number),
     },
     {
-      key: 'delete',
-      label: '删除',
-      onClick: () => onDelete(contextMenuInfo.node?.key as number),
-    },
-    {
       key: 'viewDetails',
       label: '查看详情',
       onClick: () => onViewDetails(contextMenuInfo.node?.key as number),
@@ -332,32 +314,35 @@ const TreeWithContextMenu = ({
       label: '续期',
       onClick: () => onRenew(contextMenuInfo.node?.key as number),
     },
+    {
+      key: 'delete',
+      label: '删除',
+      onClick: () => onDelete(contextMenuInfo.node?.key as number),
+    },
   ];
 
-  const handleMenuClick = ({ key }: { key: string }) => {
-    const node = contextMenuInfo.node;
-    console.log(`点击了 ${key}，节点为`, node);
-    // 在此处理菜单操作
-    setContextMenuInfo({ ...contextMenuInfo, visible: false });
-    const item = menuItems.find(item => item.key === key);
-    if (item) {
+  const items: MenuProps['items'] = menuItems.map(item => ({
+    key: item.key,
+    label: item.label,
+    onClick: () => {
+      setContextMenuInfo({ ...contextMenuInfo, visible: false });
       item.onClick();
-    }
-  };
-
-  const menu = (
-    <Menu onClick={handleMenuClick}>
-      {menuItems.map(item => (
-        <Menu.Item key={item.key}>{item.label}</Menu.Item>
-      ))}
-    </Menu>
-  );
+    },
+  }));
 
   return (
-    <div
-      style={{ position: 'relative' }}
-      onClick={() => setContextMenuInfo({ ...contextMenuInfo, visible: false })}
-    >
+    <div>
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: contextMenuInfo.visible ? 'block' : 'none',
+        }}
+        onClick={() => setContextMenuInfo({ ...contextMenuInfo, visible: false })}
+      ></div>
       <Tree multiple defaultExpandAll onRightClick={onRightClick} treeData={treeData} />
       {contextMenuInfo.visible && (
         <div
@@ -368,7 +353,7 @@ const TreeWithContextMenu = ({
             zIndex: 9999,
           }}
         >
-          <Dropdown overlay={menu} open>
+          <Dropdown menu={{ items }} open>
             <div />
           </Dropdown>
         </div>

@@ -1,6 +1,8 @@
+import { Modal, Descriptions, Tag, Space, Typography } from 'antd';
+import { SafetyCertificateOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { Certificate } from '../../api';
-import Modal from '../Modal/Modal';
-import styles from './CreateCertModal.module.css';
+
+const { Title } = Typography;
 
 interface Props {
   open: boolean;
@@ -21,135 +23,65 @@ function parseSubject(subject: string) {
   return result;
 }
 
-const FIELD_LABELS: [string, string][] = [
-  ['C', '国家(C)'],
-  ['ST', '省份(ST)'],
-  ['L', '城市(L)'],
-  ['O', '组织(O)'],
-  ['OU', '部门(OU)'],
-  ['CN', '通用名(CN)'],
-];
-
 export default function CertificateDetailModal({ open, cert, onClose }: Props) {
   if (!cert) return null;
+
   const subject = parseSubject(cert.subject);
+
   return (
     <Modal
-      open={open}
-      title="证书详情"
-      actions={
-        <button className="btn secondary" onClick={onClose}>
-          关闭
-        </button>
+      title={
+        <Space>
+          <SafetyCertificateOutlined />
+          证书详情
+        </Space>
       }
+      open={open}
+      onCancel={onClose}
+      footer={null}
+      width={700}
     >
-      <div className={styles.formScroll}>
-        <div style={{ fontWeight: 600, color: '#1890ff', marginBottom: 8 }}>Subject 信息</div>
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 16 }}>
-          <tbody>
-            {FIELD_LABELS.map(([key, label]) => (
-              <tr key={key}>
-                <td
-                  style={{
-                    width: 120,
-                    color: '#555',
-                    fontWeight: 500,
-                    padding: '6px 8px',
-                    background: '#fafbfc',
-                  }}
-                >
-                  {label}
-                </td>
-                <td style={{ color: '#222', padding: '6px 8px', background: '#fff' }}>
-                  {subject[key] || '-'}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className={styles.formSectionTitle}>其他信息</div>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <tbody>
-            <tr>
-              <td
-                style={{
-                  width: 120,
-                  color: '#555',
-                  fontWeight: 500,
-                  padding: '6px 8px',
-                  background: '#fafbfc',
-                }}
-              >
-                备注
-              </td>
-              <td style={{ color: '#222', padding: '6px 8px', background: '#fff' }}>
-                {cert.desc || '-'}
-              </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  width: 120,
-                  color: '#555',
-                  fontWeight: 500,
-                  padding: '6px 8px',
-                  background: '#fafbfc',
-                }}
-              >
-                证书ID
-              </td>
-              <td style={{ color: '#222', padding: '6px 8px', background: '#fff' }}>{cert.id}</td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  width: 120,
-                  color: '#555',
-                  fontWeight: 500,
-                  padding: '6px 8px',
-                  background: '#fafbfc',
-                }}
-              >
-                签发者ID
-              </td>
-              <td style={{ color: '#222', padding: '6px 8px', background: '#fff' }}>
-                {cert.issuerId}
-              </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  width: 120,
-                  color: '#555',
-                  fontWeight: 500,
-                  padding: '6px 8px',
-                  background: '#fafbfc',
-                }}
-              >
-                创建时间
-              </td>
-              <td style={{ color: '#222', padding: '6px 8px', background: '#fff' }}>
-                {new Date(cert.createdAt * 1000).toLocaleString()}
-              </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  width: 120,
-                  color: '#555',
-                  fontWeight: 500,
-                  padding: '6px 8px',
-                  background: '#fafbfc',
-                }}
-              >
-                更新时间
-              </td>
-              <td style={{ color: '#222', padding: '6px 8px', background: '#fff' }}>
-                {new Date(cert.updatedAt * 1000).toLocaleString()}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+        <Title level={5} style={{ marginTop: 0, marginBottom: 16 }}>
+          <InfoCircleOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+          Subject 信息
+        </Title>
+
+        <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
+          <Descriptions.Item label="通用名 (CN)">
+            <Tag color="blue">{subject.CN || '-'}</Tag>
+          </Descriptions.Item>
+          <Descriptions.Item label="国家 (C)">{subject.C || '-'}</Descriptions.Item>
+          <Descriptions.Item label="省份 (ST)">{subject.ST || '-'}</Descriptions.Item>
+          <Descriptions.Item label="城市 (L)">{subject.L || '-'}</Descriptions.Item>
+          <Descriptions.Item label="组织 (O)">{subject.O || '-'}</Descriptions.Item>
+          <Descriptions.Item label="部门 (OU)">{subject.OU || '-'}</Descriptions.Item>
+        </Descriptions>
+
+        <Title level={5} style={{ marginBottom: 16 }}>
+          <InfoCircleOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+          证书信息
+        </Title>
+
+        <Descriptions bordered column={1} size="small">
+          <Descriptions.Item label="证书ID">
+            <Tag color="geekblue">{cert.id}</Tag>
+          </Descriptions.Item>
+          <Descriptions.Item label="签发者ID">
+            <Tag color={cert.issuerId === 0 ? 'gold' : 'default'}>
+              {cert.issuerId === 0 ? '根证书' : cert.issuerId}
+            </Tag>
+          </Descriptions.Item>
+          <Descriptions.Item label="备注">
+            {cert.desc || <span style={{ color: '#999' }}>暂无备注</span>}
+          </Descriptions.Item>
+          <Descriptions.Item label="创建时间">
+            {new Date(cert.createdAt * 1000).toLocaleString()}
+          </Descriptions.Item>
+          <Descriptions.Item label="更新时间">
+            {new Date(cert.updatedAt * 1000).toLocaleString()}
+          </Descriptions.Item>
+        </Descriptions>
       </div>
     </Modal>
   );

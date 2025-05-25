@@ -11,8 +11,19 @@ import {
   TreeDataNode,
   Dropdown,
   MenuProps,
+  Alert,
 } from 'antd';
-import { DatabaseOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import {
+  DatabaseOutlined,
+  ExclamationCircleOutlined,
+  PlusOutlined,
+  InfoCircleOutlined,
+  SafetyCertificateOutlined,
+  DeleteOutlined,
+  EyeOutlined,
+  KeyOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons';
 import CreateCertModal from './CreateCertModal';
 import CertificateDetailModal from './CertificateDetailModal';
 import PrivateKeyModal from './PrivateKeyModal';
@@ -163,6 +174,9 @@ export default function CertificateManager() {
           <Title level={3} style={{ margin: 0 }}>
             证书管理
           </Title>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => onIssue(0)}>
+            创建根证书
+          </Button>
         </div>
 
         {/* 空间选择区域 */}
@@ -213,19 +227,27 @@ export default function CertificateManager() {
               {certs.length === 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <Empty description="暂无证书" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-                  <Button style={{}} type="primary" onClick={() => setShowCreate(true)}>
-                    创建根证书
-                  </Button>
                 </div>
               ) : (
-                <TreeWithContextMenu
-                  treeData={convertCert(certs)}
-                  onIssue={onIssue}
-                  onViewDetails={onViewDetails}
-                  onViewPrivateKey={onViewPrivateKey}
-                  onRenew={onRenew}
-                  onDelete={onDelete}
-                />
+                <div>
+                  <Alert
+                    message="操作提示"
+                    description="右键点击证书节点可以进行签发、删除、查看详情、查看私钥、续期等操作"
+                    type="info"
+                    showIcon
+                    icon={<InfoCircleOutlined />}
+                    style={{ marginBottom: 16 }}
+                    closable
+                  />
+                  <TreeWithContextMenu
+                    treeData={convertCert(certs)}
+                    onIssue={onIssue}
+                    onDelete={onDelete}
+                    onViewDetails={onViewDetails}
+                    onViewPrivateKey={onViewPrivateKey}
+                    onRenew={onRenew}
+                  />
+                </div>
               )}
             </Card>
           )}
@@ -293,42 +315,80 @@ const TreeWithContextMenu = ({
       node,
     });
   };
-  const menuItems = [
+  const items: MenuProps['items'] = [
     {
       key: 'issue',
-      label: '签发',
-      onClick: () => onIssue(contextMenuInfo.node?.key as number),
+      label: (
+        <Space>
+          <SafetyCertificateOutlined />
+          签发子证书
+        </Space>
+      ),
     },
     {
       key: 'viewDetails',
-      label: '查看详情',
-      onClick: () => onViewDetails(contextMenuInfo.node?.key as number),
+      label: (
+        <Space>
+          <EyeOutlined />
+          查看详情
+        </Space>
+      ),
     },
     {
       key: 'viewPrivateKey',
-      label: '查看私钥',
-      onClick: () => onViewPrivateKey(contextMenuInfo.node?.key as number),
+      label: (
+        <Space>
+          <KeyOutlined />
+          查看私钥
+        </Space>
+      ),
     },
     {
       key: 'renew',
-      label: '续期',
-      onClick: () => onRenew(contextMenuInfo.node?.key as number),
+      label: (
+        <Space>
+          <ReloadOutlined />
+          续期证书
+        </Space>
+      ),
+    },
+    {
+      type: 'divider',
     },
     {
       key: 'delete',
-      label: '删除',
-      onClick: () => onDelete(contextMenuInfo.node?.key as number),
+      label: (
+        <Space>
+          <DeleteOutlined />
+          删除证书
+        </Space>
+      ),
+      danger: true,
     },
   ];
 
-  const items: MenuProps['items'] = menuItems.map(item => ({
-    key: item.key,
-    label: item.label,
-    onClick: () => {
-      setContextMenuInfo({ ...contextMenuInfo, visible: false });
-      item.onClick();
-    },
-  }));
+  const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
+    setContextMenuInfo({ ...contextMenuInfo, visible: false });
+
+    const certId = contextMenuInfo.node?.key as number;
+    switch (key) {
+      case 'issue':
+        onIssue(certId);
+        break;
+      case 'viewDetails':
+        onViewDetails(certId);
+        break;
+      case 'viewPrivateKey':
+        onViewPrivateKey(certId);
+        break;
+      case 'renew':
+        onRenew(certId);
+        break;
+      case 'delete':
+        onDelete(certId);
+        break;
+    }
+  };
 
   return (
     <div>
@@ -343,7 +403,7 @@ const TreeWithContextMenu = ({
         }}
         onClick={() => setContextMenuInfo({ ...contextMenuInfo, visible: false })}
       ></div>
-      <Tree multiple defaultExpandAll onRightClick={onRightClick} treeData={treeData} />
+      <Tree defaultExpandAll onRightClick={onRightClick} treeData={treeData} />
       {contextMenuInfo.visible && (
         <div
           style={{
@@ -353,7 +413,7 @@ const TreeWithContextMenu = ({
             zIndex: 9999,
           }}
         >
-          <Dropdown menu={{ items }} open>
+          <Dropdown menu={{ items, onClick: handleMenuClick }} open>
             <div />
           </Dropdown>
         </div>

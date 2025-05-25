@@ -1,27 +1,54 @@
 import { useState, useEffect } from 'react';
-import styles from './NamespaceManager.module.css';
-import Modal from '../Modal/Modal';
+import {
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Space,
+  Typography,
+  message,
+  Popconfirm,
+  Tag,
+  Card,
+} from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, FolderOutlined } from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
+
+const { Title } = Typography;
+const { TextArea } = Input;
+
+interface NamespaceFormData {
+  name: string;
+  desc: string;
+}
 
 export default function NamespaceManager() {
   const [namespaces, setNamespaces] = useState<Namespace[]>([]);
-  const [showCreate, setShowCreate] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
-  const [showDelete, setShowDelete] = useState(false);
-  const [current, setCurrent] = useState<Namespace | null>(null);
-  const [name, setName] = useState('');
-  const [desc, setDesc] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingNamespace, setEditingNamespace] = useState<Namespace | null>(null);
+  const [form] = Form.useForm<NamespaceFormData>();
 
   // 拉取空间列表
   const fetchNamespaces = async () => {
-    if (window.api.namespaces?.list) {
-      const list = await window.api.namespaces.list();
-      // 兼容 desc 字段后端未返回的情况
-      setNamespaces(
-        list.map((ns: Namespace) => ({
-          ...ns,
-          desc: ns.desc ?? '',
-        })),
-      );
+    setLoading(true);
+    try {
+      if (window.api.namespaces?.list) {
+        const list = await window.api.namespaces.list();
+        // 兼容 desc 字段后端未返回的情况
+        setNamespaces(
+          list.map((ns: Namespace) => ({
+            ...ns,
+            desc: ns.desc ?? '',
+          })),
+        );
+      }
+    } catch (error) {
+      message.error('获取空间列表失败');
+      console.error('Failed to fetch namespaces:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -29,186 +56,208 @@ export default function NamespaceManager() {
     fetchNamespaces();
   }, []);
 
-  // 新建
-  const handleOpenCreate = () => {
-    setName('');
-    setDesc('');
-    setShowCreate(true);
+  // 打开新建/编辑模态框
+  const handleOpenModal = (namespace?: Namespace) => {
+    setEditingNamespace(namespace || null);
+    if (namespace) {
+      form.setFieldsValue({
+        name: namespace.name,
+        desc: namespace.desc,
+      });
+    } else {
+      form.resetFields();
+    }
+    setModalVisible(true);
   };
-  const handleCreate = async () => {
-    if (window.api.namespaces.create) {
-      await window.api.namespaces.create(name, desc);
-      setShowCreate(false);
-      fetchNamespaces(); // 新建后刷新
+
+  // 关闭模态框
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setEditingNamespace(null);
+    form.resetFields();
+  };
+
+  // 提交表单
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+
+      if (editingNamespace) {
+        // 编辑
+        if (window.api.namespaces.edit) {
+          await window.api.namespaces.edit(editingNamespace.id, values.name, values.desc);
+          message.success('空间编辑成功');
+        }
+      } else {
+        // 新建
+        if (window.api.namespaces.create) {
+          await window.api.namespaces.create(values.name, values.desc);
+          message.success('空间创建成功');
+        }
+      }
+
+      handleCloseModal();
+      fetchNamespaces();
+    } catch (error) {
+      if (error && typeof error === 'object' && 'errorFields' in error) {
+        // 表单验证错误
+        return;
+      }
+      message.error(editingNamespace ? '编辑空间失败' : '创建空间失败');
+      console.error('Failed to save namespace:', error);
     }
   };
 
-  // 编辑
-  const handleOpenEdit = (ns: Namespace) => {
-    setCurrent(ns);
-    setName(ns.name);
-    setDesc(ns.desc);
-    setShowEdit(true);
-  };
-  const handleEdit = async () => {
-    if (!current) return;
-    if (window.api.namespaces.edit) {
-      await window.api.namespaces.edit(current.id, name, desc);
-      setShowEdit(false);
-      fetchNamespaces(); // 编辑后刷新
+  // 删除空间
+  const handleDelete = async (namespace: Namespace) => {
+    try {
+      if (window.api.namespaces.delete) {
+        await window.api.namespaces.delete(namespace.id);
+        message.success('空间删除成功');
+        fetchNamespaces();
+      }
+    } catch (error) {
+      message.error('删除空间失败');
+      console.error('Failed to delete namespace:', error);
     }
   };
 
-  // 删除
-  const handleOpenDelete = (ns: Namespace) => {
-    setCurrent(ns);
-    setShowDelete(true);
-  };
-  const handleDelete = async () => {
-    if (!current) return;
-    if (window.api.namespaces.delete) {
-      await window.api.namespaces.delete(current.id);
-      setShowDelete(false);
-      fetchNamespaces(); // 删除后刷新
-    }
-  };
+  // 表格列定义
+  const columns: ColumnsType<Namespace> = [
+    {
+      title: '空间名称',
+      dataIndex: 'name',
+      key: 'name',
+      render: (name: string) => (
+        <Space>
+          <FolderOutlined style={{ color: '#1890ff' }} />
+          <span style={{ fontWeight: 500 }}>{name}</span>
+        </Space>
+      ),
+    },
+    {
+      title: '创建时间',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      render: (timestamp: number) => new Date(timestamp * 1000).toLocaleString(),
+      sorter: (a, b) => a.createdAt - b.createdAt,
+    },
+    {
+      title: '证书数量',
+      dataIndex: 'certCount',
+      key: 'certCount',
+      render: (count: number) => <Tag color={count > 0 ? 'blue' : 'default'}>{count} 个证书</Tag>,
+      sorter: (a, b) => a.certCount - b.certCount,
+    },
+    {
+      title: '描述',
+      dataIndex: 'desc',
+      key: 'desc',
+      ellipsis: true,
+      render: (desc: string) => desc || <span style={{ color: '#999' }}>暂无描述</span>,
+    },
+    {
+      title: '操作',
+      key: 'actions',
+      width: 150,
+      render: (_, record) => (
+        <Space>
+          <Button
+            type="link"
+            icon={<EditOutlined />}
+            onClick={() => handleOpenModal(record)}
+            size="small"
+          >
+            编辑
+          </Button>
+          <Popconfirm
+            title="确认删除空间"
+            description={
+              <div>
+                <div>确定要删除空间 &ldquo;{record.name}&rdquo; 吗？</div>
+                <div style={{ color: '#ff4d4f', fontSize: '12px', marginTop: '4px' }}>
+                  此操作将删除该空间下所有证书和私钥，且不可恢复！
+                </div>
+              </div>
+            }
+            onConfirm={() => handleDelete(record)}
+            okText="确认删除"
+            cancelText="取消"
+            okType="danger"
+          >
+            <Button type="link" danger icon={<DeleteOutlined />} size="small">
+              删除
+            </Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
 
   return (
     <div>
-      <h2 className={styles.sectionTitle}>空间管理</h2>
-      <div style={{ marginBottom: 16 }}>
-        <button className={styles.btn} onClick={handleOpenCreate}>
+      <div
+        style={{
+          marginBottom: 24,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <Title level={3} style={{ margin: 0 }}>
+          空间管理
+        </Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => handleOpenModal()}>
           新建空间
-        </button>
+        </Button>
       </div>
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>空间名称</th>
-            <th>创建时间</th>
-            <th>证书数量</th>
-            <th>描述</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          {namespaces.map(ns => (
-            <tr key={ns.id}>
-              <td>{ns.name}</td>
-              <td>{new Date(ns.createdAt * 1000).toLocaleString()}</td>
-              <td>{ns.certCount}</td>
-              <td>{ns.desc}</td>
-              <td>
-                <button
-                  className={styles.btn + ' ' + styles.secondary}
-                  onClick={() => handleOpenEdit(ns)}
-                >
-                  编辑
-                </button>
-                <button
-                  className={styles.btn + ' ' + styles.danger}
-                  onClick={() => handleOpenDelete(ns)}
-                >
-                  删除
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {/* 新建空间模态框 */}
+
+      <Card>
+        <Table
+          columns={columns}
+          dataSource={namespaces}
+          rowKey="id"
+          loading={loading}
+          pagination={{
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: total => `共 ${total} 个空间`,
+          }}
+          locale={{
+            emptyText: '暂无空间数据',
+          }}
+        />
+      </Card>
+
       <Modal
-        open={showCreate}
-        title="新建空间"
-        actions={
-          <>
-            <button className={styles.btn} onClick={handleCreate} disabled={!name.trim()}>
-              确定
-            </button>
-            <button
-              className={styles.btn + ' ' + styles.secondary}
-              onClick={() => setShowCreate(false)}
-            >
-              取消
-            </button>
-          </>
-        }
+        title={editingNamespace ? '编辑空间' : '新建空间'}
+        open={modalVisible}
+        onOk={handleSubmit}
+        onCancel={handleCloseModal}
+        okText={editingNamespace ? '保存' : '创建'}
+        cancelText="取消"
+        destroyOnHidden
       >
-        <label>
-          空间名称<span style={{ color: '#ff4d4f' }}>*</span>
-        </label>
-        <input
-          className={styles.input}
-          type="text"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="请输入空间名称，必填"
-          required
-        />
-        <label>描述</label>
-        <textarea
-          className={styles.textarea}
-          value={desc}
-          onChange={e => setDesc(e.target.value)}
-          placeholder="可选，空间描述"
-        />
-      </Modal>
-      {/* 编辑空间模态框 */}
-      <Modal
-        open={showEdit}
-        title="编辑空间"
-        actions={
-          <>
-            <button className={styles.btn} onClick={handleEdit} disabled={!name.trim()}>
-              保存
-            </button>
-            <button
-              className={styles.btn + ' ' + styles.secondary}
-              onClick={() => setShowEdit(false)}
-            >
-              取消
-            </button>
-          </>
-        }
-      >
-        <label>
-          空间名称<span style={{ color: '#ff4d4f' }}>*</span>
-        </label>
-        <input
-          className={styles.input}
-          type="text"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="请输入空间名称，必填"
-          required
-        />
-        <label>描述</label>
-        <textarea
-          className={styles.textarea}
-          value={desc}
-          onChange={e => setDesc(e.target.value)}
-          placeholder="可选，空间描述"
-        />
-      </Modal>
-      {/* 删除空间模态框 */}
-      <Modal
-        open={showDelete}
-        title="确认删除空间"
-        actions={
-          <>
-            <button className={styles.btn + ' ' + styles.danger} onClick={handleDelete}>
-              删除
-            </button>
-            <button
-              className={styles.btn + ' ' + styles.secondary}
-              onClick={() => setShowDelete(false)}
-            >
-              取消
-            </button>
-          </>
-        }
-      >
-        <div>确定要删除该空间及其下所有证书和私钥吗？此操作不可恢复。</div>
+        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+          <Form.Item
+            name="name"
+            label="空间名称"
+            rules={[
+              { required: true, message: '请输入空间名称' },
+              { min: 1, max: 50, message: '空间名称长度应在1-50个字符之间' },
+            ]}
+          >
+            <Input placeholder="请输入空间名称" />
+          </Form.Item>
+
+          <Form.Item
+            name="desc"
+            label="描述"
+            rules={[{ max: 200, message: '描述长度不能超过200个字符' }]}
+          >
+            <TextArea placeholder="请输入空间描述（可选）" rows={3} showCount maxLength={200} />
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );

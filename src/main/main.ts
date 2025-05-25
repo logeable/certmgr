@@ -90,8 +90,9 @@ app.whenReady().then(async () => {
 function handleIPC(serverBaseURL: string) {
   function handleWrapper(channel: string, handler: (...args: unknown[]) => Promise<unknown>) {
     ipcMain.handle(channel, async (...args) => {
+      const [_event, ...rest] = args;
       try {
-        const data = await handler(...args);
+        const data = await handler(...rest);
         return { success: true, data };
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);

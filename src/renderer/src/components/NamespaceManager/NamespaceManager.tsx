@@ -1,18 +1,6 @@
 import { useState, useEffect } from 'react';
-import {
-  Table,
-  Button,
-  Modal,
-  Form,
-  Input,
-  Space,
-  Typography,
-  message,
-  Popconfirm,
-  Tag,
-  App,
-} from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, FolderOutlined } from '@ant-design/icons';
+import { Table, Button, Modal, Form, Input, Space, Typography, Popconfirm, Tag, App } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import api, { Namespace } from '../../api';
 
@@ -49,6 +37,7 @@ export default function NamespaceManager() {
 
   useEffect(() => {
     fetchNamespaces();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 打开新建/编辑模态框

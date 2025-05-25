@@ -29,7 +29,7 @@ var (
 				Symbol:     "certificates_namespaces_certificates",
 				Columns:    []*schema.Column{CertificatesColumns[7]},
 				RefColumns: []*schema.Column{NamespacesColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 		},
 		Indexes: []*schema.Index{

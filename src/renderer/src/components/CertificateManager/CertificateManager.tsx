@@ -1,8 +1,19 @@
 import { useEffect, useState } from 'react';
-import { Select, Space, Typography, App, Card, Empty, Button } from 'antd';
+import {
+  Select,
+  Space,
+  Typography,
+  App,
+  Card,
+  Empty,
+  Button,
+  Tree,
+  TreeDataNode,
+  Menu,
+  Dropdown,
+} from 'antd';
 import { DatabaseOutlined } from '@ant-design/icons';
 import CreateCertModal from './CreateCertModal';
-import CertTree from '../CertTree';
 import Modal from '../Modal/Modal';
 import CertificateDetailModal from './CertificateDetailModal';
 import PrivateKeyModal from './PrivateKeyModal';
@@ -206,8 +217,8 @@ export default function CertificateManager() {
                   </Button>
                 </div>
               ) : (
-                <CertTree
-                  certificates={certs}
+                <TreeWithContextMenu
+                  treeData={convertCert(certs)}
                   onIssue={onIssue}
                   onDelete={onDelete}
                   onViewDetails={onViewDetails}
@@ -262,4 +273,131 @@ export default function CertificateManager() {
       />
     </div>
   );
+}
+
+const TreeWithContextMenu = ({
+  treeData,
+  onIssue,
+  onDelete,
+  onViewDetails,
+  onViewPrivateKey,
+  onRenew,
+}: {
+  treeData: TreeDataNode[];
+  onIssue: (id: number) => void;
+  onDelete: (id: number) => void;
+  onViewDetails: (id: number) => void;
+  onViewPrivateKey: (id: number) => void;
+  onRenew: (id: number) => void;
+}) => {
+  const [contextMenuInfo, setContextMenuInfo] = useState({
+    visible: false,
+    pageX: 0,
+    pageY: 0,
+    node: null as TreeDataNode | null,
+  });
+
+  const onRightClick = ({ event, node }: { event: React.MouseEvent; node: TreeDataNode }) => {
+    event.preventDefault();
+    setContextMenuInfo({
+      visible: true,
+      pageX: event.pageX,
+      pageY: event.pageY,
+      node,
+    });
+  };
+  const menuItems = [
+    {
+      key: 'issue',
+      label: '签发',
+      onClick: () => onIssue(contextMenuInfo.node?.key as number),
+    },
+    {
+      key: 'delete',
+      label: '删除',
+      onClick: () => onDelete(contextMenuInfo.node?.key as number),
+    },
+    {
+      key: 'viewDetails',
+      label: '查看详情',
+      onClick: () => onViewDetails(contextMenuInfo.node?.key as number),
+    },
+    {
+      key: 'viewPrivateKey',
+      label: '查看私钥',
+      onClick: () => onViewPrivateKey(contextMenuInfo.node?.key as number),
+    },
+    {
+      key: 'renew',
+      label: '续期',
+      onClick: () => onRenew(contextMenuInfo.node?.key as number),
+    },
+  ];
+
+  const handleMenuClick = ({ key }: { key: string }) => {
+    const node = contextMenuInfo.node;
+    console.log(`点击了 ${key}，节点为`, node);
+    // 在此处理菜单操作
+    setContextMenuInfo({ ...contextMenuInfo, visible: false });
+    const item = menuItems.find(item => item.key === key);
+    if (item) {
+      item.onClick();
+    }
+  };
+
+  const menu = (
+    <Menu onClick={handleMenuClick}>
+      {menuItems.map(item => (
+        <Menu.Item key={item.key}>{item.label}</Menu.Item>
+      ))}
+    </Menu>
+  );
+
+  return (
+    <div
+      style={{ position: 'relative' }}
+      onClick={() => setContextMenuInfo({ ...contextMenuInfo, visible: false })}
+    >
+      <Tree multiple defaultExpandAll onRightClick={onRightClick} treeData={treeData} />
+      {contextMenuInfo.visible && (
+        <div
+          style={{
+            position: 'fixed',
+            top: contextMenuInfo.pageY,
+            left: contextMenuInfo.pageX,
+            zIndex: 9999,
+          }}
+        >
+          <Dropdown overlay={menu} open>
+            <div />
+          </Dropdown>
+        </div>
+      )}
+    </div>
+  );
+};
+
+function convertCert(certs: Certificate[]): TreeDataNode[] {
+  const certMap = new Map<number, TreeDataNode>();
+
+  // 将所有证书转换为 Cert 并存入 Map
+  certs.forEach(cert => {
+    certMap.set(cert.id, { key: cert.id, title: cert.subject, children: [] });
+  });
+
+  const root: TreeDataNode[] = [];
+
+  // 组织树形结构
+  certs.forEach(cert => {
+    const currentCert = certMap.get(cert.id)!;
+    if (cert.issuerId === 0 || !certMap.has(cert.issuerId)) {
+      // 如果 issuerId 为 0 或找不到父级，认为是根节点
+      root.push(currentCert);
+    } else {
+      const parent = certMap.get(cert.issuerId)!;
+      parent.children!.push(currentCert);
+    }
+  });
+
+  return root;
 }

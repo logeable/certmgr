@@ -101,8 +101,7 @@ const api = {
       throw new Error(res.error);
     },
     renew: async (certId: number, validDays: number) => {
-      const res = await window.request_server<void>('certificates:renew', {
-        certId,
+      const res = await window.request_server<void>('certificates:renew', certId, {
         validDays,
       });
       if (res.success) {

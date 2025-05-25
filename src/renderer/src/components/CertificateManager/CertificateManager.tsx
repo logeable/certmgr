@@ -74,9 +74,6 @@ export default function CertificateManager() {
         try {
           const list = await api.certificates.list(selectedNs);
           setCerts(list);
-          // 检查是否有根证书
-          const hasRoot = list.some(cert => cert.issuerId === 0);
-          if (!hasRoot) setShowCreate(true);
         } catch (error) {
           message.error('获取证书列表失败');
           console.error('Failed to fetch certificates:', error);
@@ -149,11 +146,16 @@ export default function CertificateManager() {
   const refreshCertificates = async () => {
     if (selectedNs) {
       try {
-        const list = await api.certificates.list(selectedNs);
-        setCerts(list);
+        // 同时刷新证书列表和空间列表
+        const [certList, namespaceList] = await Promise.all([
+          api.certificates.list(selectedNs),
+          api.namespaces.list(),
+        ]);
+        setCerts(certList);
+        setNamespaces(namespaceList);
       } catch (error) {
-        message.error('刷新证书列表失败');
-        console.error('Failed to refresh certificates:', error);
+        message.error('刷新数据失败');
+        console.error('Failed to refresh data:', error);
       }
     }
   };
@@ -174,9 +176,11 @@ export default function CertificateManager() {
           <Title level={3} style={{ margin: 0 }}>
             证书管理
           </Title>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => onIssue(0)}>
-            创建根证书
-          </Button>
+          {selectedNs && certs.length === 0 && certsLoading === false && (
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => onIssue(0)}>
+              创建根证书
+            </Button>
+          )}
         </div>
 
         {/* 空间选择区域 */}

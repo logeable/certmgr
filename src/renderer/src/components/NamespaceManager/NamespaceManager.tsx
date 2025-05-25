@@ -10,7 +10,6 @@ import {
   message,
   Popconfirm,
   Tag,
-  Card,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, FolderOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -195,39 +194,36 @@ export default function NamespaceManager() {
   ];
 
   return (
-    <div>
-      <div
-        style={{
-          marginBottom: 24,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <Title level={3} style={{ margin: 0 }}>
-          空间管理
-        </Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => handleOpenModal()}>
-          新建空间
-        </Button>
-      </div>
+    <div style={{ height: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div
+          style={{
+            marginBottom: 24,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <Title level={3} style={{ margin: 0 }}>
+            空间管理
+          </Title>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => handleOpenModal()}>
+            新建空间
+          </Button>
+        </div>
 
-      <Card>
         <Table
+          style={{ overflow: 'scroll', height: '100%' }}
           columns={columns}
           dataSource={namespaces}
           rowKey="id"
           loading={loading}
-          pagination={{
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: total => `共 ${total} 个空间`,
-          }}
           locale={{
             emptyText: '暂无空间数据',
           }}
+          pagination={false}
         />
-      </Card>
+      </div>
 
       <Modal
         title={editingNamespace ? '编辑空间' : '新建空间'}
@@ -255,7 +251,13 @@ export default function NamespaceManager() {
             label="描述"
             rules={[{ max: 200, message: '描述长度不能超过200个字符' }]}
           >
-            <TextArea placeholder="请输入空间描述（可选）" rows={3} showCount maxLength={200} />
+            <TextArea
+              placeholder="请输入空间描述（可选）"
+              rows={3}
+              showCount
+              maxLength={200}
+              style={{ resize: 'none' }}
+            />
           </Form.Item>
         </Form>
       </Modal>

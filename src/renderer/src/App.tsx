@@ -47,7 +47,7 @@ function App() {
         },
       }}
     >
-      <Layout style={{ minHeight: '100vh' }}>
+      <Layout style={{ height: '100vh' }}>
         <Sider
           theme="light"
           width={180}
@@ -82,6 +82,7 @@ function App() {
               padding: '1.5rem',
               background: colorBgContainer,
               borderRadius: borderRadiusLG,
+              // overflow: 'hidden',
             }}
           >
             {activeMenu === MenuKey.Space && <NamespaceManager />}

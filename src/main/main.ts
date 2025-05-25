@@ -2,6 +2,7 @@ import { ChildProcess, spawn } from 'child_process';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { URLSearchParams } from 'url';
+import logger from './logger';
 
 async function createWindow() {
   // 创建浏览器窗口
@@ -44,16 +45,16 @@ async function startServer() {
     server.stdout.on('data', data => {
       if (data.toString().includes('http server started on')) {
         const port = data.toString().split(':')[2].trim();
-        console.log(`http server started on http://localhost:${port}`);
+        logger.info(`http server started on http://localhost:${port}`);
         resolve({ port: Number(port), process: server });
       }
-      console.log(`server output: ${data.toString()}`);
+      logger.info(`server output: ${data.toString()}`);
     });
     server.stderr.on('data', data => {
-      console.error(`server error: ${data.toString()}`);
+      logger.error(`server error: ${data.toString()}`);
     });
     server.on('close', () => {
-      console.log('server closed');
+      logger.info('server closed');
     });
   });
 }
@@ -91,12 +92,14 @@ function handleIPC(serverBaseURL: string) {
   function handleWrapper(channel: string, handler: (...args: unknown[]) => Promise<unknown>) {
     ipcMain.handle(channel, async (...args) => {
       const [_event, ...rest] = args;
+      logger.debug(`handle IPC`, { channel, args: rest });
       try {
         const data = await handler(...rest);
+        logger.debug(`handle IPC success`, { channel, data });
         return { success: true, data };
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error(`handler "${channel}" error: ${errorMessage}`);
+        logger.error(`handle IPC error`, { channel, error: errorMessage });
         return { success: false, error: errorMessage };
       }
     });

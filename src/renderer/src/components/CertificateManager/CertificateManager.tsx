@@ -224,7 +224,7 @@ export default function CertificateManager() {
         <div style={{ flex: 1, overflow: 'scroll' }}>
           {!selectedNs ? (
             <Card style={{ height: '100%' }}>
-              <Empty description="请先一个空间" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+              <Empty description="请先选择空间" image={Empty.PRESENTED_IMAGE_SIMPLE} />
             </Card>
           ) : (
             <Card loading={certsLoading}>

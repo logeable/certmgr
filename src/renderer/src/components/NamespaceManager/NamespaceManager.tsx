@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Input, Space, Typography, Popconfirm, Tag, App } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import api, { Namespace } from '../../api';
+import FilterDropdown from './FilterDropdown';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -122,6 +123,17 @@ export default function NamespaceManager() {
       dataIndex: 'name',
       key: 'name',
       render: (name: string) => <span style={{ fontWeight: 500 }}>{name}</span>,
+      filterDropdown: props => <FilterDropdown {...props} placeholder="搜索空间名称" />,
+      filterIcon: (filtered: boolean) => (
+        <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
+      ),
+      onFilter: (value, record) =>
+        record.name
+          ? record.name
+              .toString()
+              .toLowerCase()
+              .includes((value as string).toLowerCase())
+          : false,
     },
     {
       title: '创建时间',
@@ -143,6 +155,17 @@ export default function NamespaceManager() {
       key: 'desc',
       ellipsis: true,
       render: (desc: string) => desc || <span style={{ color: '#999' }}>暂无描述</span>,
+      filterDropdown: props => <FilterDropdown {...props} placeholder="搜索描述" />,
+      filterIcon: (filtered: boolean) => (
+        <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
+      ),
+      onFilter: (value, record) =>
+        record.desc
+          ? record.desc
+              .toString()
+              .toLowerCase()
+              .includes((value as string).toLowerCase())
+          : false,
     },
     {
       title: '操作',

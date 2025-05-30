@@ -11,7 +11,7 @@ import {
   TreeDataNode,
   Dropdown,
   MenuProps,
-  Alert,
+  Tooltip,
 } from 'antd';
 import {
   DatabaseOutlined,
@@ -234,15 +234,17 @@ export default function CertificateManager() {
                 </div>
               ) : (
                 <div>
-                  <Alert
-                    message="操作提示"
-                    description="右键点击证书节点可以进行签发、删除、查看详情、查看私钥、续期等操作"
-                    type="info"
-                    showIcon
-                    icon={<InfoCircleOutlined />}
-                    style={{ marginBottom: 16 }}
-                    closable
-                  />
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontWeight: 500, fontSize: 16 }}>证书树</span>
+                    <Tooltip
+                      title="右键点击证书节点可以进行签发、删除、查看详情、查看私钥、续期等操作"
+                      placement="right"
+                    >
+                      <InfoCircleOutlined
+                        style={{ color: '#1677ff', marginLeft: 8, cursor: 'pointer' }}
+                      />
+                    </Tooltip>
+                  </div>
                   <TreeWithContextMenu
                     treeData={convertCert(certs)}
                     onIssue={onIssue}

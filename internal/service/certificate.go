@@ -269,9 +269,13 @@ func (s *CertificateService) RenewCertificate(ctx context.Context, id int, valid
 		MaxPathLenZero:        false,
 	}
 
-	issuerCert, err := s.ctx.client.Certificate.Get(ctx, cert.IssuerID)
+	issuerId := cert.IssuerID
+	if issuerId == 0 {
+		issuerId = cert.ID
+	}
+	issuerCert, err := s.ctx.client.Certificate.Get(ctx, issuerId)
 	if err != nil {
-		return fmt.Errorf("get issuer failed: %w", err)
+		return fmt.Errorf("get issuer (%d) failed: %w", issuerId, err)
 	}
 	issuerX509Cert, err := getCertFromPem(issuerCert.CertPem)
 	if err != nil {

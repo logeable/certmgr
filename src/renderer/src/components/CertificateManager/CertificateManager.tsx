@@ -447,7 +447,12 @@ function convertCert(certs: Certificate[]): TreeDataNode[] {
 
   // 将所有证书转换为 Cert 并存入 Map
   certs.forEach(cert => {
-    certMap.set(cert.id, { key: cert.id, title: cert.subject, children: [] });
+    const title = (
+      <Tooltip title={cert.desc || '无描述'}>
+        <span>{cert.subject}</span>
+      </Tooltip>
+    );
+    certMap.set(cert.id, { key: cert.id, title, children: [] });
   });
 
   const root: TreeDataNode[] = [];

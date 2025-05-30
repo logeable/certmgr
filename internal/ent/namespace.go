@@ -9,7 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/logeable/certmgr/ent/namespace"
+	"github.com/logeable/certmgr/internal/ent/namespace"
 )
 
 // Namespace is the model entity for the Namespace schema.

@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/logeable/certmgr/ent"
+	"github.com/logeable/certmgr/internal/ent"
 )
 
 // The CertificateFunc type is an adapter to allow the use of ordinary

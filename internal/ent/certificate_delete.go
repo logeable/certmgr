@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/logeable/certmgr/ent/certificate"
-	"github.com/logeable/certmgr/ent/predicate"
+	"github.com/logeable/certmgr/internal/ent/certificate"
+	"github.com/logeable/certmgr/internal/ent/predicate"
 )
 
 // CertificateDelete is the builder for deleting a Certificate entity.

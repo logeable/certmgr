@@ -1,6 +1,6 @@
 .PHONY: generate
 generate:
-	go generate ./ent
+	go generate ./internal/ent
 
 .PHONY: bin
 bin: generate

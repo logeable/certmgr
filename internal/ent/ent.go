@@ -12,8 +12,8 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/logeable/certmgr/ent/certificate"
-	"github.com/logeable/certmgr/ent/namespace"
+	"github.com/logeable/certmgr/internal/ent/certificate"
+	"github.com/logeable/certmgr/internal/ent/namespace"
 )
 
 // ent aliases to avoid import conflicts in user's code.

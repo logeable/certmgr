@@ -3,74 +3,101 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
-	"github.com/logeable/certmgr/ent"
-	"go.uber.org/zap"
+	"github.com/logeable/certmgr/internal/ent"
+	"github.com/logeable/certmgr/internal/ent/certificate"
 )
 
-type NamespaceInput struct {
-	Name string
-	Desc string
+type NamespaceService struct {
+	ctx *ServiceContext
 }
 
-func CreateNamespace(ctx context.Context, client *ent.Client, input NamespaceInput) (*ent.Namespace, error) {
-	ns, err := client.Namespace.Create().SetName(input.Name).SetDesc(input.Desc).Save(ctx)
+func NewNamespaceService(ctx *ServiceContext) *NamespaceService {
+	return &NamespaceService{
+		ctx: ctx,
+	}
+}
+
+func (s *NamespaceService) CreateNamespace(ctx context.Context, req ent.Namespace) (*ent.Namespace, error) {
+	ns, err := s.ctx.client.Namespace.Create().SetName(req.Name).SetDesc(req.Desc).Save(ctx)
 	if err != nil {
-		wrapErr := fmt.Errorf("CreateNamespace: save failed (name=%s): %w", input.Name, err)
-		zap.L().Error(wrapErr.Error())
-		return nil, wrapErr
+		return nil, fmt.Errorf("db save failed: %w", err)
 	}
 	return ns, nil
 }
 
-func UpdateNamespace(ctx context.Context, client *ent.Client, id int, input NamespaceInput) (*ent.Namespace, error) {
-	_, err := client.Namespace.Get(ctx, id)
+func (s *NamespaceService) UpdateNamespace(ctx context.Context, id int, req ent.Namespace) (*ent.Namespace, error) {
+	_, err := s.ctx.client.Namespace.Get(ctx, id)
 	if err != nil {
-		wrapErr := fmt.Errorf("UpdateNamespace: get failed (id=%d): %w", id, err)
-		zap.L().Error(wrapErr.Error())
-		return nil, wrapErr
+		return nil, fmt.Errorf("db check namespace exist failed: %w", err)
 	}
-	err = client.Namespace.UpdateOneID(id).SetName(input.Name).SetDesc(input.Desc).Exec(ctx)
+	err = s.ctx.client.Namespace.UpdateOneID(id).SetName(req.Name).SetDesc(req.Desc).Exec(ctx)
 	if err != nil {
-		wrapErr := fmt.Errorf("UpdateNamespace: update failed (id=%d): %w", id, err)
-		zap.L().Error(wrapErr.Error())
-		return nil, wrapErr
+		return nil, fmt.Errorf("db update failed: %w", err)
 	}
-	updated, err := client.Namespace.Get(ctx, id)
+	ns, err := s.ctx.client.Namespace.Get(ctx, id)
 	if err != nil {
-		wrapErr := fmt.Errorf("UpdateNamespace: get after update failed (id=%d): %w", id, err)
-		zap.L().Error(wrapErr.Error())
-		return nil, wrapErr
+		return nil, fmt.Errorf("db get failed: %w", err)
 	}
-	return updated, nil
+	return ns, nil
 }
 
-func DeleteNamespace(ctx context.Context, client *ent.Client, id int) error {
-	err := client.Namespace.DeleteOneID(id).Exec(ctx)
+func (s *NamespaceService) DeleteNamespace(ctx context.Context, id int) error {
+	err := s.ctx.client.Namespace.DeleteOneID(id).Exec(ctx)
 	if err != nil {
-		wrapErr := fmt.Errorf("DeleteNamespace: delete failed (id=%d): %w", id, err)
-		zap.L().Error(wrapErr.Error())
-		return wrapErr
+		return fmt.Errorf("db delete failed: %w", err)
 	}
 	return nil
 }
 
-func GetNamespace(ctx context.Context, client *ent.Client, id int) (*ent.Namespace, error) {
-	ns, err := client.Namespace.Get(ctx, id)
+func (s *NamespaceService) GetNamespace(ctx context.Context, id int) (*ent.Namespace, error) {
+	ns, err := s.ctx.client.Namespace.Get(ctx, id)
 	if err != nil {
-		wrapErr := fmt.Errorf("GetNamespace: get failed (id=%d): %w", id, err)
-		zap.L().Error(wrapErr.Error())
-		return nil, wrapErr
+		return nil, fmt.Errorf("db get failed: %w", err)
 	}
 	return ns, nil
 }
 
-func ListNamespaces(ctx context.Context, client *ent.Client) ([]*ent.Namespace, error) {
-	ns, err := client.Namespace.Query().All(ctx)
+type Namespace struct {
+	ID        int
+	Name      string
+	Desc      string
+	UpdatedAt time.Time
+	CreatedAt time.Time
+	CertCount int
+}
+
+func (s *NamespaceService) ListNamespaces(ctx context.Context) ([]Namespace, error) {
+	var result []Namespace
+	err := s.ctx.withTx(ctx, func(tx *ent.Tx) error {
+		ns, err := tx.Namespace.Query().All(ctx)
+		if err != nil {
+			return fmt.Errorf("query namespaces failed: %w", err)
+		}
+		for _, namespace := range ns {
+			certCount, err := tx.Certificate.Query().Where(certificate.NamespaceID(namespace.ID)).Count(ctx)
+			if err != nil {
+				return fmt.Errorf("query cert count of namespace %d failed: %w", namespace.ID, err)
+			}
+			ns := entToNamespace(namespace)
+			ns.CertCount = certCount
+			result = append(result, ns)
+		}
+		return nil
+	})
 	if err != nil {
-		wrapErr := fmt.Errorf("ListNamespaces: query failed: %w", err)
-		zap.L().Error(wrapErr.Error())
-		return nil, wrapErr
+		return nil, fmt.Errorf("list namespaces failed: %w", err)
 	}
-	return ns, nil
+	return result, nil
+}
+
+func entToNamespace(ns *ent.Namespace) Namespace {
+	return Namespace{
+		ID:        ns.ID,
+		Name:      ns.Name,
+		Desc:      ns.Desc,
+		UpdatedAt: ns.UpdatedAt,
+		CreatedAt: ns.CreatedAt,
+	}
 }

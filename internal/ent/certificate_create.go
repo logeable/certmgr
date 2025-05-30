@@ -10,8 +10,8 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/logeable/certmgr/ent/certificate"
-	"github.com/logeable/certmgr/ent/namespace"
+	"github.com/logeable/certmgr/internal/ent/certificate"
+	"github.com/logeable/certmgr/internal/ent/namespace"
 )
 
 // CertificateCreate is the builder for creating a Certificate entity.

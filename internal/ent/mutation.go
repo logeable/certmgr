@@ -11,9 +11,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/logeable/certmgr/ent/certificate"
-	"github.com/logeable/certmgr/ent/namespace"
-	"github.com/logeable/certmgr/ent/predicate"
+	"github.com/logeable/certmgr/internal/ent/certificate"
+	"github.com/logeable/certmgr/internal/ent/namespace"
+	"github.com/logeable/certmgr/internal/ent/predicate"
 )
 
 const (

@@ -9,8 +9,6 @@ require (
 	go.uber.org/zap v1.27.0
 )
 
-require golang.org/x/time v0.8.0 // indirect
-
 require (
 	ariga.io/atlas v0.31.1-0.20250212144724-069be8033e83 // indirect
 	github.com/agext/levenshtein v1.2.1 // indirect

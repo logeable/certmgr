@@ -5,12 +5,12 @@ package enttest
 import (
 	"context"
 
-	"github.com/logeable/certmgr/ent"
+	"github.com/logeable/certmgr/internal/ent"
 	// required by schema hooks.
-	_ "github.com/logeable/certmgr/ent/runtime"
+	_ "github.com/logeable/certmgr/internal/ent/runtime"
 
 	"entgo.io/ent/dialect/sql/schema"
-	"github.com/logeable/certmgr/ent/migrate"
+	"github.com/logeable/certmgr/internal/ent/migrate"
 )
 
 type (

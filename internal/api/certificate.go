@@ -1,101 +1,128 @@
 package api
 
 import (
-	"context"
-	"crypto/rand"
-	"crypto/x509"
-	"crypto/x509/pkix"
-	"encoding/pem"
-	"math/big"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/logeable/certmgr/ent"
-	"github.com/logeable/certmgr/ent/certificate"
 	"github.com/logeable/certmgr/internal/service"
-	"github.com/logeable/certmgr/internal/util"
 	"go.uber.org/zap"
 )
 
-type Subject struct {
-	Country    string `json:"country"`
-	State      string `json:"state"`
-	City       string `json:"city"`
-	Org        string `json:"org"`
-	Ou         string `json:"ou"`
-	CommonName string `json:"commonName"`
+func RegisterCertificateRoutes(g *echo.Group, ctx *service.ServiceContext) {
+	g.GET("/", ListCertificatesHandler(ctx))
+	g.DELETE("/:id", DeleteCertificateHandler(ctx))
+	g.POST("/", CreateCertificateHandler(ctx))
+	g.POST("/:id/renew/", RenewCertificateHandler(ctx))
 }
 
-type CertificateRequest struct {
-	NamespaceId int     `json:"namespaceId"`
-	IssuerId    int     `json:"issuerId"`
-	KeyType     string  `json:"keyType"`
-	KeyLen      int     `json:"keyLen"`
-	ValidDays   int     `json:"validDays"`
-	Desc        string  `json:"desc"`
-	Subject     Subject `json:"subject"`
-}
+func ListCertificatesHandler(ctx *service.ServiceContext) echo.HandlerFunc {
+	type CertificateResponse struct {
+		ID        int    `json:"id"`
+		Desc      string `json:"desc"`
+		UpdatedAt int64  `json:"updatedAt"`
+		CreatedAt int64  `json:"createdAt"`
+		Subject   string `json:"subject"`
+		IssuerID  int    `json:"issuerId"`
+	}
 
-type CertificateResponse struct {
-	ID        int    `json:"id"`
-	Desc      string `json:"desc"`
-	CertPem   string `json:"certPem"`
-	KeyPem    string `json:"keyPem"`
-	UpdatedAt int64  `json:"updatedAt"`
-	CreatedAt int64  `json:"createdAt"`
-	Subject   string `json:"subject"`
-	IssuerID  int    `json:"issuerId"`
-}
-
-func RegisterCertificateRoutes(g *echo.Group, client *ent.Client) {
-	g.GET("/", func(c echo.Context) error {
-		nsID := c.QueryParam("namespaceId")
-		nsIDInt, err := strconv.Atoi(nsID)
+	return func(c echo.Context) error {
+		logger := zap.L().With(zap.String("handler", "ListCertificatesHandler"))
+		nsID, err := strconv.Atoi(c.QueryParam("namespaceId"))
 		if err != nil {
-			zap.L().Error("api: ListCertificates param failed", zap.String("namespaceId", nsID), zap.Error(err))
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid namespace_id"})
+			logger.Error("convert param failed", zap.String("namespaceId", c.QueryParam("namespaceId")), zap.Error(err))
+			return c.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid namespace_id"})
 		}
-		certs, err := client.Certificate.Query().Where(certificate.NamespaceIDEQ(nsIDInt)).All(context.Background())
+
+		logger = logger.With(zap.Int("namespaceId", nsID))
+		svc := service.NewCertificateService(ctx)
+		certs, err := svc.ListCertificates(c.Request().Context(), nsID)
 		if err != nil {
-			zap.L().Error("api: ListCertificates query failed", zap.Int("namespaceId", nsIDInt), zap.Error(err))
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			logger.Error("list failed", zap.Error(err))
+			return c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		}
-		resp := make([]CertificateResponse, 0, len(certs))
-		for _, cert := range certs {
-			certPem, _ := pem.Decode([]byte(cert.CertPem))
-			if certPem == nil {
-				zap.L().Error("api: ListCertificates decode certPem failed", zap.Int("certId", cert.ID))
-				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "invalid certPem"})
-			}
-			x509Cert, err := x509.ParseCertificate(certPem.Bytes)
-			if err != nil {
-				zap.L().Error("api: ListCertificates parse x509 failed", zap.Int("certId", cert.ID), zap.Error(err))
-				return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-			}
-			resp = append(resp, CertificateResponse{
+
+		resp := make([]CertificateResponse, len(certs))
+		for i, cert := range certs {
+			resp[i] = CertificateResponse{
 				ID:        cert.ID,
 				Desc:      cert.Desc,
-				CertPem:   cert.CertPem,
-				KeyPem:    cert.KeyPem,
 				UpdatedAt: cert.UpdatedAt.Unix(),
 				CreatedAt: cert.CreatedAt.Unix(),
-				Subject:   util.GetSubject(x509Cert),
+				Subject:   cert.Subject,
 				IssuerID:  cert.IssuerID,
-			})
+			}
 		}
-		return c.JSON(http.StatusOK, resp)
-	})
 
-	g.POST("/", func(c echo.Context) error {
-		var req CertificateRequest
-		if err := c.Bind(&req); err != nil {
-			zap.L().Error("api: CreateCertificate bind failed", zap.Error(err))
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusOK, resp)
+	}
+}
+
+func DeleteCertificateHandler(ctx *service.ServiceContext) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		logger := zap.L().With(zap.String("handler", "DeleteCertificateHandler"))
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			logger.Error("convert param failed", zap.String("id", c.Param("id")), zap.Error(err))
+			return c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		}
-		entCert, certPemBytes, _, err := service.CreateCertificate(
-			c.Request().Context(), client, service.CreateCertInput{
+
+		logger = logger.With(zap.Int("id", id))
+		svc := service.NewCertificateService(ctx)
+		err = svc.DeleteCertificate(c.Request().Context(), id)
+		if err != nil {
+			logger.Error("delete failed", zap.Error(err))
+			return c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		}
+
+		return c.JSON(http.StatusNoContent, nil)
+	}
+}
+
+func CreateCertificateHandler(ctx *service.ServiceContext) echo.HandlerFunc {
+	type Subject struct {
+		Country    string `json:"country"`
+		State      string `json:"state"`
+		City       string `json:"city"`
+		Org        string `json:"org"`
+		Ou         string `json:"ou"`
+		CommonName string `json:"commonName"`
+	}
+
+	type Usage struct {
+		DigitalSignature bool `json:"digitalSignature"`
+		KeyEncipherment  bool `json:"keyEncipherment"`
+		KeyCertSign      bool `json:"keyCertSign"`
+		CRLSign          bool `json:"cRLSign"`
+		ServerAuth       bool `json:"serverAuth"`
+		ClientAuth       bool `json:"clientAuth"`
+		CodeSigning      bool `json:"codeSigning"`
+		CA               bool `json:"ca"`
+	}
+
+	type Req struct {
+		NamespaceId     int      `json:"namespaceId"`
+		IssuerId        int      `json:"issuerId"`
+		KeyType         string   `json:"keyType"`
+		KeyLen          int      `json:"keyLen"`
+		ValidDays       int      `json:"validDays"`
+		Desc            string   `json:"desc"`
+		Subject         Subject  `json:"subject"`
+		Usage           Usage    `json:"usage"`
+		SubjectAltNames []string `json:"subjectAltNames"`
+	}
+
+	return func(c echo.Context) error {
+		logger := zap.L().With(zap.String("handler", "CreateCertificateHandler"))
+		var req Req
+		if err := c.Bind(&req); err != nil {
+			logger.Error("bind failed", zap.Error(err))
+			return c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		}
+
+		svc := service.NewCertificateService(ctx)
+		createdCert, err := svc.CreateCertificate(
+			c.Request().Context(), service.CreateCertReq{
 				NamespaceId: req.NamespaceId,
 				IssuerId:    req.IssuerId,
 				KeyType:     req.KeyType,
@@ -109,122 +136,51 @@ func RegisterCertificateRoutes(g *echo.Group, client *ent.Client) {
 					Ou:         req.Subject.Ou,
 					CommonName: req.Subject.CommonName,
 				},
+				Usage: service.Usage{
+					DigitalSignature: req.Usage.DigitalSignature,
+					KeyEncipherment:  req.Usage.KeyEncipherment,
+					KeyCertSign:      req.Usage.KeyCertSign,
+					CRLSign:          req.Usage.CRLSign,
+				},
 			},
 		)
-		if err != nil {
-			zap.L().Error("api: CreateCertificate failed", zap.Any("req", req), zap.Error(err))
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-		}
-		certPem, _ := pem.Decode(certPemBytes)
-		if certPem == nil {
-			zap.L().Error("api: CreateCertificate decode certPem failed", zap.Any("req", req))
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "invalid certPem"})
-		}
-		x509Cert, err := x509.ParseCertificate(certPem.Bytes)
-		if err != nil {
-			zap.L().Error("api: CreateCertificate parse x509 failed", zap.Any("req", req), zap.Error(err))
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-		}
-		return c.JSON(http.StatusOK, map[string]interface{}{
-			"id":        entCert.ID,
-			"desc":      entCert.Desc,
-			"certPem":   entCert.CertPem,
-			"keyPem":    entCert.KeyPem,
-			"createdAt": entCert.CreatedAt.Unix(),
-			"updatedAt": entCert.UpdatedAt.Unix(),
-			"subject":   util.GetSubject(x509Cert),
-		})
-	})
 
-	g.DELETE("/:id", func(c echo.Context) error {
-		id := c.Param("id")
-		idInt, err := strconv.Atoi(id)
 		if err != nil {
-			zap.L().Error("api: DeleteCertificate param failed", zap.String("id", id), zap.Error(err))
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+			logger.Error("create failed", zap.Error(err))
+			return c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		}
-		cert, err := client.Certificate.Get(context.Background(), idInt)
-		if err != nil {
-			zap.L().Error("api: DeleteCertificate get failed", zap.Int("id", idInt), zap.Error(err))
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-		}
-		subCerts, err := util.FindAllSubCertificates(client, cert)
-		if err != nil {
-			zap.L().Error("api: DeleteCertificate find sub failed", zap.Int("id", idInt), zap.Error(err))
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-		}
-		for _, subCert := range subCerts {
-			err = client.Certificate.DeleteOneID(subCert.ID).Exec(context.Background())
-			if err != nil {
-				zap.L().Error("api: DeleteCertificate delete sub failed", zap.Int("subId", subCert.ID), zap.Error(err))
-				return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-			}
-		}
-		err = client.Certificate.DeleteOneID(idInt).Exec(context.Background())
-		if err != nil {
-			zap.L().Error("api: DeleteCertificate delete main failed", zap.Int("id", idInt), zap.Error(err))
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-		}
-		return c.JSON(http.StatusOK, map[string]string{"message": "Certificate deleted"})
-	})
 
-	g.POST("/:id/renew/", func(c echo.Context) error {
-		id := c.Param("id")
-		idInt, err := strconv.Atoi(id)
+		return c.JSON(http.StatusCreated, createdCert)
+	}
+}
+
+func RenewCertificateHandler(ctx *service.ServiceContext) echo.HandlerFunc {
+	type Req struct {
+		ValidDays int `json:"validDays"`
+	}
+
+	return func(c echo.Context) error {
+		logger := zap.L().With(zap.String("handler", "RenewCertificateHandler"))
+		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
-			zap.L().Error("api: RenewCertificate param failed", zap.String("id", id), zap.Error(err))
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+			logger.Error("convert param failed", zap.String("id", c.Param("id")), zap.Error(err))
+			return c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		}
-		type RenewReq struct {
-			ValidDays int `json:"validDays"`
-		}
-		var req RenewReq
+
+		logger = logger.With(zap.Int("id", id))
+		var req Req
 		if err := c.Bind(&req); err != nil {
-			zap.L().Error("api: RenewCertificate bind failed", zap.Error(err))
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+			logger.Error("bind failed", zap.Error(err))
+			return c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		}
-		certData, err := client.Certificate.Get(context.Background(), idInt)
+
+		svc := service.NewCertificateService(ctx)
+		err = svc.RenewCertificate(c.Request().Context(), id, req.ValidDays)
 		if err != nil {
-			zap.L().Error("api: RenewCertificate get failed", zap.Int("id", idInt), zap.Error(err))
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			logger.Error("renew failed", zap.Error(err))
+			return c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		}
-		keyPem, _ := pem.Decode([]byte(certData.KeyPem))
-		key, err := x509.ParsePKCS1PrivateKey(keyPem.Bytes)
-		if err != nil {
-			zap.L().Error("api: RenewCertificate parse key failed", zap.Int("id", idInt), zap.Error(err))
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-		}
-		certPem, _ := pem.Decode([]byte(certData.CertPem))
-		cert, err := x509.ParseCertificate(certPem.Bytes)
-		if err != nil {
-			zap.L().Error("api: RenewCertificate parse cert failed", zap.Int("id", idInt), zap.Error(err))
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-		}
-		now := time.Now()
-		certTemplate := &x509.Certificate{
-			SerialNumber: big.NewInt(1),
-			Subject: pkix.Name{
-				Country:            cert.Subject.Country,
-				Province:           cert.Subject.Province,
-				Locality:           cert.Subject.Locality,
-				CommonName:         cert.Subject.CommonName,
-				Organization:       cert.Subject.Organization,
-				OrganizationalUnit: cert.Subject.OrganizationalUnit,
-			},
-			NotBefore: now,
-			NotAfter:  now.AddDate(0, 0, req.ValidDays),
-		}
-		newCert, err := x509.CreateCertificate(rand.Reader, certTemplate, certTemplate, key.Public(), key)
-		if err != nil {
-			zap.L().Error("api: RenewCertificate create cert failed", zap.Int("id", idInt), zap.Error(err))
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-		}
-		certPemBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: newCert})
-		err = client.Certificate.UpdateOne(certData).SetCertPem(string(certPemBytes)).Exec(context.Background())
-		if err != nil {
-			zap.L().Error("api: RenewCertificate update db failed", zap.Int("id", idInt), zap.Error(err))
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-		}
-		return c.JSON(http.StatusOK, map[string]string{"message": "succeed"})
-	})
+
+		return c.JSON(http.StatusOK, nil)
+	}
 }

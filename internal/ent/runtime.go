@@ -5,9 +5,9 @@ package ent
 import (
 	"time"
 
-	"github.com/logeable/certmgr/ent/certificate"
-	"github.com/logeable/certmgr/ent/namespace"
-	"github.com/logeable/certmgr/ent/schema"
+	"github.com/logeable/certmgr/internal/ent/certificate"
+	"github.com/logeable/certmgr/internal/ent/namespace"
+	"github.com/logeable/certmgr/internal/ent/schema"
 )
 
 // The init function reads all schema descriptors with runtime code

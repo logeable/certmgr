@@ -5,8 +5,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/logeable/certmgr/ent"
-	"github.com/logeable/certmgr/ent/certificate"
+	"github.com/logeable/certmgr/internal/ent"
 	"github.com/logeable/certmgr/internal/service"
 	"go.uber.org/zap"
 )
@@ -24,98 +23,142 @@ type NamespaceResponse struct {
 	CertCount int    `json:"certCount"`
 }
 
-func RegisterNamespaceRoutes(g *echo.Group, client *ent.Client) {
-	g.GET("/", func(c echo.Context) error {
-		namespaces, err := service.ListNamespaces(c.Request().Context(), client)
+func RegisterNamespaceRoutes(g *echo.Group, ctx *service.ServiceContext) {
+	g.GET("/", ListNamespacesHandler(ctx))
+	g.POST("/", CreateNamespaceHandler(ctx))
+	g.GET("/:id", GetNamespaceHandler(ctx))
+	g.PUT("/:id", UpdateNamespaceHandler(ctx))
+	g.DELETE("/:id", DeleteNamespaceHandler(ctx))
+}
+
+func ListNamespacesHandler(ctx *service.ServiceContext) echo.HandlerFunc {
+	type Response struct {
+		ID        int    `json:"id"`
+		Name      string `json:"name"`
+		Desc      string `json:"desc"`
+		UpdatedAt int64  `json:"updatedAt"`
+		CreatedAt int64  `json:"createdAt"`
+		CertCount int    `json:"certCount"`
+	}
+
+	return func(c echo.Context) error {
+		logger := zap.L().With(zap.String("handler", "ListNamespacesHandler"))
+
+		svc := service.NewNamespaceService(ctx)
+		namespaces, err := svc.ListNamespaces(c.Request().Context())
 		if err != nil {
-			zap.L().Error("api: ListNamespaces failed", zap.Error(err))
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			logger.Error("list failed", zap.Error(err))
+			return c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		}
-		resp := make([]NamespaceResponse, 0, len(namespaces))
+
+		resp := make([]Response, 0, len(namespaces))
 		for _, namespace := range namespaces {
-			certCount, err := client.Certificate.Query().Where(certificate.NamespaceIDEQ(namespace.ID)).Count(c.Request().Context())
-			if err != nil {
-				zap.L().Error("api: ListNamespaces certCount failed", zap.Int("namespaceId", namespace.ID), zap.Error(err))
-				return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-			}
-			resp = append(resp, NamespaceResponse{
+			resp = append(resp, Response{
 				ID:        namespace.ID,
 				Name:      namespace.Name,
 				Desc:      namespace.Desc,
+				UpdatedAt: namespace.UpdatedAt.Unix(),
 				CreatedAt: namespace.CreatedAt.Unix(),
-				CertCount: certCount,
+				CertCount: namespace.CertCount,
 			})
 		}
-		return c.JSON(http.StatusOK, resp)
-	})
 
-	g.POST("/", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, resp)
+	}
+}
+
+func CreateNamespaceHandler(ctx *service.ServiceContext) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		logger := zap.L().With(zap.String("handler", "CreateNamespaceHandler"))
+
 		var req NamespaceRequest
 		if err := c.Bind(&req); err != nil {
-			zap.L().Error("api: CreateNamespace bind failed", zap.Error(err))
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+			logger.Error("bind failed", zap.Error(err))
+			return c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		}
-		namespace, err := service.CreateNamespace(c.Request().Context(), client, service.NamespaceInput{
+
+		svc := service.NewNamespaceService(ctx)
+		namespace, err := svc.CreateNamespace(c.Request().Context(), ent.Namespace{
 			Name: req.Name,
 			Desc: req.Desc,
 		})
 		if err != nil {
-			zap.L().Error("api: CreateNamespace failed", zap.String("name", req.Name), zap.String("desc", req.Desc), zap.Error(err))
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			logger.Error("create failed", zap.Error(err))
+			return c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		}
-		return c.JSON(http.StatusOK, map[string]string{"id": strconv.Itoa(namespace.ID)})
-	})
 
-	g.GET("/:id", func(c echo.Context) error {
-		id := c.Param("id")
-		idInt, err := strconv.Atoi(id)
+		return c.JSON(http.StatusCreated, map[string]string{"id": strconv.Itoa(namespace.ID)})
+	}
+}
+
+func GetNamespaceHandler(ctx *service.ServiceContext) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		logger := zap.L().With(zap.String("handler", "GetNamespaceHandler"))
+
+		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
-			zap.L().Error("api: GetNamespace param failed", zap.String("id", id), zap.Error(err))
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+			logger.Error("convert param failed", zap.String("id", c.Param("id")), zap.Error(err))
+			return c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		}
-		namespace, err := service.GetNamespace(c.Request().Context(), client, idInt)
+
+		logger = logger.With(zap.Int("id", id))
+		svc := service.NewNamespaceService(ctx)
+		namespace, err := svc.GetNamespace(c.Request().Context(), id)
 		if err != nil {
-			zap.L().Error("api: GetNamespace failed", zap.Int("id", idInt), zap.Error(err))
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			logger.Error("get failed", zap.Error(err))
+			return c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		}
 		return c.JSON(http.StatusOK, namespace)
-	})
+	}
+}
 
-	g.PUT("/:id", func(c echo.Context) error {
-		id := c.Param("id")
-		idInt, err := strconv.Atoi(id)
+func UpdateNamespaceHandler(ctx *service.ServiceContext) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		logger := zap.L().With(zap.String("handler", "UpdateNamespaceHandler"))
+
+		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
-			zap.L().Error("api: UpdateNamespace param failed", zap.String("id", id), zap.Error(err))
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+			logger.Error("convert param failed", zap.String("id", c.Param("id")), zap.Error(err))
+			return c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		}
+
+		logger = logger.With(zap.Int("id", id))
 		var req NamespaceRequest
 		if err := c.Bind(&req); err != nil {
-			zap.L().Error("api: UpdateNamespace bind failed", zap.Error(err))
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+			logger.Error("bind failed", zap.Error(err))
+			return c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		}
-		updated, err := service.UpdateNamespace(c.Request().Context(), client, idInt, service.NamespaceInput{
+
+		svc := service.NewNamespaceService(ctx)
+		updated, err := svc.UpdateNamespace(c.Request().Context(), id, ent.Namespace{
 			Name: req.Name,
 			Desc: req.Desc,
 		})
 		if err != nil {
-			zap.L().Error("api: UpdateNamespace failed", zap.Int("id", idInt), zap.String("name", req.Name), zap.String("desc", req.Desc), zap.Error(err))
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			logger.Error("update failed", zap.Error(err))
+			return c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		}
 		return c.JSON(http.StatusOK, updated)
-	})
+	}
+}
 
-	g.DELETE("/:id", func(c echo.Context) error {
-		id := c.Param("id")
-		idInt, err := strconv.Atoi(id)
+func DeleteNamespaceHandler(ctx *service.ServiceContext) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		logger := zap.L().With(zap.String("handler", "DeleteNamespaceHandler"))
+
+		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
-			zap.L().Error("api: DeleteNamespace param failed", zap.String("id", id), zap.Error(err))
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+			logger.Error("convert param failed", zap.String("id", c.Param("id")), zap.Error(err))
+			return c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		}
-		err = service.DeleteNamespace(c.Request().Context(), client, idInt)
+
+		logger = logger.With(zap.Int("id", id))
+		svc := service.NewNamespaceService(ctx)
+		err = svc.DeleteNamespace(c.Request().Context(), id)
 		if err != nil {
-			zap.L().Error("api: DeleteNamespace failed", zap.Int("id", idInt), zap.Error(err))
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			logger.Error("delete failed", zap.Error(err))
+			return c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		}
-		return c.JSON(http.StatusOK, nil)
-	})
+		return c.JSON(http.StatusNoContent, nil)
+	}
 }

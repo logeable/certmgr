@@ -140,6 +140,7 @@ func CreateCertificateHandler(ctx *service.ServiceContext) echo.HandlerFunc {
 				KeyType:     req.KeyType,
 				KeyLen:      req.KeyLen,
 				ECCCurve:    req.ECCCurve,
+				ValidDays:   req.ValidDays,
 				Desc:        req.Desc,
 				Subject: service.Subject{
 					Country:    req.Subject.Country,

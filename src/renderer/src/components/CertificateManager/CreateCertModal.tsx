@@ -1,18 +1,5 @@
 import { useState, useEffect } from 'react';
-import {
-  Modal,
-  Form,
-  Input,
-  Select,
-  InputNumber,
-  Button,
-  Space,
-  Divider,
-  Alert,
-  App,
-  Steps,
-  Switch,
-} from 'antd';
+import { Modal, Form, Input, Select, InputNumber, Button, Space, App, Steps, Switch } from 'antd';
 import { SafetyCertificateOutlined } from '@ant-design/icons';
 import api from '../../api';
 
@@ -189,7 +176,7 @@ export default function CreateCertModal({
         <>
           <Form.Item
             name="commonName"
-            label="通用名 (Common Name)"
+            label="通用名"
             rules={[
               { required: true, message: '请输入通用名' },
               { max: 64, message: '通用名长度不能超过64个字符' },
@@ -200,7 +187,7 @@ export default function CreateCertModal({
           </Form.Item>
           <Form.Item
             name="country"
-            label="国家 (Country Name)"
+            label="国家"
             rules={[
               { required: true, message: '请输入国家代码' },
               { len: 2, message: '国家代码必须是2个字符' },
@@ -211,28 +198,28 @@ export default function CreateCertModal({
           </Form.Item>
           <Form.Item
             name="state"
-            label="省份 (State or Province Name)"
+            label="省份"
             rules={[{ max: 128, message: '省份名称长度不能超过128个字符' }]}
           >
-            <Input placeholder="如 Jiangsu" />
+            <Input placeholder="如 Zhejiang" />
           </Form.Item>
           <Form.Item
             name="city"
-            label="城市 (Locality Name)"
+            label="城市"
             rules={[{ max: 128, message: '城市名称长度不能超过128个字符' }]}
           >
-            <Input placeholder="如 Nanjing" />
+            <Input placeholder="如 Hangzhou" />
           </Form.Item>
           <Form.Item
             name="org"
-            label="组织 (Organization Name)"
+            label="组织"
             rules={[{ max: 64, message: '组织名称长度不能超过64个字符' }]}
           >
             <Input placeholder="如 Example Corp" />
           </Form.Item>
           <Form.Item
             name="ou"
-            label="部门 (Organizational Unit Name)"
+            label="部门"
             rules={[{ max: 64, message: '部门名称长度不能超过64个字符' }]}
           >
             <Input placeholder="如 IT" />
@@ -244,7 +231,6 @@ export default function CreateCertModal({
       title: '高级配置',
       content: (
         <>
-          <Divider orientation="left">高级配置（可选）</Divider>
           <Form.Item name="keyUsage" label="Key Usage">
             <Select
               mode="multiple"
@@ -357,22 +343,17 @@ export default function CreateCertModal({
           country: 'CN',
           usage: 'CA',
         }}
-        style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '8px' }}
+        style={{ paddingRight: '8px' }}
       >
-        <Alert
-          message="证书配置"
-          description="请按步骤填写证书信息，带 * 的为必填项"
-          type="info"
-          showIcon
-          style={{ marginBottom: 16 }}
-        />
-        <Steps current={currentStep} style={{ marginBottom: 24 }}>
+        <Steps current={currentStep} style={{ marginBottom: 12, marginTop: 12 }} size="small">
           {steps.map(item => (
             <Steps.Step key={item.title} title={item.title} />
           ))}
         </Steps>
-        {steps[currentStep].content}
-        <div style={{ marginTop: 24, textAlign: 'right' }}>
+        <div style={{ marginBottom: 0, maxHeight: '54vh', overflowY: 'auto' }}>
+          {steps[currentStep].content}
+        </div>
+        <div style={{ marginTop: 12, textAlign: 'right' }}>
           {currentStep > 0 && (
             <Button style={{ marginRight: 8 }} onClick={prev} disabled={loading}>
               上一步

@@ -49,6 +49,7 @@ export default function CertificateManager() {
   const [namespacesLoading, setNamespacesLoading] = useState(false);
   const [certsLoading, setCertsLoading] = useState(false);
   const { message, modal } = App.useApp();
+  const [selectedCertId, setSelectedCertId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchNamespaces = async () => {
@@ -253,6 +254,8 @@ export default function CertificateManager() {
                     onViewDetails={onViewDetails}
                     onViewPrivateKey={onViewPrivateKey}
                     onRenew={onRenew}
+                    selectedCertId={selectedCertId}
+                    setSelectedCertId={setSelectedCertId}
                   />
                 </div>
               )}
@@ -298,6 +301,8 @@ const TreeWithContextMenu = ({
   onViewPrivateKey,
   onRenew,
   onDelete,
+  selectedCertId,
+  setSelectedCertId,
 }: {
   certs: Certificate[];
   onIssue: (id: number) => void;
@@ -305,6 +310,8 @@ const TreeWithContextMenu = ({
   onViewPrivateKey: (id: number) => void;
   onRenew: (id: number) => void;
   onDelete: (id: number) => void;
+  selectedCertId: number | null;
+  setSelectedCertId: (id: number | null) => void;
 }) => {
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
   const [contextMenuInfo, setContextMenuInfo] = useState({
@@ -410,6 +417,19 @@ const TreeWithContextMenu = ({
     setExpandedKeys(certs.map(item => item.id));
   }, [certs]);
 
+  // 监听Delete键删除选中证书
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedCertId) {
+        onDelete(selectedCertId);
+        setSelectedCertId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCertId]);
+
   return (
     <div>
       <div
@@ -431,6 +451,9 @@ const TreeWithContextMenu = ({
         onRightClick={onRightClick}
         onDoubleClick={(_event, node) => {
           onViewDetails(node.key as number);
+        }}
+        onSelect={selectedKeys => {
+          setSelectedCertId(selectedKeys.length > 0 ? (selectedKeys[0] as number) : null);
         }}
         treeData={treeData}
       />

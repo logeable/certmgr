@@ -8,6 +8,7 @@ import (
 	"github.com/logeable/certmgr/ent"
 	"github.com/logeable/certmgr/ent/certificate"
 	"github.com/logeable/certmgr/internal/service"
+	"go.uber.org/zap"
 )
 
 type NamespaceRequest struct {
@@ -27,12 +28,14 @@ func RegisterNamespaceRoutes(g *echo.Group, client *ent.Client) {
 	g.GET("/", func(c echo.Context) error {
 		namespaces, err := service.ListNamespaces(c.Request().Context(), client)
 		if err != nil {
+			zap.L().Error("api: ListNamespaces failed", zap.Error(err))
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 		resp := make([]NamespaceResponse, 0, len(namespaces))
 		for _, namespace := range namespaces {
 			certCount, err := client.Certificate.Query().Where(certificate.NamespaceIDEQ(namespace.ID)).Count(c.Request().Context())
 			if err != nil {
+				zap.L().Error("api: ListNamespaces certCount failed", zap.Int("namespaceId", namespace.ID), zap.Error(err))
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 			}
 			resp = append(resp, NamespaceResponse{
@@ -49,6 +52,7 @@ func RegisterNamespaceRoutes(g *echo.Group, client *ent.Client) {
 	g.POST("/", func(c echo.Context) error {
 		var req NamespaceRequest
 		if err := c.Bind(&req); err != nil {
+			zap.L().Error("api: CreateNamespace bind failed", zap.Error(err))
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
 		namespace, err := service.CreateNamespace(c.Request().Context(), client, service.NamespaceInput{
@@ -56,6 +60,7 @@ func RegisterNamespaceRoutes(g *echo.Group, client *ent.Client) {
 			Desc: req.Desc,
 		})
 		if err != nil {
+			zap.L().Error("api: CreateNamespace failed", zap.String("name", req.Name), zap.String("desc", req.Desc), zap.Error(err))
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusOK, map[string]string{"id": strconv.Itoa(namespace.ID)})
@@ -65,10 +70,12 @@ func RegisterNamespaceRoutes(g *echo.Group, client *ent.Client) {
 		id := c.Param("id")
 		idInt, err := strconv.Atoi(id)
 		if err != nil {
+			zap.L().Error("api: GetNamespace param failed", zap.String("id", id), zap.Error(err))
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
 		namespace, err := service.GetNamespace(c.Request().Context(), client, idInt)
 		if err != nil {
+			zap.L().Error("api: GetNamespace failed", zap.Int("id", idInt), zap.Error(err))
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusOK, namespace)
@@ -78,10 +85,12 @@ func RegisterNamespaceRoutes(g *echo.Group, client *ent.Client) {
 		id := c.Param("id")
 		idInt, err := strconv.Atoi(id)
 		if err != nil {
+			zap.L().Error("api: UpdateNamespace param failed", zap.String("id", id), zap.Error(err))
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
 		var req NamespaceRequest
 		if err := c.Bind(&req); err != nil {
+			zap.L().Error("api: UpdateNamespace bind failed", zap.Error(err))
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
 		updated, err := service.UpdateNamespace(c.Request().Context(), client, idInt, service.NamespaceInput{
@@ -89,6 +98,7 @@ func RegisterNamespaceRoutes(g *echo.Group, client *ent.Client) {
 			Desc: req.Desc,
 		})
 		if err != nil {
+			zap.L().Error("api: UpdateNamespace failed", zap.Int("id", idInt), zap.String("name", req.Name), zap.String("desc", req.Desc), zap.Error(err))
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusOK, updated)
@@ -98,10 +108,12 @@ func RegisterNamespaceRoutes(g *echo.Group, client *ent.Client) {
 		id := c.Param("id")
 		idInt, err := strconv.Atoi(id)
 		if err != nil {
+			zap.L().Error("api: DeleteNamespace param failed", zap.String("id", id), zap.Error(err))
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
 		err = service.DeleteNamespace(c.Request().Context(), client, idInt)
 		if err != nil {
+			zap.L().Error("api: DeleteNamespace failed", zap.Int("id", idInt), zap.Error(err))
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusOK, nil)

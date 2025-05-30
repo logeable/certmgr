@@ -16,13 +16,13 @@ func FindAllSubCertificates(client *ent.Client, cert *ent.Certificate) ([]*ent.C
 	dfs = func(cert *ent.Certificate) error {
 		certs, err := client.Certificate.Query().Where(certificate.IssuerIDEQ(cert.ID)).All(context.Background())
 		if err != nil {
-			return err
+			return fmt.Errorf("FindAllSubCertificates: query failed (issuerID=%d): %w", cert.ID, err)
 		}
 		for _, subCert := range certs {
 			result = append(result, subCert)
 			err = dfs(subCert)
 			if err != nil {
-				return err
+				return fmt.Errorf("FindAllSubCertificates: dfs failed (issuerID=%d, subID=%d): %w", cert.ID, subCert.ID, err)
 			}
 		}
 		return nil
@@ -30,7 +30,7 @@ func FindAllSubCertificates(client *ent.Client, cert *ent.Certificate) ([]*ent.C
 
 	err := dfs(cert)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("FindAllSubCertificates: dfs root failed (rootID=%d): %w", cert.ID, err)
 	}
 	return result, nil
 }

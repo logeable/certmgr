@@ -7,9 +7,11 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"fmt"
 	"math/big"
 
 	"github.com/logeable/certmgr/ent"
+	"go.uber.org/zap"
 )
 
 type Subject struct {
@@ -34,7 +36,9 @@ func CreateCertificate(ctx context.Context, client *ent.Client, input CreateCert
 	if input.KeyType == "RSA" {
 		key, err := rsa.GenerateKey(rand.Reader, input.KeyLen)
 		if err != nil {
-			return nil, nil, nil, err
+			wrapErr := fmt.Errorf("CreateCertificate: generate key failed (namespaceId=%d, keyLen=%d): %w", input.NamespaceId, input.KeyLen, err)
+			zap.L().Error(wrapErr.Error())
+			return nil, nil, nil, wrapErr
 		}
 		certTemplate := &x509.Certificate{
 			SerialNumber: big.NewInt(1),
@@ -49,7 +53,9 @@ func CreateCertificate(ctx context.Context, client *ent.Client, input CreateCert
 		}
 		cert, err := x509.CreateCertificate(rand.Reader, certTemplate, certTemplate, key.Public(), key)
 		if err != nil {
-			return nil, nil, nil, err
+			wrapErr := fmt.Errorf("CreateCertificate: create cert failed (namespaceId=%d): %w", input.NamespaceId, err)
+			zap.L().Error(wrapErr.Error())
+			return nil, nil, nil, wrapErr
 		}
 		certPemBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert})
 		keyPemBytes := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)})
@@ -61,9 +67,13 @@ func CreateCertificate(ctx context.Context, client *ent.Client, input CreateCert
 			SetDesc(input.Desc).
 			Save(ctx)
 		if err != nil {
-			return nil, nil, nil, err
+			wrapErr := fmt.Errorf("CreateCertificate: save to db failed (namespaceId=%d): %w", input.NamespaceId, err)
+			zap.L().Error(wrapErr.Error())
+			return nil, nil, nil, wrapErr
 		}
 		return entCert, certPemBytes, keyPemBytes, nil
 	}
-	return nil, nil, nil, nil // 其他类型可扩展
+	wrapErr := fmt.Errorf("CreateCertificate: unsupported key type %s (namespaceId=%d)", input.KeyType, input.NamespaceId)
+	zap.L().Error(wrapErr.Error())
+	return nil, nil, nil, wrapErr
 }

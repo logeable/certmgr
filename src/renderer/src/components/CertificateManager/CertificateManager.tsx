@@ -137,6 +137,7 @@ export default function CertificateManager() {
           await api.certificates.delete(certId);
           message.success('证书删除成功');
           refreshCertificates();
+          setSelectedCertId(null);
         } catch (error) {
           message.error('删除证书失败');
           console.error('Failed to delete certificate:', error);
@@ -422,7 +423,6 @@ const TreeWithContextMenu = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedCertId) {
         onDelete(selectedCertId);
-        setSelectedCertId(null);
       }
     };
     window.addEventListener('keydown', handleKeyDown);

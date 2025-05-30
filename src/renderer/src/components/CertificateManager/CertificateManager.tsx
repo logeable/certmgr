@@ -113,6 +113,8 @@ export default function CertificateManager() {
         }
       } else if ((e.key === 'Enter' || e.key === ' ') && selectedCertId) {
         onViewDetails(selectedCertId);
+      } else if (e.key === 'r' && selectedCertId) {
+        onRenew(selectedCertId);
       }
     };
     window.addEventListener('keydown', handleKeyDown);

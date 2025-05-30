@@ -46,9 +46,9 @@ func (s *CertificateService) CreateCertificate(ctx context.Context, req CreateCe
 		NotBefore:             now,
 		NotAfter:              now.AddDate(0, 0, req.ValidDays),
 		KeyUsage:              req.Usage.ToKeyUsage(),
-		ExtKeyUsage:           req.Usage.ToExtKeyUsage(),
+		ExtKeyUsage:           req.ExtendedUsage.ToExtKeyUsage(),
 		BasicConstraintsValid: true,
-		IsCA:                  req.Usage.CA,
+		IsCA:                  req.BasicConstraints.CA,
 		MaxPathLenZero:        false,
 	}
 
@@ -291,7 +291,13 @@ func (u *Usage) ToKeyUsage() x509.KeyUsage {
 	return ku
 }
 
-func (u *Usage) ToExtKeyUsage() []x509.ExtKeyUsage {
+type ExtendedUsage struct {
+	ServerAuth  bool `json:"serverAuth"`
+	ClientAuth  bool `json:"clientAuth"`
+	CodeSigning bool `json:"codeSigning"`
+}
+
+func (u *ExtendedUsage) ToExtKeyUsage() []x509.ExtKeyUsage {
 	var eku []x509.ExtKeyUsage
 	if u.ServerAuth {
 		eku = append(eku, x509.ExtKeyUsageServerAuth)
@@ -303,6 +309,10 @@ func (u *Usage) ToExtKeyUsage() []x509.ExtKeyUsage {
 		eku = append(eku, x509.ExtKeyUsageCodeSigning)
 	}
 	return eku
+}
+
+type BasicConstraints struct {
+	CA bool `json:"ca"`
 }
 
 type Certificate struct {
@@ -318,15 +328,18 @@ type Certificate struct {
 }
 
 type CreateCertReq struct {
-	NamespaceId     int      `json:"namespaceId"`
-	IssuerId        int      `json:"issuerId"`
-	KeyType         string   `json:"keyType"`
-	KeyLen          int      `json:"keyLen"`
-	ValidDays       int      `json:"validDays"`
-	Desc            string   `json:"desc"`
-	Subject         Subject  `json:"subject"`
-	Usage           Usage    `json:"usage"`
-	SubjectAltNames []string `json:"subjectAltNames"`
+	NamespaceId      int              `json:"namespaceId"`
+	IssuerId         int              `json:"issuerId"`
+	KeyType          string           `json:"keyType"`
+	KeyLen           int              `json:"keyLen"`
+	ValidDays        int              `json:"validDays"`
+	Desc             string           `json:"desc"`
+	Subject          Subject          `json:"subject"`
+	Usage            Usage            `json:"usage"`
+	ExtendedUsage    ExtendedUsage    `json:"extendedUsage"`
+	BasicConstraints BasicConstraints `json:"basicConstraints"`
+	DNSNames         []string         `json:"dnsNames"`
+	IPAddresses      []string         `json:"ipAddresses"`
 }
 
 func getCertFromPem(certPem string) (*x509.Certificate, error) {

@@ -94,22 +94,30 @@ func CreateCertificateHandler(ctx *service.ServiceContext) echo.HandlerFunc {
 		KeyEncipherment  bool `json:"keyEncipherment"`
 		KeyCertSign      bool `json:"keyCertSign"`
 		CRLSign          bool `json:"cRLSign"`
-		ServerAuth       bool `json:"serverAuth"`
-		ClientAuth       bool `json:"clientAuth"`
-		CodeSigning      bool `json:"codeSigning"`
-		CA               bool `json:"ca"`
+	}
+
+	type ExtendedUsage struct {
+		ServerAuth  bool `json:"serverAuth"`
+		ClientAuth  bool `json:"clientAuth"`
+		CodeSigning bool `json:"codeSigning"`
+	}
+	type BasicConstraints struct {
+		CA bool `json:"ca"`
 	}
 
 	type Req struct {
-		NamespaceId     int      `json:"namespaceId"`
-		IssuerId        int      `json:"issuerId"`
-		KeyType         string   `json:"keyType"`
-		KeyLen          int      `json:"keyLen"`
-		ValidDays       int      `json:"validDays"`
-		Desc            string   `json:"desc"`
-		Subject         Subject  `json:"subject"`
-		Usage           Usage    `json:"usage"`
-		SubjectAltNames []string `json:"subjectAltNames"`
+		NamespaceId      int              `json:"namespaceId"`
+		IssuerId         int              `json:"issuerId"`
+		KeyType          string           `json:"keyType"`
+		KeyLen           int              `json:"keyLen"`
+		ValidDays        int              `json:"validDays"`
+		Desc             string           `json:"desc"`
+		Subject          Subject          `json:"subject"`
+		Usage            Usage            `json:"usage"`
+		ExtendedUsage    ExtendedUsage    `json:"extendedUsage"`
+		BasicConstraints BasicConstraints `json:"basicConstraints"`
+		DNSNames         []string         `json:"dnsNames"`
+		IPAddresses      []string         `json:"ipAddresses"`
 	}
 
 	return func(c echo.Context) error {
@@ -142,6 +150,16 @@ func CreateCertificateHandler(ctx *service.ServiceContext) echo.HandlerFunc {
 					KeyCertSign:      req.Usage.KeyCertSign,
 					CRLSign:          req.Usage.CRLSign,
 				},
+				ExtendedUsage: service.ExtendedUsage{
+					ServerAuth:  req.ExtendedUsage.ServerAuth,
+					ClientAuth:  req.ExtendedUsage.ClientAuth,
+					CodeSigning: req.ExtendedUsage.CodeSigning,
+				},
+				BasicConstraints: service.BasicConstraints{
+					CA: req.BasicConstraints.CA,
+				},
+				DNSNames:    req.DNSNames,
+				IPAddresses: req.IPAddresses,
 			},
 		)
 

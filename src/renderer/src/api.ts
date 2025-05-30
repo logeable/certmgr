@@ -78,6 +78,22 @@ const api = {
         ou: string;
         commonName: string;
       },
+      usage: {
+        digitalSignature: boolean;
+        keyEncipherment: boolean;
+        keyCertSign: boolean;
+        cRLSign: boolean;
+      },
+      extendedUsage: {
+        serverAuth: boolean;
+        clientAuth: boolean;
+        codeSigning: boolean;
+      },
+      basicConstraints: {
+        ca: boolean;
+      },
+      dnsNames: string[],
+      ipAddresses: string[],
     ) => {
       const res = await window.request_server<Certificate>('certificates:create', {
         namespaceId,
@@ -87,6 +103,11 @@ const api = {
         validDays,
         desc,
         subject,
+        usage,
+        extendedUsage,
+        basicConstraints,
+        dnsNames,
+        ipAddresses,
       });
       if (res.success) {
         return res.data;

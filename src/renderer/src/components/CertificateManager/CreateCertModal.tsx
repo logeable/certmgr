@@ -28,7 +28,8 @@ interface FormData {
   usage: string;
   keyUsage?: string[];
   extKeyUsage?: string[];
-  san?: string;
+  dnsNames?: string[];
+  ipAddresses?: string[];
   basicConstraintsCA?: boolean;
 }
 
@@ -256,8 +257,11 @@ export default function CreateCertModal({
               <Option value="codeSigning">codeSigning</Option>
             </Select>
           </Form.Item>
-          <Form.Item name="san" label="Subject Alternative Name (SAN)">
-            <Input placeholder="如 example.com, www.example.com" onChange={handleAdvancedChange} />
+          <Form.Item name="dnsNames" label="DNS Names">
+            <Select mode="tags" placeholder="如 example.com, *.example.com" />
+          </Form.Item>
+          <Form.Item name="ipAddresses" label="IP Addresses">
+            <Select mode="tags" placeholder="如 192.168.1.1, 192.168.1.2" />
           </Form.Item>
           <Form.Item name="basicConstraintsCA" label="是否为CA证书" valuePropName="checked">
             <Switch checkedChildren="是" unCheckedChildren="否" onChange={handleAdvancedChange} />
@@ -282,6 +286,36 @@ export default function CreateCertModal({
       await form.validateFields();
       setLoading(true);
       const values = form.getFieldsValue();
+
+      const subject = {
+        country: values.country,
+        state: values.state,
+        city: values.city,
+        org: values.org,
+        ou: values.ou,
+        commonName: values.commonName,
+      };
+
+      const usage = {
+        digitalSignature: values.keyUsage?.includes('digitalSignature') ?? false,
+        keyEncipherment: values.keyUsage?.includes('keyEncipherment') ?? false,
+        keyCertSign: values.keyUsage?.includes('keyCertSign') ?? false,
+        cRLSign: values.keyUsage?.includes('cRLSign') ?? false,
+      };
+
+      const extendedUsage = {
+        serverAuth: values.extKeyUsage?.includes('serverAuth') ?? false,
+        clientAuth: values.extKeyUsage?.includes('clientAuth') ?? false,
+        codeSigning: values.extKeyUsage?.includes('codeSigning') ?? false,
+      };
+
+      const basicConstraints = {
+        ca: values.basicConstraintsCA ?? false,
+      };
+
+      const dnsNames = values.dnsNames ?? [];
+      const ipAddresses = values.ipAddresses ?? [];
+
       await api.certificates.create(
         namespaceId,
         issuerId,
@@ -289,14 +323,12 @@ export default function CreateCertModal({
         values.keyLen,
         values.validDays,
         values.desc,
-        {
-          country: values.country,
-          state: values.state,
-          city: values.city,
-          org: values.org,
-          ou: values.ou,
-          commonName: values.commonName,
-        },
+        subject,
+        usage,
+        extendedUsage,
+        basicConstraints,
+        dnsNames,
+        ipAddresses,
       );
       message.success('证书创建成功');
       onSuccess();

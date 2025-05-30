@@ -423,6 +423,11 @@ const TreeWithContextMenu = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedCertId) {
         onDelete(selectedCertId);
+      } else if (e.key === 's' && selectedCertId) {
+        const cert = certs.find(c => c.id === selectedCertId);
+        if (cert && cert.isCA) {
+          onIssue(selectedCertId);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);

@@ -24,7 +24,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer logger.Sync()
+	defer func() {
+		err := logger.Sync()
+		if err != nil {
+			panic(err)
+		}
+	}()
 	zap.ReplaceGlobals(logger)
 
 	dbPath := filepath.Join(os.Getenv("HOME"), ".certmgr", "certmgr.db")

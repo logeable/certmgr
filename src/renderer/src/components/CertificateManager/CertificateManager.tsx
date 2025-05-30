@@ -52,6 +52,7 @@ export default function CertificateManager() {
   const { message, modal } = App.useApp();
   const [selectedCertId, setSelectedCertId] = useState<number | null>(null);
   const [showTreeHelp, setShowTreeHelp] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     const fetchNamespaces = async () => {
@@ -91,6 +92,43 @@ export default function CertificateManager() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedNs]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 只在没有任何模态框弹出时才响应快捷键
+      if (
+        showDetail ||
+        showCreate ||
+        showPrivateKey ||
+        showRenew ||
+        showTreeHelp ||
+        showDeleteConfirm
+      )
+        return;
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedCertId) {
+        onDelete(selectedCertId);
+      } else if (e.key === 's' && selectedCertId) {
+        const cert = certs.find(c => c.id === selectedCertId);
+        if (cert && cert.isCA) {
+          onIssue(selectedCertId);
+        }
+      } else if ((e.key === 'Enter' || e.key === ' ') && selectedCertId) {
+        onViewDetails(selectedCertId);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    selectedCertId,
+    showDetail,
+    showCreate,
+    showPrivateKey,
+    showRenew,
+    showTreeHelp,
+    certs,
+    showDeleteConfirm,
+  ]);
+
   const onIssue = (issuerId: number) => {
     setIssuerId(issuerId);
     setShowCreate(true);
@@ -121,8 +159,9 @@ export default function CertificateManager() {
   };
 
   // 删除证书确认
-  const onDelete = (certId: number) => {
-    modal.confirm({
+  const onDelete = async (certId: number) => {
+    setShowDeleteConfirm(true);
+    await modal.confirm({
       title: '确认删除证书',
       icon: <ExclamationCircleOutlined />,
       content: (
@@ -146,6 +185,7 @@ export default function CertificateManager() {
         }
       },
     });
+    setShowDeleteConfirm(false);
   };
 
   const refreshCertificates = async () => {
@@ -253,7 +293,6 @@ export default function CertificateManager() {
                     onViewDetails={onViewDetails}
                     onViewPrivateKey={onViewPrivateKey}
                     onRenew={onRenew}
-                    selectedCertId={selectedCertId}
                     setSelectedCertId={setSelectedCertId}
                   />
                 </div>
@@ -325,7 +364,6 @@ const TreeWithContextMenu = ({
   onViewPrivateKey,
   onRenew,
   onDelete,
-  selectedCertId,
   setSelectedCertId,
 }: {
   certs: Certificate[];
@@ -334,7 +372,6 @@ const TreeWithContextMenu = ({
   onViewPrivateKey: (id: number) => void;
   onRenew: (id: number) => void;
   onDelete: (id: number) => void;
-  selectedCertId: number | null;
   setSelectedCertId: (id: number | null) => void;
 }) => {
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
@@ -440,25 +477,6 @@ const TreeWithContextMenu = ({
   useEffect(() => {
     setExpandedKeys(certs.map(item => item.id));
   }, [certs]);
-
-  // 监听Delete键删除选中证书
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedCertId) {
-        onDelete(selectedCertId);
-      } else if (e.key === 's' && selectedCertId) {
-        const cert = certs.find(c => c.id === selectedCertId);
-        if (cert && cert.isCA) {
-          onIssue(selectedCertId);
-        }
-      } else if ((e.key === 'Enter' || e.key === ' ') && selectedCertId) {
-        onViewDetails(selectedCertId);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCertId]);
 
   return (
     <div>

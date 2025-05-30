@@ -428,6 +428,8 @@ const TreeWithContextMenu = ({
         if (cert && cert.isCA) {
           onIssue(selectedCertId);
         }
+      } else if ((e.key === 'Enter' || e.key === ' ') && selectedCertId) {
+        onViewDetails(selectedCertId);
       }
     };
     window.addEventListener('keydown', handleKeyDown);

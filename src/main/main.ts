@@ -194,4 +194,9 @@ function handleIPC(serverBaseURL: string) {
     const [certId, body] = args;
     return await doPost(`certificates/${certId}/renew/`, body);
   });
+
+  handleWrapper('certificates:get', async (...args: unknown[]) => {
+    const [certId] = args;
+    return await doGet(`certificates/${certId}`);
+  });
 }

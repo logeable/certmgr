@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"net"
 	"time"
 
 	"github.com/logeable/certmgr/internal/ent"
@@ -64,6 +65,9 @@ func (s *CertificateService) CreateCertificate(ctx context.Context, req CreateCe
 		if err != nil {
 			return nil, fmt.Errorf("get issuer (%d) cert from pem failed: %w", req.IssuerId, err)
 		}
+		if !parentCert.IsCA {
+			return nil, fmt.Errorf("issuer (%d) is not a CA", req.IssuerId)
+		}
 		signKey, err = getPrivateKeyFromPem(issuer.KeyPem)
 		if err != nil {
 			return nil, fmt.Errorf("get issuer (%d) key from pem failed: %w", req.IssuerId, err)
@@ -105,6 +109,7 @@ func (s *CertificateService) CreateCertificate(ctx context.Context, req CreateCe
 		CertPem:     string(certPemBytes),
 		KeyPem:      string(keyPemBytes),
 		Subject:     getSubject(x509Cert),
+		IsCA:        x509Cert.IsCA,
 	}, nil
 }
 
@@ -115,9 +120,9 @@ func (s *CertificateService) ListCertificates(ctx context.Context, namespaceId i
 		return nil, fmt.Errorf("query certificates failed: %w", err)
 	}
 	for _, cert := range certs {
-		subject, err := getSubjectFromPem(cert.CertPem)
+		x509Cert, err := getCertFromPem(cert.CertPem)
 		if err != nil {
-			return nil, fmt.Errorf("get subject of cert %d failed: %w", cert.ID, err)
+			return nil, fmt.Errorf("get cert %d from pem failed: %w", cert.ID, err)
 		}
 		result = append(result, Certificate{
 			ID:          cert.ID,
@@ -126,12 +131,86 @@ func (s *CertificateService) ListCertificates(ctx context.Context, namespaceId i
 			IssuerID:    cert.IssuerID,
 			UpdatedAt:   cert.UpdatedAt,
 			CreatedAt:   cert.CreatedAt,
-			Subject:     subject,
+			Subject:     getSubject(x509Cert),
+			IsCA:        x509Cert.IsCA,
 			CertPem:     cert.CertPem,
 			KeyPem:      cert.KeyPem,
 		})
 	}
 	return result, nil
+}
+
+func (s *CertificateService) GetCertificate(ctx context.Context, id int) (*CertificateDetail, error) {
+	cert, err := s.ctx.client.Certificate.Get(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("get cert failed: %w", err)
+	}
+
+	subject, err := getSubjectFromPem(cert.CertPem)
+	if err != nil {
+		return nil, fmt.Errorf("get subject of cert %d failed: %w", cert.ID, err)
+	}
+
+	issuerSubject := subject
+	if cert.IssuerID != 0 {
+		issuerCert, err := s.ctx.client.Certificate.Get(ctx, cert.IssuerID)
+		if err != nil {
+			return nil, fmt.Errorf("get issuer cert %d failed: %w", cert.IssuerID, err)
+		}
+		issuerSubject, err = getSubjectFromPem(issuerCert.CertPem)
+		if err != nil {
+			return nil, fmt.Errorf("get issuer subject of cert %d failed: %w", cert.IssuerID, err)
+		}
+	}
+
+	privateKey, err := getPrivateKeyFromPem(cert.KeyPem)
+	if err != nil {
+		return nil, fmt.Errorf("get private key %d from pem failed: %w", cert.ID, err)
+	}
+
+	x509Cert, err := getCertFromPem(cert.CertPem)
+	if err != nil {
+		return nil, fmt.Errorf("get cert %d from pem failed: %w", cert.ID, err)
+	}
+
+	var keyType string
+	var keyLen int
+	var eccCurve string
+	switch privateKey.(type) {
+	case *rsa.PrivateKey:
+		keyType = "RSA"
+		keyLen = x509Cert.PublicKey.(*rsa.PublicKey).N.BitLen()
+	case *ecdsa.PrivateKey:
+		keyType = "ECDSA"
+		eccCurve = x509Cert.PublicKey.(*ecdsa.PublicKey).Curve.Params().Name
+	case ed25519.PrivateKey:
+		keyType = "ED25519"
+	default:
+		return nil, fmt.Errorf("unsupported key type: %T", privateKey)
+	}
+
+	return &CertificateDetail{
+		ID:            cert.ID,
+		Desc:          cert.Desc,
+		UpdatedAt:     cert.UpdatedAt.Unix(),
+		CreatedAt:     cert.CreatedAt.Unix(),
+		Subject:       subject,
+		IssuerID:      cert.IssuerID,
+		IssuerSubject: issuerSubject,
+		CertPem:       cert.CertPem,
+		KeyPem:        cert.KeyPem,
+		KeyType:       keyType,
+		KeyLen:        keyLen,
+		ECCCurve:      eccCurve,
+		ValidDays:     int(x509Cert.NotAfter.Sub(x509Cert.NotBefore).Hours() / 24),
+		NotBefore:     x509Cert.NotBefore.Unix(),
+		NotAfter:      x509Cert.NotAfter.Unix(),
+		KeyUsage:      formatKeyUsage(x509Cert.KeyUsage),
+		ExtKeyUsage:   formatExtKeyUsage(x509Cert.ExtKeyUsage),
+		DNSNames:      x509Cert.DNSNames,
+		IPAddresses:   formatIPAddresses(x509Cert.IPAddresses),
+		IsCA:          x509Cert.IsCA,
+	}, nil
 }
 
 func (s *CertificateService) DeleteCertificate(ctx context.Context, id int) error {
@@ -247,6 +326,29 @@ func (s *CertificateService) FindAllSubCertificates(ctx context.Context, id int)
 	return result, nil
 }
 
+type CertificateDetail struct {
+	ID            int      `json:"id"`
+	Desc          string   `json:"desc"`
+	UpdatedAt     int64    `json:"updatedAt"`
+	CreatedAt     int64    `json:"createdAt"`
+	Subject       string   `json:"subject"`
+	IssuerID      int      `json:"issuerId"`
+	IssuerSubject string   `json:"issuerSubject"`
+	CertPem       string   `json:"certPem"`
+	KeyPem        string   `json:"keyPem"`
+	KeyType       string   `json:"keyType"`
+	KeyLen        int      `json:"keyLen"`
+	ECCCurve      string   `json:"eccCurve"`
+	ValidDays     int      `json:"validDays"`
+	NotBefore     int64    `json:"notBefore"`
+	NotAfter      int64    `json:"notAfter"`
+	KeyUsage      []string `json:"keyUsage"`
+	ExtKeyUsage   []string `json:"extKeyUsage"`
+	DNSNames      []string `json:"dnsNames"`
+	IPAddresses   []string `json:"ipAddresses"`
+	IsCA          bool     `json:"isCA"`
+}
+
 type Subject struct {
 	Country    string `json:"country"`
 	State      string `json:"state"`
@@ -272,10 +374,6 @@ type Usage struct {
 	KeyEncipherment  bool `json:"keyEncipherment"`
 	KeyCertSign      bool `json:"keyCertSign"`
 	CRLSign          bool `json:"cRLSign"`
-	ServerAuth       bool `json:"serverAuth"`
-	ClientAuth       bool `json:"clientAuth"`
-	CodeSigning      bool `json:"codeSigning"`
-	CA               bool `json:"ca"`
 }
 
 func (u *Usage) ToKeyUsage() x509.KeyUsage {
@@ -329,6 +427,7 @@ type Certificate struct {
 	UpdatedAt   time.Time
 	CreatedAt   time.Time
 	Subject     string
+	IsCA        bool
 }
 
 type CreateCertReq struct {
@@ -437,4 +536,46 @@ func createPrivateKey(keyType string, req CreateCertReq) (crypto.PrivateKey, err
 	default:
 		return nil, fmt.Errorf("unsupported key type: %s", keyType)
 	}
+}
+
+func formatKeyUsage(ku x509.KeyUsage) []string {
+	var result []string
+	if ku&x509.KeyUsageDigitalSignature != 0 {
+		result = append(result, "digitalSignature")
+	}
+	if ku&x509.KeyUsageKeyEncipherment != 0 {
+		result = append(result, "keyEncipherment")
+	}
+	if ku&x509.KeyUsageCertSign != 0 {
+		result = append(result, "keyCertSign")
+	}
+	if ku&x509.KeyUsageCRLSign != 0 {
+		result = append(result, "cRLSign")
+	}
+	return result
+}
+
+func formatExtKeyUsage(eku []x509.ExtKeyUsage) []string {
+	var result []string
+	for _, e := range eku {
+		switch e {
+		case x509.ExtKeyUsageServerAuth:
+			result = append(result, "serverAuth")
+		case x509.ExtKeyUsageClientAuth:
+			result = append(result, "clientAuth")
+		case x509.ExtKeyUsageCodeSigning:
+			result = append(result, "codeSigning")
+		default:
+			result = append(result, fmt.Sprintf("unknown(%d)", e))
+		}
+	}
+	return result
+}
+
+func formatIPAddresses(ipAddresses []net.IP) []string {
+	var result []string
+	for _, ip := range ipAddresses {
+		result = append(result, ip.String())
+	}
+	return result
 }

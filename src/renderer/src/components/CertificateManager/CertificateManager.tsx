@@ -12,6 +12,7 @@ import {
   Dropdown,
   MenuProps,
   Tooltip,
+  Tag,
 } from 'antd';
 import {
   DatabaseOutlined,
@@ -324,15 +325,6 @@ const TreeWithContextMenu = ({
   };
   const items: MenuProps['items'] = [
     {
-      key: 'issue',
-      label: (
-        <Space>
-          <SafetyCertificateOutlined />
-          签发子证书
-        </Space>
-      ),
-    },
-    {
       key: 'viewDetails',
       label: (
         <Space>
@@ -350,6 +342,21 @@ const TreeWithContextMenu = ({
         </Space>
       ),
     },
+    // 只有CA证书才显示签发菜单
+    ...(contextMenuInfo.node &&
+    certs.find(c => c.id === (contextMenuInfo.node?.key as number) && c.isCA)
+      ? [
+          {
+            key: 'issue',
+            label: (
+              <Space>
+                <SafetyCertificateOutlined />
+                签发证书
+              </Space>
+            ),
+          },
+        ]
+      : []),
     {
       key: 'renew',
       label: (
@@ -422,6 +429,9 @@ const TreeWithContextMenu = ({
           setExpandedKeys(keys);
         }}
         onRightClick={onRightClick}
+        onDoubleClick={(_event, node) => {
+          onViewDetails(node.key as number);
+        }}
         treeData={treeData}
       />
       {contextMenuInfo.visible && (
@@ -449,7 +459,14 @@ function convertCert(certs: Certificate[]): TreeDataNode[] {
   certs.forEach(cert => {
     const title = (
       <Tooltip title={cert.desc || '无描述'}>
-        <span>{cert.subject}</span>
+        <span style={{ userSelect: 'none' }}>
+          {cert.subject}
+          {cert.isCA && (
+            <Tag color="green" style={{ marginLeft: 6, fontSize: 10, verticalAlign: 'middle' }}>
+              CA
+            </Tag>
+          )}
+        </span>
       </Tooltip>
     );
     certMap.set(cert.id, { key: cert.id, title, children: [] });

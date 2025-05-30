@@ -11,6 +11,7 @@ import (
 
 func RegisterCertificateRoutes(g *echo.Group, ctx *service.ServiceContext) {
 	g.GET("/", ListCertificatesHandler(ctx))
+	g.GET("/:id", GetCertificateHandler(ctx))
 	g.DELETE("/:id", DeleteCertificateHandler(ctx))
 	g.POST("/", CreateCertificateHandler(ctx))
 	g.POST("/:id/renew/", RenewCertificateHandler(ctx))
@@ -24,6 +25,7 @@ func ListCertificatesHandler(ctx *service.ServiceContext) echo.HandlerFunc {
 		CreatedAt int64  `json:"createdAt"`
 		Subject   string `json:"subject"`
 		IssuerID  int    `json:"issuerId"`
+		IsCA      bool   `json:"isCA"`
 	}
 
 	return func(c echo.Context) error {
@@ -51,6 +53,7 @@ func ListCertificatesHandler(ctx *service.ServiceContext) echo.HandlerFunc {
 				CreatedAt: cert.CreatedAt.Unix(),
 				Subject:   cert.Subject,
 				IssuerID:  cert.IssuerID,
+				IsCA:      cert.IsCA,
 			}
 		}
 
@@ -202,5 +205,26 @@ func RenewCertificateHandler(ctx *service.ServiceContext) echo.HandlerFunc {
 		}
 
 		return c.JSON(http.StatusOK, nil)
+	}
+}
+
+func GetCertificateHandler(ctx *service.ServiceContext) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		logger := zap.L().With(zap.String("handler", "GetCertificateHandler"))
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			logger.Error("convert param failed", zap.String("id", c.Param("id")), zap.Error(err))
+			return c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		}
+
+		logger = logger.With(zap.Int("id", id))
+		svc := service.NewCertificateService(ctx)
+		cert, err := svc.GetCertificate(c.Request().Context(), id)
+		if err != nil {
+			logger.Error("get failed", zap.Error(err))
+			return c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		}
+
+		return c.JSON(http.StatusOK, cert)
 	}
 }

@@ -15,6 +15,21 @@ export interface Certificate {
   createdAt: number;
   subject: string;
   issuerId: number;
+  isCA: boolean;
+}
+
+export interface CertificateDetail extends Certificate {
+  issuerSubject: string;
+  keyType: string;
+  keyLen: number;
+  eccCurve: string;
+  validDays: number;
+  notBefore: number;
+  notAfter: number;
+  keyUsage: string[];
+  extKeyUsage: string[];
+  dnsNames: string[];
+  ipAddresses: string[];
 }
 
 const api = {
@@ -131,6 +146,12 @@ const api = {
         return res.data;
       }
       throw new Error(res.error);
+    },
+    get: async (certId: number) => {
+      const res = await window.request_server<CertificateDetail>('certificates:get', certId);
+      if (res.success) {
+        return res.data;
+      }
     },
   },
 };

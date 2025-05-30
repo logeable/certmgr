@@ -17,6 +17,7 @@ interface Props {
 interface FormData {
   keyType: string;
   keyLen: number;
+  eccCurve: string;
   validDays: number;
   desc: string;
   country: string;
@@ -42,7 +43,6 @@ export default function CreateCertModal({
 }: Props) {
   const [form] = Form.useForm<FormData>();
   const [loading, setLoading] = useState(false);
-  const [keyType, setKeyType] = useState('RSA');
   const { message } = App.useApp();
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -121,36 +121,49 @@ export default function CreateCertModal({
             label="密钥类型"
             rules={[{ required: true, message: '请选择密钥类型' }]}
           >
-            <Select
-              onChange={value => {
-                setKeyType(value);
-                if (value === 'ECC') {
-                  form.setFieldsValue({ keyLen: 256 });
-                } else {
-                  form.setFieldsValue({ keyLen: 2048 });
-                }
-              }}
-            >
+            <Select>
               <Option value="RSA">RSA</Option>
-              <Option value="ECC">ECC</Option>
+              <Option value="ECDSA">ECDSA</Option>
+              <Option value="ED25519">ED25519</Option>
             </Select>
           </Form.Item>
-          <Form.Item
-            name="keyLen"
-            label="密钥长度"
-            rules={[{ required: true, message: '请输入密钥长度' }]}
-          >
-            {keyType === 'RSA' ? (
-              <Select>
-                <Option value={2048}>2048</Option>
-                <Option value={3072}>3072</Option>
-                <Option value={4096}>4096</Option>
-                <Option value={8192}>8192</Option>
-              </Select>
-            ) : (
-              <InputNumber style={{ width: '100%' }} placeholder="如 256" min={1} disabled />
-            )}
+          <Form.Item shouldUpdate={(prev, cur) => prev.keyType !== cur.keyType} noStyle>
+            {({ getFieldValue }) => {
+              const keyType = getFieldValue('keyType');
+              if (keyType === 'RSA') {
+                return (
+                  <Form.Item
+                    name="keyLen"
+                    label="密钥长度"
+                    rules={[{ required: true, message: '请输入密钥长度' }]}
+                  >
+                    <Select>
+                      <Option value={2048}>2048</Option>
+                      <Option value={3072}>3072</Option>
+                      <Option value={4096}>4096</Option>
+                      <Option value={8192}>8192</Option>
+                    </Select>
+                  </Form.Item>
+                );
+              } else if (keyType === 'ECDSA') {
+                return (
+                  <Form.Item
+                    name="eccCurve"
+                    label="椭圆曲线"
+                    rules={[{ required: true, message: '请选择椭圆曲线' }]}
+                  >
+                    <Select>
+                      <Option value="P224">P224</Option>
+                      <Option value="P256">P256</Option>
+                      <Option value="P384">P384</Option>
+                      <Option value="P521">P521</Option>
+                    </Select>
+                  </Form.Item>
+                );
+              }
+            }}
           </Form.Item>
+
           <Form.Item
             name="validDays"
             label="有效期（天）"
@@ -271,9 +284,16 @@ export default function CreateCertModal({
     },
   ];
 
+  // 步骤对应的表单字段名
+  const stepFieldNames = [
+    ['usage', 'keyType', 'keyLen', 'eccCurve', 'validDays', 'desc'],
+    ['commonName', 'country', 'state', 'city', 'org', 'ou'],
+    ['keyUsage', 'extKeyUsage', 'dnsNames', 'ipAddresses', 'basicConstraintsCA'],
+  ];
+
   const next = async () => {
     try {
-      await form.validateFields();
+      await form.validateFields(stepFieldNames[currentStep]);
       setCurrentStep(currentStep + 1);
     } catch (_) {
       // 校验失败不跳转
@@ -321,6 +341,7 @@ export default function CreateCertModal({
         issuerId,
         values.keyType,
         values.keyLen,
+        values.eccCurve,
         values.validDays,
         values.desc,
         subject,
@@ -346,7 +367,6 @@ export default function CreateCertModal({
 
   const handleClose = () => {
     form.resetFields();
-    setKeyType('RSA');
     setCurrentStep(0);
     onClose();
   };
@@ -371,6 +391,7 @@ export default function CreateCertModal({
         initialValues={{
           keyType: 'RSA',
           keyLen: 2048,
+          eccCurve: 'P256',
           validDays: 365,
           country: 'CN',
           usage: 'CA',
@@ -383,7 +404,11 @@ export default function CreateCertModal({
           ))}
         </Steps>
         <div style={{ marginBottom: 0, maxHeight: '54vh', overflowY: 'auto' }}>
-          {steps[currentStep].content}
+          {steps.map((item, idx) => (
+            <div key={item.title} style={{ display: idx === currentStep ? 'block' : 'none' }}>
+              {item.content}
+            </div>
+          ))}
         </div>
         <div style={{ marginTop: 12, textAlign: 'right' }}>
           {currentStep > 0 && (

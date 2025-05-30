@@ -68,6 +68,7 @@ const api = {
       issuerId: number,
       keyType: string,
       keyLen: number,
+      eccCurve: string,
       validDays: number,
       desc: string,
       subject: {
@@ -100,6 +101,7 @@ const api = {
         issuerId,
         keyType,
         keyLen,
+        eccCurve,
         validDays,
         desc,
         subject,

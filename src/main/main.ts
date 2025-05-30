@@ -111,6 +111,9 @@ function handleIPC(serverBaseURL: string) {
       const data = await res.json();
       throw new Error(data.error);
     }
+    if (res.status === 204) {
+      return null;
+    }
     return res.json();
   }
 

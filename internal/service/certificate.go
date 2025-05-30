@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto"
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
@@ -30,7 +31,7 @@ func NewCertificateService(ctx *ServiceContext) *CertificateService {
 }
 
 func (s *CertificateService) CreateCertificate(ctx context.Context, req CreateCertReq) (*Certificate, error) {
-	newKey, err := createPrivateKey(req.KeyType, req.KeyLen)
+	newKey, err := createPrivateKey(req.KeyType, req)
 	if err != nil {
 		return nil, fmt.Errorf("create private key failed: %w", err)
 	}
@@ -134,7 +135,7 @@ func (s *CertificateService) ListCertificates(ctx context.Context, namespaceId i
 }
 
 func (s *CertificateService) DeleteCertificate(ctx context.Context, id int) error {
-	s.ctx.withTx(ctx, func(tx *ent.Tx) error {
+	err := s.ctx.withTx(ctx, func(tx *ent.Tx) error {
 		_, err := tx.Certificate.Get(ctx, id)
 		if err != nil {
 			return fmt.Errorf("get cert %d failed: %w", id, err)
@@ -155,6 +156,9 @@ func (s *CertificateService) DeleteCertificate(ctx context.Context, id int) erro
 		}
 		return nil
 	})
+	if err != nil {
+		return fmt.Errorf("delete cert with tx failed: %w", err)
+	}
 	return nil
 }
 
@@ -332,6 +336,7 @@ type CreateCertReq struct {
 	IssuerId         int              `json:"issuerId"`
 	KeyType          string           `json:"keyType"`
 	KeyLen           int              `json:"keyLen"`
+	ECCCurve         string           `json:"eccCurve"`
 	ValidDays        int              `json:"validDays"`
 	Desc             string           `json:"desc"`
 	Subject          Subject          `json:"subject"`
@@ -404,12 +409,31 @@ func PrivateKeyToPem(key crypto.PrivateKey) []byte {
 	return pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: pkcs8})
 }
 
-func createPrivateKey(keyType string, keyLen int) (crypto.PrivateKey, error) {
+func createPrivateKey(keyType string, req CreateCertReq) (crypto.PrivateKey, error) {
 	switch keyType {
 	case "RSA":
-		return rsa.GenerateKey(rand.Reader, keyLen)
+		return rsa.GenerateKey(rand.Reader, req.KeyLen)
 	case "ECDSA":
-		return ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		var curve elliptic.Curve
+		switch req.ECCCurve {
+		case "P224":
+			curve = elliptic.P224()
+		case "P256":
+			curve = elliptic.P256()
+		case "P384":
+			curve = elliptic.P384()
+		case "P521":
+			curve = elliptic.P521()
+		default:
+			return nil, fmt.Errorf("unsupported ecc curve: %s", req.ECCCurve)
+		}
+		return ecdsa.GenerateKey(curve, rand.Reader)
+	case "ED25519":
+		_, privateKey, err := ed25519.GenerateKey(rand.Reader)
+		if err != nil {
+			return nil, fmt.Errorf("generate ed25519 key failed: %w", err)
+		}
+		return privateKey, nil
 	default:
 		return nil, fmt.Errorf("unsupported key type: %s", keyType)
 	}

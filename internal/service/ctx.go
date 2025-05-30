@@ -22,7 +22,9 @@ func (sctx *ServiceContext) withTx(ctx context.Context, fn func(tx *ent.Tx) erro
 	if err != nil {
 		return fmt.Errorf("begin tx failed: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	err = fn(tx)
 	if err != nil {

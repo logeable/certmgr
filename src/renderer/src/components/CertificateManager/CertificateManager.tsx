@@ -246,7 +246,7 @@ export default function CertificateManager() {
                     </Tooltip>
                   </div>
                   <TreeWithContextMenu
-                    treeData={convertCert(certs)}
+                    certs={certs}
                     onIssue={onIssue}
                     onDelete={onDelete}
                     onViewDetails={onViewDetails}
@@ -291,20 +291,21 @@ export default function CertificateManager() {
 }
 
 const TreeWithContextMenu = ({
-  treeData,
+  certs,
   onIssue,
   onViewDetails,
   onViewPrivateKey,
   onRenew,
   onDelete,
 }: {
-  treeData: TreeDataNode[];
+  certs: Certificate[];
   onIssue: (id: number) => void;
   onViewDetails: (id: number) => void;
   onViewPrivateKey: (id: number) => void;
   onRenew: (id: number) => void;
   onDelete: (id: number) => void;
 }) => {
+  const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
   const [contextMenuInfo, setContextMenuInfo] = useState({
     visible: false,
     pageX: 0,
@@ -396,6 +397,12 @@ const TreeWithContextMenu = ({
     }
   };
 
+  const treeData = convertCert(certs);
+
+  useEffect(() => {
+    setExpandedKeys(certs.map(item => item.id));
+  }, [certs]);
+
   return (
     <div>
       <div
@@ -409,7 +416,14 @@ const TreeWithContextMenu = ({
         }}
         onClick={() => setContextMenuInfo({ ...contextMenuInfo, visible: false })}
       ></div>
-      <Tree defaultExpandAll onRightClick={onRightClick} treeData={treeData} />
+      <Tree
+        expandedKeys={expandedKeys}
+        onExpand={(keys, _info) => {
+          setExpandedKeys(keys);
+        }}
+        onRightClick={onRightClick}
+        treeData={treeData}
+      />
       {contextMenuInfo.visible && (
         <div
           style={{

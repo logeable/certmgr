@@ -110,6 +110,7 @@ func CreateCertificateHandler(ctx *service.ServiceContext) echo.HandlerFunc {
 		IssuerId         int              `json:"issuerId"`
 		KeyType          string           `json:"keyType"`
 		KeyLen           int              `json:"keyLen"`
+		ECCCurve         string           `json:"eccCurve"`
 		ValidDays        int              `json:"validDays"`
 		Desc             string           `json:"desc"`
 		Subject          Subject          `json:"subject"`
@@ -135,6 +136,7 @@ func CreateCertificateHandler(ctx *service.ServiceContext) echo.HandlerFunc {
 				IssuerId:    req.IssuerId,
 				KeyType:     req.KeyType,
 				KeyLen:      req.KeyLen,
+				ECCCurve:    req.ECCCurve,
 				Desc:        req.Desc,
 				Subject: service.Subject{
 					Country:    req.Subject.Country,

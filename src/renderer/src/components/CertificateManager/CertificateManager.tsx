@@ -13,6 +13,7 @@ import {
   MenuProps,
   Tooltip,
   Tag,
+  Modal as AntdModal,
 } from 'antd';
 import {
   DatabaseOutlined,
@@ -50,6 +51,7 @@ export default function CertificateManager() {
   const [certsLoading, setCertsLoading] = useState(false);
   const { message, modal } = App.useApp();
   const [selectedCertId, setSelectedCertId] = useState<number | null>(null);
+  const [showTreeHelp, setShowTreeHelp] = useState(false);
 
   useEffect(() => {
     const fetchNamespaces = async () => {
@@ -239,14 +241,10 @@ export default function CertificateManager() {
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
                     <span style={{ fontWeight: 500, fontSize: 16 }}>证书树</span>
-                    <Tooltip
-                      title="右键点击证书节点可以进行签发、删除、查看详情、查看私钥、续期等操作"
-                      placement="right"
-                    >
-                      <InfoCircleOutlined
-                        style={{ color: '#1677ff', marginLeft: 8, cursor: 'pointer' }}
-                      />
-                    </Tooltip>
+                    <InfoCircleOutlined
+                      style={{ color: '#1677ff', marginLeft: 8, cursor: 'pointer' }}
+                      onClick={() => setShowTreeHelp(true)}
+                    />
                   </div>
                   <TreeWithContextMenu
                     certs={certs}
@@ -291,6 +289,31 @@ export default function CertificateManager() {
         onClose={() => setShowRenew(false)}
         onSuccess={refreshCertificates}
       />
+      <AntdModal
+        open={showTreeHelp}
+        title="证书树操作说明"
+        onCancel={() => setShowTreeHelp(false)}
+        footer={null}
+        width={480}
+      >
+        <ul style={{ lineHeight: 2, fontSize: 15 }}>
+          <li>
+            <b>右键</b>：弹出操作菜单（签发、删除、查看详情、查看私钥、续期等）
+          </li>
+          <li>
+            <b>双击</b>：查看证书详情
+          </li>
+          <li>
+            <b>Delete/Backspace</b>：删除选中证书
+          </li>
+          <li>
+            <b>Enter/空格</b>：查看证书详情
+          </li>
+          <li>
+            <b>S</b>：签发证书（仅CA证书）
+          </li>
+        </ul>
+      </AntdModal>
     </div>
   );
 }

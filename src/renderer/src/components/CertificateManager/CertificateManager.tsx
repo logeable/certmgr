@@ -23,12 +23,10 @@ import {
   SafetyCertificateOutlined,
   DeleteOutlined,
   EyeOutlined,
-  KeyOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
 import CreateCertModal from './CreateCertModal';
 import CertificateDetailModal from './CertificateDetailModal';
-import PrivateKeyModal from './PrivateKeyModal';
 import RenewCertModal from './RenewCertModal';
 import api, { Certificate, Namespace } from '../../api';
 
@@ -43,8 +41,6 @@ export default function CertificateManager() {
   const [issuerId, setIssuerId] = useState(0);
   const [showDetail, setShowDetail] = useState(false);
   const [detailCert, setDetailCert] = useState<Certificate | null>(null);
-  const [showPrivateKey, setShowPrivateKey] = useState(false);
-  const [privateKeyCert, setPrivateKeyCert] = useState<Certificate | null>(null);
   const [showRenew, setShowRenew] = useState(false);
   const [renewCert, setRenewCert] = useState<Certificate | null>(null);
   const [namespacesLoading, setNamespacesLoading] = useState(false);
@@ -95,15 +91,7 @@ export default function CertificateManager() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // 只在没有任何模态框弹出时才响应快捷键
-      if (
-        showDetail ||
-        showCreate ||
-        showPrivateKey ||
-        showRenew ||
-        showTreeHelp ||
-        showDeleteConfirm
-      )
-        return;
+      if (showDetail || showCreate || showRenew || showTreeHelp || showDeleteConfirm) return;
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedCertId) {
         onDelete(selectedCertId);
       } else if (e.key === 's' && selectedCertId) {
@@ -120,16 +108,7 @@ export default function CertificateManager() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    selectedCertId,
-    showDetail,
-    showCreate,
-    showPrivateKey,
-    showRenew,
-    showTreeHelp,
-    certs,
-    showDeleteConfirm,
-  ]);
+  }, [selectedCertId, showDetail, showCreate, showRenew, showTreeHelp, certs, showDeleteConfirm]);
 
   const onIssue = (issuerId: number) => {
     setIssuerId(issuerId);
@@ -141,14 +120,6 @@ export default function CertificateManager() {
     if (cert) {
       setDetailCert(cert);
       setShowDetail(true);
-    }
-  };
-
-  const onViewPrivateKey = (certId: number) => {
-    const cert = certs.find(c => c.id === certId);
-    if (cert) {
-      setPrivateKeyCert(cert);
-      setShowPrivateKey(true);
     }
   };
 
@@ -293,7 +264,6 @@ export default function CertificateManager() {
                     onIssue={onIssue}
                     onDelete={onDelete}
                     onViewDetails={onViewDetails}
-                    onViewPrivateKey={onViewPrivateKey}
                     onRenew={onRenew}
                     setSelectedCertId={setSelectedCertId}
                   />
@@ -318,11 +288,6 @@ export default function CertificateManager() {
         open={showDetail}
         cert={detailCert}
         onClose={() => setShowDetail(false)}
-      />
-      <PrivateKeyModal
-        open={showPrivateKey}
-        cert={privateKeyCert}
-        onClose={() => setShowPrivateKey(false)}
       />
       <RenewCertModal
         open={showRenew}
@@ -363,7 +328,6 @@ const TreeWithContextMenu = ({
   certs,
   onIssue,
   onViewDetails,
-  onViewPrivateKey,
   onRenew,
   onDelete,
   setSelectedCertId,
@@ -371,7 +335,6 @@ const TreeWithContextMenu = ({
   certs: Certificate[];
   onIssue: (id: number) => void;
   onViewDetails: (id: number) => void;
-  onViewPrivateKey: (id: number) => void;
   onRenew: (id: number) => void;
   onDelete: (id: number) => void;
   setSelectedCertId: (id: number | null) => void;
@@ -400,15 +363,6 @@ const TreeWithContextMenu = ({
         <Space>
           <EyeOutlined />
           查看详情
-        </Space>
-      ),
-    },
-    {
-      key: 'viewPrivateKey',
-      label: (
-        <Space>
-          <KeyOutlined />
-          查看私钥
         </Space>
       ),
     },
@@ -461,9 +415,6 @@ const TreeWithContextMenu = ({
         break;
       case 'viewDetails':
         onViewDetails(certId);
-        break;
-      case 'viewPrivateKey':
-        onViewPrivateKey(certId);
         break;
       case 'renew':
         onRenew(certId);

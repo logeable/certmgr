@@ -1,6 +1,8 @@
 package service
 
 import (
+	"archive/tar"
+	"bytes"
 	"context"
 	"crypto"
 	"crypto/ecdsa"
@@ -327,6 +329,72 @@ func (s *CertificateService) FindAllSubCertificates(ctx context.Context, id int)
 	if err != nil {
 		return nil, fmt.Errorf("dfs failed: %w", err)
 	}
+	return result, nil
+}
+
+func (s *CertificateService) ExportCertificate(ctx context.Context, id int) ([]byte, error) {
+	ancestors, err := s.findAllCertsAncestors(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("find all certs ancestors of cert %d failed: %w", id, err)
+	}
+
+	var tarBuf bytes.Buffer
+	tw := tar.NewWriter(&tarBuf)
+
+	var certData bytes.Buffer
+	for _, cert := range ancestors {
+		certData.WriteString(cert.CertPem)
+		certData.WriteString("\n")
+	}
+	var keyData bytes.Buffer
+	keyData.WriteString(ancestors[0].KeyPem)
+	keyData.WriteString("\n")
+
+	err = tw.WriteHeader(&tar.Header{
+		Name: "certificate.pem",
+		Size: int64(certData.Len()),
+		Mode: 0644,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("write cert header to tar failed: %w", err)
+	}
+	_, err = tw.Write(certData.Bytes())
+	if err != nil {
+		return nil, fmt.Errorf("write cert data to tar failed: %w", err)
+	}
+
+	err = tw.WriteHeader(&tar.Header{
+		Name: "key.pem",
+		Size: int64(keyData.Len()),
+		Mode: 0600,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("write key header to tar failed: %w", err)
+	}
+	_, err = tw.Write(keyData.Bytes())
+	if err != nil {
+		return nil, fmt.Errorf("write key data to tar failed: %w", err)
+	}
+
+	tw.Close()
+	return tarBuf.Bytes(), nil
+}
+
+func (s *CertificateService) findAllCertsAncestors(ctx context.Context, id int) ([]*ent.Certificate, error) {
+	var result []*ent.Certificate
+	cert, err := s.ctx.client.Certificate.Get(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("get cert %d failed: %w", id, err)
+	}
+	result = append(result, cert)
+	if cert.IssuerID == 0 {
+		return result, nil
+	}
+	ancestors, err := s.findAllCertsAncestors(ctx, cert.IssuerID)
+	if err != nil {
+		return nil, fmt.Errorf("find all certs ancestors of cert %d failed: %w", id, err)
+	}
+	result = append(result, ancestors...)
 	return result, nil
 }
 

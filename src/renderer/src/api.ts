@@ -153,6 +153,13 @@ const api = {
         return res.data;
       }
     },
+    export: async (certId: number) => {
+      const res = await window.request_server<void>('certificates:export', certId);
+      if (res.success) {
+        return res.data;
+      }
+      throw new Error(res.error);
+    },
   },
 };
 export default api;

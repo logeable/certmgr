@@ -24,6 +24,7 @@ import {
   DeleteOutlined,
   EyeOutlined,
   ReloadOutlined,
+  ExportOutlined,
 } from '@ant-design/icons';
 import CreateCertModal from './CreateCertModal';
 import CertificateDetailModal from './CertificateDetailModal';
@@ -103,6 +104,8 @@ export default function CertificateManager() {
         onViewDetails(selectedCertId);
       } else if (e.key === 'r' && selectedCertId) {
         onRenew(selectedCertId);
+      } else if (e.key === 'e' && selectedCertId) {
+        onExport(selectedCertId);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -129,6 +132,30 @@ export default function CertificateManager() {
       setRenewCert(cert);
       setShowRenew(true);
     }
+  };
+
+  const onExport = (certId: number) => {
+    modal.confirm({
+      title: '导出证书与私钥',
+      icon: <ExclamationCircleOutlined />,
+      content: (
+        <div>
+          <p>将导出该证书及其私钥，包含完整证书链。</p>
+          <p style={{ color: '#faad14', fontSize: '12px' }}>请妥善保管导出的私钥文件！</p>
+        </div>
+      ),
+      okText: '导出',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          await api.certificates.export(certId);
+          message.success('导出成功');
+        } catch (err) {
+          message.error('导出失败');
+          console.error('Failed to export certificate:', err);
+        }
+      },
+    });
   };
 
   // 删除证书确认
@@ -265,6 +292,7 @@ export default function CertificateManager() {
                     onDelete={onDelete}
                     onViewDetails={onViewDetails}
                     onRenew={onRenew}
+                    onExport={onExport}
                     setSelectedCertId={setSelectedCertId}
                   />
                 </div>
@@ -330,6 +358,7 @@ const TreeWithContextMenu = ({
   onViewDetails,
   onRenew,
   onDelete,
+  onExport,
   setSelectedCertId,
 }: {
   certs: Certificate[];
@@ -337,6 +366,7 @@ const TreeWithContextMenu = ({
   onViewDetails: (id: number) => void;
   onRenew: (id: number) => void;
   onDelete: (id: number) => void;
+  onExport: (id: number) => void;
   setSelectedCertId: (id: number | null) => void;
 }) => {
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
@@ -391,6 +421,15 @@ const TreeWithContextMenu = ({
       ),
     },
     {
+      key: 'export',
+      label: (
+        <Space>
+          <ExportOutlined />
+          导出证书与私钥
+        </Space>
+      ),
+    },
+    {
       type: 'divider',
     },
     {
@@ -418,6 +457,9 @@ const TreeWithContextMenu = ({
         break;
       case 'renew':
         onRenew(certId);
+        break;
+      case 'export':
+        onExport(certId);
         break;
       case 'delete':
         onDelete(certId);

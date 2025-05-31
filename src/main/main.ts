@@ -1,8 +1,9 @@
 import { ChildProcess, spawn } from 'child_process';
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import { join } from 'path';
 import { URLSearchParams } from 'url';
 import logger from './logger';
+import { writeFile } from 'fs/promises';
 
 async function createWindow() {
   // 创建浏览器窗口
@@ -198,5 +199,33 @@ function handleIPC(serverBaseURL: string) {
   handleWrapper('certificates:get', async (...args: unknown[]) => {
     const [certId] = args;
     return await doGet(`certificates/${certId}`);
+  });
+
+  handleWrapper('certificates:export', async (...args: unknown[]) => {
+    const [certId] = args;
+    try {
+      const { canceled, filePath } = await dialog.showSaveDialog({
+        title: '保存证书与私钥',
+        defaultPath: `certificate-${certId}.tar`,
+        filters: [{ name: 'Tar Archive', extensions: ['tar'] }],
+      });
+      if (canceled || !filePath) {
+        throw new Error('用户取消保存');
+      }
+      // 请求后端接口，获取 tar 包流
+      const res = await fetch(`${serverBaseURL}/certificates/${certId}/export/`, {
+        method: 'POST',
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error);
+      }
+      const buffer = Buffer.from(await res.arrayBuffer());
+      await writeFile(filePath, buffer);
+      return null;
+    } catch (err) {
+      logger.error(`export certificate error`, { error: err });
+      throw err;
+    }
   });
 }

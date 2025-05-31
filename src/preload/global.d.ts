@@ -9,5 +9,8 @@ declare global {
 
   interface Window {
     request_server<T>(channel: string, ...args: unknown[]): Promise<IPCResponse<T>>;
+    electronAPI: {
+      exportCertificate: (certId: number) => Promise<{ success: boolean; error?: string }>;
+    };
   }
 }

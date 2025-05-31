@@ -1,6 +1,8 @@
 package api
 
 import (
+	"bytes"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -15,6 +17,7 @@ func RegisterCertificateRoutes(g *echo.Group, ctx *service.ServiceContext) {
 	g.DELETE("/:id", DeleteCertificateHandler(ctx))
 	g.POST("/", CreateCertificateHandler(ctx))
 	g.POST("/:id/renew/", RenewCertificateHandler(ctx))
+	g.POST("/:id/export/", ExportCertificateHandler(ctx))
 }
 
 func ListCertificatesHandler(ctx *service.ServiceContext) echo.HandlerFunc {
@@ -227,5 +230,27 @@ func GetCertificateHandler(ctx *service.ServiceContext) echo.HandlerFunc {
 		}
 
 		return c.JSON(http.StatusOK, cert)
+	}
+}
+
+func ExportCertificateHandler(ctx *service.ServiceContext) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		logger := zap.L().With(zap.String("handler", "ExportCertificateHandler"))
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			logger.Error("convert param failed", zap.String("id", c.Param("id")), zap.Error(err))
+			return c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		}
+
+		logger = logger.With(zap.Int("id", id))
+		svc := service.NewCertificateService(ctx)
+		tar, err := svc.ExportCertificate(c.Request().Context(), id)
+		if err != nil {
+			logger.Error("export failed", zap.Error(err))
+			return c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		}
+
+		c.Response().Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=certificate-%d.tar", id))
+		return c.Stream(http.StatusOK, "application/x-tar", bytes.NewReader(tar))
 	}
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Modal, Descriptions, Tag, Space, Typography, Collapse, Button, Spin, message } from 'antd';
+import { Modal, Descriptions, Tag, Space, Typography, Collapse, Button, Spin, App } from 'antd';
 import {
   SafetyCertificateOutlined,
   InfoCircleOutlined,
@@ -33,6 +33,7 @@ function parseSubject(subject: string) {
 export default function CertificateDetailModal({ open, cert, onClose }: Props) {
   const [detail, setDetail] = useState<CertificateDetail | null>(null);
   const [loading, setLoading] = useState(false);
+  const { message } = App.useApp();
 
   useEffect(() => {
     if (open && cert) {
@@ -48,17 +49,9 @@ export default function CertificateDetailModal({ open, cert, onClose }: Props) {
     } else {
       setDetail(null);
     }
-  }, [open, cert]);
+  }, [open, cert, message]);
 
   const subject = parseSubject(detail?.subject || '');
-
-  // 复制证书内容到剪贴板
-  const handleCopy = async () => {
-    if (detail?.certPem) {
-      await navigator.clipboard.writeText(detail.certPem);
-      message.success('证书内容已复制');
-    }
-  };
 
   return (
     <Modal
@@ -187,22 +180,63 @@ export default function CertificateDetailModal({ open, cert, onClose }: Props) {
                 }
                 key="certPem"
               >
-                <Paragraph
-                  copyable={{ text: detail.certPem }}
-                  style={{ whiteSpace: 'pre', fontFamily: 'monospace', fontSize: 13 }}
-                >
+                <Paragraph style={{ whiteSpace: 'pre', fontFamily: 'monospace', fontSize: 13 }}>
                   {detail.certPem}
                 </Paragraph>
                 <Button
                   icon={<CopyOutlined />}
                   size="small"
-                  onClick={handleCopy}
+                  onClick={async () => {
+                    if (detail.certPem) {
+                      await navigator.clipboard.writeText(detail.certPem);
+                      message.success('证书内容已复制');
+                    }
+                  }}
                   style={{ float: 'right' }}
                 >
                   复制证书内容
                 </Button>
               </Panel>
             </Collapse>
+            {/* 密钥原文 */}
+            {detail.keyPem && (
+              <Collapse style={{ marginBottom: 16 }}>
+                <Panel
+                  header={
+                    <span>
+                      <EyeOutlined style={{ marginRight: 8, color: '#ff4d4f' }} />
+                      密钥原文（PEM）
+                    </span>
+                  }
+                  key="keyPem"
+                >
+                  <Paragraph
+                    style={{
+                      whiteSpace: 'pre',
+                      fontFamily: 'monospace',
+                      fontSize: 13,
+                      color: '#ff4d4f',
+                    }}
+                  >
+                    {detail.keyPem}
+                  </Paragraph>
+                  <Button
+                    icon={<CopyOutlined />}
+                    size="small"
+                    danger
+                    onClick={async () => {
+                      if (detail.keyPem) {
+                        await navigator.clipboard.writeText(detail.keyPem);
+                        message.success('密钥内容已复制');
+                      }
+                    }}
+                    style={{ float: 'right' }}
+                  >
+                    复制密钥内容
+                  </Button>
+                </Panel>
+              </Collapse>
+            )}
           </>
         )}
       </div>

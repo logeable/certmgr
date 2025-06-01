@@ -346,6 +346,12 @@ export default function CertificateManager() {
           <li>
             <b>S</b>：签发证书（仅CA证书）
           </li>
+          <li>
+            <b>R</b>：续期证书
+          </li>
+          <li>
+            <b>E</b>：导出证书与私钥
+          </li>
         </ul>
       </AntdModal>
     </div>

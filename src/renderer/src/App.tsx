@@ -54,7 +54,7 @@ function App() {
             theme="light"
             width={180}
             className="drag-region"
-            style={{ borderRight: '1px solid #f0f0f0', paddingTop: '1rem' }}
+            style={{ borderRight: '1px solid #f0f0f0', paddingTop: '2rem' }}
           >
             <div
               style={{

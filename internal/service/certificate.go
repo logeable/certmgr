@@ -54,6 +54,8 @@ func (s *CertificateService) CreateCertificate(ctx context.Context, req CreateCe
 		BasicConstraintsValid: true,
 		IsCA:                  req.BasicConstraints.CA,
 		MaxPathLenZero:        false,
+		DNSNames:              req.DNSNames,
+		IPAddresses:           buildIPAddresses(req.IPAddresses),
 	}
 
 	parentCert := certTemplate
@@ -269,6 +271,8 @@ func (s *CertificateService) RenewCertificate(ctx context.Context, id int, valid
 		BasicConstraintsValid: true,
 		IsCA:                  x509Cert.IsCA,
 		MaxPathLenZero:        false,
+		DNSNames:              x509Cert.DNSNames,
+		IPAddresses:           x509Cert.IPAddresses,
 	}
 
 	issuerId := cert.IssuerID
@@ -648,6 +652,14 @@ func formatIPAddresses(ipAddresses []net.IP) []string {
 	var result []string
 	for _, ip := range ipAddresses {
 		result = append(result, ip.String())
+	}
+	return result
+}
+
+func buildIPAddresses(ipAddresses []string) []net.IP {
+	var result []net.IP
+	for _, ip := range ipAddresses {
+		result = append(result, net.ParseIP(ip))
 	}
 	return result
 }

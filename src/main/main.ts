@@ -34,7 +34,7 @@ async function startServer() {
   const path = join(app.getAppPath(), '../bin/server');
   const server = spawn(path);
   return new Promise<{ port: number; process: ChildProcess }>((resolve, reject) => {
-    const returnPort = 0;
+    let returnPort = 0;
 
     setTimeout(() => {
       if (returnPort === 0) {
@@ -47,6 +47,7 @@ async function startServer() {
       if (data.toString().includes('http server started on')) {
         const port = data.toString().split(':')[2].trim();
         logger.info(`http server started on http://localhost:${port}`);
+        returnPort = Number(port);
         resolve({ port: Number(port), process: server });
       }
       logger.info(`server output: ${data.toString()}`);

@@ -39,6 +39,7 @@ async function startServer() {
     setTimeout(() => {
       if (returnPort === 0) {
         server.kill();
+        logger.error('server start timeout');
         reject(new Error('server start timeout'));
       }
     }, 5000);
@@ -54,6 +55,9 @@ async function startServer() {
     });
     server.stderr.on('data', data => {
       logger.error(`server error: ${data.toString()}`);
+    });
+    server.on('error', err => {
+      logger.error(`start error: ${err.message}`);
     });
     server.on('close', () => {
       logger.info('server closed');

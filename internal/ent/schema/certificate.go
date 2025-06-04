@@ -26,6 +26,7 @@ func (Certificate) Fields() []ent.Field {
 		field.Text("key_pem").Optional(),
 		field.Text("desc").Optional().Default(""),
 		field.Int("issuer_id").Optional(),
+		field.Text("usage").Optional().Default(""),
 		field.Time("updated_at").
 			Default(time.Now).
 			UpdateDefault(time.Now),

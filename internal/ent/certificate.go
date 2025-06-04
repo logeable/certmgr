@@ -28,6 +28,8 @@ type Certificate struct {
 	Desc string `json:"desc,omitempty"`
 	// IssuerID holds the value of the "issuer_id" field.
 	IssuerID int `json:"issuer_id,omitempty"`
+	// Usage holds the value of the "usage" field.
+	Usage string `json:"usage,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -65,7 +67,7 @@ func (*Certificate) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case certificate.FieldID, certificate.FieldNamespaceID, certificate.FieldIssuerID:
 			values[i] = new(sql.NullInt64)
-		case certificate.FieldCertPem, certificate.FieldKeyPem, certificate.FieldDesc:
+		case certificate.FieldCertPem, certificate.FieldKeyPem, certificate.FieldDesc, certificate.FieldUsage:
 			values[i] = new(sql.NullString)
 		case certificate.FieldUpdatedAt, certificate.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -119,6 +121,12 @@ func (c *Certificate) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field issuer_id", values[i])
 			} else if value.Valid {
 				c.IssuerID = int(value.Int64)
+			}
+		case certificate.FieldUsage:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field usage", values[i])
+			} else if value.Valid {
+				c.Usage = value.String
 			}
 		case certificate.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -187,6 +195,9 @@ func (c *Certificate) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("issuer_id=")
 	builder.WriteString(fmt.Sprintf("%v", c.IssuerID))
+	builder.WriteString(", ")
+	builder.WriteString("usage=")
+	builder.WriteString(c.Usage)
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(c.UpdatedAt.Format(time.ANSIC))

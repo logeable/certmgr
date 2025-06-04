@@ -29,6 +29,7 @@ func ListCertificatesHandler(ctx *service.ServiceContext) echo.HandlerFunc {
 		Subject   string `json:"subject"`
 		IssuerID  int    `json:"issuerId"`
 		IsCA      bool   `json:"isCA"`
+		Usage     string `json:"usage"`
 	}
 
 	return func(c echo.Context) error {
@@ -57,6 +58,7 @@ func ListCertificatesHandler(ctx *service.ServiceContext) echo.HandlerFunc {
 				Subject:   cert.Subject,
 				IssuerID:  cert.IssuerID,
 				IsCA:      cert.IsCA,
+				Usage:     cert.Usage,
 			}
 		}
 
@@ -95,14 +97,14 @@ func CreateCertificateHandler(ctx *service.ServiceContext) echo.HandlerFunc {
 		CommonName string `json:"commonName"`
 	}
 
-	type Usage struct {
+	type KeyUsage struct {
 		DigitalSignature bool `json:"digitalSignature"`
 		KeyEncipherment  bool `json:"keyEncipherment"`
 		KeyCertSign      bool `json:"keyCertSign"`
 		CRLSign          bool `json:"cRLSign"`
 	}
 
-	type ExtendedUsage struct {
+	type ExtendedKeyUsage struct {
 		ServerAuth  bool `json:"serverAuth"`
 		ClientAuth  bool `json:"clientAuth"`
 		CodeSigning bool `json:"codeSigning"`
@@ -120,8 +122,9 @@ func CreateCertificateHandler(ctx *service.ServiceContext) echo.HandlerFunc {
 		ValidDays        int              `json:"validDays"`
 		Desc             string           `json:"desc"`
 		Subject          Subject          `json:"subject"`
-		Usage            Usage            `json:"usage"`
-		ExtendedUsage    ExtendedUsage    `json:"extendedUsage"`
+		Usage            string           `json:"usage"`
+		KeyUsage         KeyUsage         `json:"keyUsage"`
+		ExtendeKeydUsage ExtendedKeyUsage `json:"extendedKeyUsage"`
 		BasicConstraints BasicConstraints `json:"basicConstraints"`
 		DNSNames         []string         `json:"dnsNames"`
 		IPAddresses      []string         `json:"ipAddresses"`
@@ -153,16 +156,17 @@ func CreateCertificateHandler(ctx *service.ServiceContext) echo.HandlerFunc {
 					Ou:         req.Subject.Ou,
 					CommonName: req.Subject.CommonName,
 				},
-				Usage: service.Usage{
-					DigitalSignature: req.Usage.DigitalSignature,
-					KeyEncipherment:  req.Usage.KeyEncipherment,
-					KeyCertSign:      req.Usage.KeyCertSign,
-					CRLSign:          req.Usage.CRLSign,
+				Usage: req.Usage,
+				KeyUsage: service.KeyUsage{
+					DigitalSignature: req.KeyUsage.DigitalSignature,
+					KeyEncipherment:  req.KeyUsage.KeyEncipherment,
+					KeyCertSign:      req.KeyUsage.KeyCertSign,
+					CRLSign:          req.KeyUsage.CRLSign,
 				},
-				ExtendedUsage: service.ExtendedUsage{
-					ServerAuth:  req.ExtendedUsage.ServerAuth,
-					ClientAuth:  req.ExtendedUsage.ClientAuth,
-					CodeSigning: req.ExtendedUsage.CodeSigning,
+				ExtendeKeydUsage: service.ExtendedKeyUsage{
+					ServerAuth:  req.ExtendeKeydUsage.ServerAuth,
+					ClientAuth:  req.ExtendeKeydUsage.ClientAuth,
+					CodeSigning: req.ExtendeKeydUsage.CodeSigning,
 				},
 				BasicConstraints: service.BasicConstraints{
 					CA: req.BasicConstraints.CA,

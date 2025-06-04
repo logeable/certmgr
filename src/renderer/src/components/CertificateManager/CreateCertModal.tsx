@@ -316,14 +316,16 @@ export default function CreateCertModal({
         commonName: values.commonName,
       };
 
-      const usage = {
+      const usage = values.usage;
+
+      const keyUsage = {
         digitalSignature: values.keyUsage?.includes('digitalSignature') ?? false,
         keyEncipherment: values.keyUsage?.includes('keyEncipherment') ?? false,
         keyCertSign: values.keyUsage?.includes('keyCertSign') ?? false,
         cRLSign: values.keyUsage?.includes('cRLSign') ?? false,
       };
 
-      const extendedUsage = {
+      const extendedKeyUsage = {
         serverAuth: values.extKeyUsage?.includes('serverAuth') ?? false,
         clientAuth: values.extKeyUsage?.includes('clientAuth') ?? false,
         codeSigning: values.extKeyUsage?.includes('codeSigning') ?? false,
@@ -346,7 +348,8 @@ export default function CreateCertModal({
         values.desc,
         subject,
         usage,
-        extendedUsage,
+        keyUsage,
+        extendedKeyUsage,
         basicConstraints,
         dnsNames,
         ipAddresses,

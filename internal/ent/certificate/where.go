@@ -80,6 +80,11 @@ func IssuerID(v int) predicate.Certificate {
 	return predicate.Certificate(sql.FieldEQ(FieldIssuerID, v))
 }
 
+// Usage applies equality check predicate on the "usage" field. It's identical to UsageEQ.
+func Usage(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldEQ(FieldUsage, v))
+}
+
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Certificate {
 	return predicate.Certificate(sql.FieldEQ(FieldUpdatedAt, v))
@@ -373,6 +378,81 @@ func IssuerIDIsNil() predicate.Certificate {
 // IssuerIDNotNil applies the NotNil predicate on the "issuer_id" field.
 func IssuerIDNotNil() predicate.Certificate {
 	return predicate.Certificate(sql.FieldNotNull(FieldIssuerID))
+}
+
+// UsageEQ applies the EQ predicate on the "usage" field.
+func UsageEQ(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldEQ(FieldUsage, v))
+}
+
+// UsageNEQ applies the NEQ predicate on the "usage" field.
+func UsageNEQ(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldNEQ(FieldUsage, v))
+}
+
+// UsageIn applies the In predicate on the "usage" field.
+func UsageIn(vs ...string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldIn(FieldUsage, vs...))
+}
+
+// UsageNotIn applies the NotIn predicate on the "usage" field.
+func UsageNotIn(vs ...string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldNotIn(FieldUsage, vs...))
+}
+
+// UsageGT applies the GT predicate on the "usage" field.
+func UsageGT(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldGT(FieldUsage, v))
+}
+
+// UsageGTE applies the GTE predicate on the "usage" field.
+func UsageGTE(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldGTE(FieldUsage, v))
+}
+
+// UsageLT applies the LT predicate on the "usage" field.
+func UsageLT(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldLT(FieldUsage, v))
+}
+
+// UsageLTE applies the LTE predicate on the "usage" field.
+func UsageLTE(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldLTE(FieldUsage, v))
+}
+
+// UsageContains applies the Contains predicate on the "usage" field.
+func UsageContains(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldContains(FieldUsage, v))
+}
+
+// UsageHasPrefix applies the HasPrefix predicate on the "usage" field.
+func UsageHasPrefix(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldHasPrefix(FieldUsage, v))
+}
+
+// UsageHasSuffix applies the HasSuffix predicate on the "usage" field.
+func UsageHasSuffix(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldHasSuffix(FieldUsage, v))
+}
+
+// UsageIsNil applies the IsNil predicate on the "usage" field.
+func UsageIsNil() predicate.Certificate {
+	return predicate.Certificate(sql.FieldIsNull(FieldUsage))
+}
+
+// UsageNotNil applies the NotNil predicate on the "usage" field.
+func UsageNotNil() predicate.Certificate {
+	return predicate.Certificate(sql.FieldNotNull(FieldUsage))
+}
+
+// UsageEqualFold applies the EqualFold predicate on the "usage" field.
+func UsageEqualFold(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldEqualFold(FieldUsage, v))
+}
+
+// UsageContainsFold applies the ContainsFold predicate on the "usage" field.
+func UsageContainsFold(v string) predicate.Certificate {
+	return predicate.Certificate(sql.FieldContainsFold(FieldUsage, v))
 }
 
 // UpdatedAtEQ applies the EQ predicate on the "updated_at" field.

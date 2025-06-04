@@ -34,24 +34,37 @@ async function startServer() {
   const path = join(app.getAppPath(), '../bin/server');
   const server = spawn(path);
   return new Promise<{ port: number; process: ChildProcess }>((resolve, reject) => {
-    let returnPort = 0;
+    let foundPort = false;
 
     setTimeout(() => {
-      if (returnPort === 0) {
+      if (!foundPort) {
         server.kill();
         logger.error('server start timeout');
         reject(new Error('server start timeout'));
       }
     }, 5000);
 
+    let buffer = '';
+
     server.stdout.on('data', data => {
-      if (data.toString().includes('http server started on')) {
-        const port = data.toString().split(':')[2].trim();
-        logger.info(`http server started on http://localhost:${port}`);
-        returnPort = Number(port);
-        resolve({ port: Number(port), process: server });
+      logger.debug(`server output: ${data.toString()}`);
+
+      if (!foundPort) {
+        buffer += data.toString();
+        if (buffer.includes('http server started on')) {
+          const lines = buffer.split('\n');
+          for (const line of lines) {
+            const match = line.match(/server started on .*:(\d+)/);
+            if (match) {
+              const port = match[1];
+              foundPort = true;
+
+              logger.info(`http server started on http://localhost:${port}`);
+              resolve({ port: Number(port), process: server });
+            }
+          }
+        }
       }
-      logger.info(`server output: ${data.toString()}`);
     });
     server.stderr.on('data', data => {
       logger.error(`server error: ${data.toString()}`);
@@ -59,8 +72,8 @@ async function startServer() {
     server.on('error', err => {
       logger.error(`start error: ${err.message}`);
     });
-    server.on('close', () => {
-      logger.info('server closed');
+    server.on('exit', code => {
+      logger.info(`server exited with code ${code}`);
     });
   });
 }

@@ -40,6 +40,7 @@ type CertificateMutation struct {
 	desc             *string
 	issuer_id        *int
 	addissuer_id     *int
+	usage            *string
 	updated_at       *time.Time
 	created_at       *time.Time
 	clearedFields    map[string]struct{}
@@ -394,6 +395,55 @@ func (m *CertificateMutation) ResetIssuerID() {
 	delete(m.clearedFields, certificate.FieldIssuerID)
 }
 
+// SetUsage sets the "usage" field.
+func (m *CertificateMutation) SetUsage(s string) {
+	m.usage = &s
+}
+
+// Usage returns the value of the "usage" field in the mutation.
+func (m *CertificateMutation) Usage() (r string, exists bool) {
+	v := m.usage
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUsage returns the old "usage" field's value of the Certificate entity.
+// If the Certificate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CertificateMutation) OldUsage(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUsage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUsage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUsage: %w", err)
+	}
+	return oldValue.Usage, nil
+}
+
+// ClearUsage clears the value of the "usage" field.
+func (m *CertificateMutation) ClearUsage() {
+	m.usage = nil
+	m.clearedFields[certificate.FieldUsage] = struct{}{}
+}
+
+// UsageCleared returns if the "usage" field was cleared in this mutation.
+func (m *CertificateMutation) UsageCleared() bool {
+	_, ok := m.clearedFields[certificate.FieldUsage]
+	return ok
+}
+
+// ResetUsage resets all changes to the "usage" field.
+func (m *CertificateMutation) ResetUsage() {
+	m.usage = nil
+	delete(m.clearedFields, certificate.FieldUsage)
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (m *CertificateMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
@@ -527,7 +577,7 @@ func (m *CertificateMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *CertificateMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 8)
 	if m.namespace != nil {
 		fields = append(fields, certificate.FieldNamespaceID)
 	}
@@ -542,6 +592,9 @@ func (m *CertificateMutation) Fields() []string {
 	}
 	if m.issuer_id != nil {
 		fields = append(fields, certificate.FieldIssuerID)
+	}
+	if m.usage != nil {
+		fields = append(fields, certificate.FieldUsage)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, certificate.FieldUpdatedAt)
@@ -567,6 +620,8 @@ func (m *CertificateMutation) Field(name string) (ent.Value, bool) {
 		return m.Desc()
 	case certificate.FieldIssuerID:
 		return m.IssuerID()
+	case certificate.FieldUsage:
+		return m.Usage()
 	case certificate.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case certificate.FieldCreatedAt:
@@ -590,6 +645,8 @@ func (m *CertificateMutation) OldField(ctx context.Context, name string) (ent.Va
 		return m.OldDesc(ctx)
 	case certificate.FieldIssuerID:
 		return m.OldIssuerID(ctx)
+	case certificate.FieldUsage:
+		return m.OldUsage(ctx)
 	case certificate.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case certificate.FieldCreatedAt:
@@ -637,6 +694,13 @@ func (m *CertificateMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetIssuerID(v)
+		return nil
+	case certificate.FieldUsage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUsage(v)
 		return nil
 	case certificate.FieldUpdatedAt:
 		v, ok := value.(time.Time)
@@ -706,6 +770,9 @@ func (m *CertificateMutation) ClearedFields() []string {
 	if m.FieldCleared(certificate.FieldIssuerID) {
 		fields = append(fields, certificate.FieldIssuerID)
 	}
+	if m.FieldCleared(certificate.FieldUsage) {
+		fields = append(fields, certificate.FieldUsage)
+	}
 	return fields
 }
 
@@ -729,6 +796,9 @@ func (m *CertificateMutation) ClearField(name string) error {
 	case certificate.FieldIssuerID:
 		m.ClearIssuerID()
 		return nil
+	case certificate.FieldUsage:
+		m.ClearUsage()
+		return nil
 	}
 	return fmt.Errorf("unknown Certificate nullable field %s", name)
 }
@@ -751,6 +821,9 @@ func (m *CertificateMutation) ResetField(name string) error {
 		return nil
 	case certificate.FieldIssuerID:
 		m.ResetIssuerID()
+		return nil
+	case certificate.FieldUsage:
+		m.ResetUsage()
 		return nil
 	case certificate.FieldUpdatedAt:
 		m.ResetUpdatedAt()

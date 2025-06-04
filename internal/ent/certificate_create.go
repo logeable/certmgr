@@ -75,6 +75,20 @@ func (cc *CertificateCreate) SetNillableIssuerID(i *int) *CertificateCreate {
 	return cc
 }
 
+// SetUsage sets the "usage" field.
+func (cc *CertificateCreate) SetUsage(s string) *CertificateCreate {
+	cc.mutation.SetUsage(s)
+	return cc
+}
+
+// SetNillableUsage sets the "usage" field if the given value is not nil.
+func (cc *CertificateCreate) SetNillableUsage(s *string) *CertificateCreate {
+	if s != nil {
+		cc.SetUsage(*s)
+	}
+	return cc
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (cc *CertificateCreate) SetUpdatedAt(t time.Time) *CertificateCreate {
 	cc.mutation.SetUpdatedAt(t)
@@ -152,6 +166,10 @@ func (cc *CertificateCreate) defaults() {
 	if _, ok := cc.mutation.Desc(); !ok {
 		v := certificate.DefaultDesc
 		cc.mutation.SetDesc(v)
+	}
+	if _, ok := cc.mutation.Usage(); !ok {
+		v := certificate.DefaultUsage
+		cc.mutation.SetUsage(v)
 	}
 	if _, ok := cc.mutation.UpdatedAt(); !ok {
 		v := certificate.DefaultUpdatedAt()
@@ -232,6 +250,10 @@ func (cc *CertificateCreate) createSpec() (*Certificate, *sqlgraph.CreateSpec) {
 	if value, ok := cc.mutation.IssuerID(); ok {
 		_spec.SetField(certificate.FieldIssuerID, field.TypeInt, value)
 		_node.IssuerID = value
+	}
+	if value, ok := cc.mutation.Usage(); ok {
+		_spec.SetField(certificate.FieldUsage, field.TypeString, value)
+		_node.Usage = value
 	}
 	if value, ok := cc.mutation.UpdatedAt(); ok {
 		_spec.SetField(certificate.FieldUpdatedAt, field.TypeTime, value)

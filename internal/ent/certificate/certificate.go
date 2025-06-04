@@ -24,6 +24,8 @@ const (
 	FieldDesc = "desc"
 	// FieldIssuerID holds the string denoting the issuer_id field in the database.
 	FieldIssuerID = "issuer_id"
+	// FieldUsage holds the string denoting the usage field in the database.
+	FieldUsage = "usage"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -49,6 +51,7 @@ var Columns = []string{
 	FieldKeyPem,
 	FieldDesc,
 	FieldIssuerID,
+	FieldUsage,
 	FieldUpdatedAt,
 	FieldCreatedAt,
 }
@@ -66,6 +69,8 @@ func ValidColumn(column string) bool {
 var (
 	// DefaultDesc holds the default value on creation for the "desc" field.
 	DefaultDesc string
+	// DefaultUsage holds the default value on creation for the "usage" field.
+	DefaultUsage string
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
@@ -107,6 +112,11 @@ func ByDesc(opts ...sql.OrderTermOption) OrderOption {
 // ByIssuerID orders the results by the issuer_id field.
 func ByIssuerID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIssuerID, opts...).ToFunc()
+}
+
+// ByUsage orders the results by the usage field.
+func ByUsage(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUsage, opts...).ToFunc()
 }
 
 // ByUpdatedAt orders the results by the updated_at field.

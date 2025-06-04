@@ -533,9 +533,9 @@ function convertCert(certs: Certificate[]): TreeDataNode[] {
       <Tooltip title={cert.desc || '无描述'}>
         <span style={{ userSelect: 'none' }}>
           {cert.subject}
-          {cert.isCA && (
-            <Tag color="green" style={{ marginLeft: 6, fontSize: 10, verticalAlign: 'middle' }}>
-              CA
+          {cert.usage && (
+            <Tag color="blue" style={{ marginLeft: 6, fontSize: 10, verticalAlign: 'middle' }}>
+              {cert.usage}
             </Tag>
           )}
         </span>

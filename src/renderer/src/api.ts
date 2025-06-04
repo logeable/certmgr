@@ -16,6 +16,7 @@ export interface Certificate {
   subject: string;
   issuerId: number;
   isCA: boolean;
+  usage: string;
 }
 
 export interface CertificateDetail extends Certificate {
@@ -30,6 +31,7 @@ export interface CertificateDetail extends Certificate {
   extKeyUsage: string[];
   dnsNames: string[];
   ipAddresses: string[];
+  usage: string;
 }
 
 const api = {
@@ -94,13 +96,14 @@ const api = {
         ou: string;
         commonName: string;
       },
-      usage: {
+      usage: string,
+      keyUsage: {
         digitalSignature: boolean;
         keyEncipherment: boolean;
         keyCertSign: boolean;
         cRLSign: boolean;
       },
-      extendedUsage: {
+      extendedKeyUsage: {
         serverAuth: boolean;
         clientAuth: boolean;
         codeSigning: boolean;
@@ -121,7 +124,8 @@ const api = {
         desc,
         subject,
         usage,
-        extendedUsage,
+        keyUsage,
+        extendedKeyUsage,
         basicConstraints,
         dnsNames,
         ipAddresses,

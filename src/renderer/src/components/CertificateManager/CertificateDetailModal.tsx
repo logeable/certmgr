@@ -128,6 +128,9 @@ export default function CertificateDetailModal({ open, cert, onClose }: Props) {
                 {detail.keyType === 'RSA' ? detail.keyLen : detail.eccCurve || '-'}
               </Descriptions.Item>
               <Descriptions.Item label="有效期（天）">{detail.validDays || '-'}</Descriptions.Item>
+              <Descriptions.Item label="用途">
+                {detail.usage ? <Tag color="blue">{detail.usage}</Tag> : '-'}
+              </Descriptions.Item>
             </Descriptions>
 
             {/* 高级配置 */}

@@ -124,6 +124,26 @@ func (cu *CertificateUpdate) ClearIssuerID() *CertificateUpdate {
 	return cu
 }
 
+// SetUsage sets the "usage" field.
+func (cu *CertificateUpdate) SetUsage(s string) *CertificateUpdate {
+	cu.mutation.SetUsage(s)
+	return cu
+}
+
+// SetNillableUsage sets the "usage" field if the given value is not nil.
+func (cu *CertificateUpdate) SetNillableUsage(s *string) *CertificateUpdate {
+	if s != nil {
+		cu.SetUsage(*s)
+	}
+	return cu
+}
+
+// ClearUsage clears the value of the "usage" field.
+func (cu *CertificateUpdate) ClearUsage() *CertificateUpdate {
+	cu.mutation.ClearUsage()
+	return cu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (cu *CertificateUpdate) SetUpdatedAt(t time.Time) *CertificateUpdate {
 	cu.mutation.SetUpdatedAt(t)
@@ -225,6 +245,12 @@ func (cu *CertificateUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if cu.mutation.IssuerIDCleared() {
 		_spec.ClearField(certificate.FieldIssuerID, field.TypeInt)
+	}
+	if value, ok := cu.mutation.Usage(); ok {
+		_spec.SetField(certificate.FieldUsage, field.TypeString, value)
+	}
+	if cu.mutation.UsageCleared() {
+		_spec.ClearField(certificate.FieldUsage, field.TypeString)
 	}
 	if value, ok := cu.mutation.UpdatedAt(); ok {
 		_spec.SetField(certificate.FieldUpdatedAt, field.TypeTime, value)
@@ -373,6 +399,26 @@ func (cuo *CertificateUpdateOne) ClearIssuerID() *CertificateUpdateOne {
 	return cuo
 }
 
+// SetUsage sets the "usage" field.
+func (cuo *CertificateUpdateOne) SetUsage(s string) *CertificateUpdateOne {
+	cuo.mutation.SetUsage(s)
+	return cuo
+}
+
+// SetNillableUsage sets the "usage" field if the given value is not nil.
+func (cuo *CertificateUpdateOne) SetNillableUsage(s *string) *CertificateUpdateOne {
+	if s != nil {
+		cuo.SetUsage(*s)
+	}
+	return cuo
+}
+
+// ClearUsage clears the value of the "usage" field.
+func (cuo *CertificateUpdateOne) ClearUsage() *CertificateUpdateOne {
+	cuo.mutation.ClearUsage()
+	return cuo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (cuo *CertificateUpdateOne) SetUpdatedAt(t time.Time) *CertificateUpdateOne {
 	cuo.mutation.SetUpdatedAt(t)
@@ -504,6 +550,12 @@ func (cuo *CertificateUpdateOne) sqlSave(ctx context.Context) (_node *Certificat
 	}
 	if cuo.mutation.IssuerIDCleared() {
 		_spec.ClearField(certificate.FieldIssuerID, field.TypeInt)
+	}
+	if value, ok := cuo.mutation.Usage(); ok {
+		_spec.SetField(certificate.FieldUsage, field.TypeString, value)
+	}
+	if cuo.mutation.UsageCleared() {
+		_spec.ClearField(certificate.FieldUsage, field.TypeString)
 	}
 	if value, ok := cuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(certificate.FieldUpdatedAt, field.TypeTime, value)

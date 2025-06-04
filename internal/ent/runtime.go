@@ -20,14 +20,18 @@ func init() {
 	certificateDescDesc := certificateFields[4].Descriptor()
 	// certificate.DefaultDesc holds the default value on creation for the desc field.
 	certificate.DefaultDesc = certificateDescDesc.Default.(string)
+	// certificateDescUsage is the schema descriptor for usage field.
+	certificateDescUsage := certificateFields[6].Descriptor()
+	// certificate.DefaultUsage holds the default value on creation for the usage field.
+	certificate.DefaultUsage = certificateDescUsage.Default.(string)
 	// certificateDescUpdatedAt is the schema descriptor for updated_at field.
-	certificateDescUpdatedAt := certificateFields[6].Descriptor()
+	certificateDescUpdatedAt := certificateFields[7].Descriptor()
 	// certificate.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	certificate.DefaultUpdatedAt = certificateDescUpdatedAt.Default.(func() time.Time)
 	// certificate.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	certificate.UpdateDefaultUpdatedAt = certificateDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// certificateDescCreatedAt is the schema descriptor for created_at field.
-	certificateDescCreatedAt := certificateFields[7].Descriptor()
+	certificateDescCreatedAt := certificateFields[8].Descriptor()
 	// certificate.DefaultCreatedAt holds the default value on creation for the created_at field.
 	certificate.DefaultCreatedAt = certificateDescCreatedAt.Default.(func() time.Time)
 	// certificateDescID is the schema descriptor for id field.

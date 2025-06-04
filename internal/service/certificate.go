@@ -49,8 +49,8 @@ func (s *CertificateService) CreateCertificate(ctx context.Context, req CreateCe
 		Subject:               req.Subject.ToPkixName(),
 		NotBefore:             now,
 		NotAfter:              now.AddDate(0, 0, req.ValidDays),
-		KeyUsage:              req.Usage.ToKeyUsage(),
-		ExtKeyUsage:           req.ExtendedUsage.ToExtKeyUsage(),
+		KeyUsage:              req.KeyUsage.ToKeyUsage(),
+		ExtKeyUsage:           req.ExtendeKeydUsage.ToExtKeyUsage(),
 		BasicConstraintsValid: true,
 		IsCA:                  req.BasicConstraints.CA,
 		MaxPathLenZero:        false,
@@ -98,6 +98,7 @@ func (s *CertificateService) CreateCertificate(ctx context.Context, req CreateCe
 		SetCertPem(string(certPemBytes)).
 		SetKeyPem(string(keyPemBytes)).
 		SetDesc(req.Desc).
+		SetUsage(req.Usage).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("save to db failed: %w", err)
@@ -139,6 +140,7 @@ func (s *CertificateService) ListCertificates(ctx context.Context, namespaceId i
 			IsCA:        x509Cert.IsCA,
 			CertPem:     cert.CertPem,
 			KeyPem:      cert.KeyPem,
+			Usage:       cert.Usage,
 		})
 	}
 	return result, nil
@@ -214,6 +216,7 @@ func (s *CertificateService) GetCertificate(ctx context.Context, id int) (*Certi
 		DNSNames:      x509Cert.DNSNames,
 		IPAddresses:   formatIPAddresses(x509Cert.IPAddresses),
 		IsCA:          x509Cert.IsCA,
+		Usage:         cert.Usage,
 	}, nil
 }
 
@@ -423,6 +426,7 @@ type CertificateDetail struct {
 	DNSNames      []string `json:"dnsNames"`
 	IPAddresses   []string `json:"ipAddresses"`
 	IsCA          bool     `json:"isCA"`
+	Usage         string   `json:"usage"`
 }
 
 type Subject struct {
@@ -445,14 +449,14 @@ func (s *Subject) ToPkixName() pkix.Name {
 	}
 }
 
-type Usage struct {
+type KeyUsage struct {
 	DigitalSignature bool `json:"digitalSignature"`
 	KeyEncipherment  bool `json:"keyEncipherment"`
 	KeyCertSign      bool `json:"keyCertSign"`
 	CRLSign          bool `json:"cRLSign"`
 }
 
-func (u *Usage) ToKeyUsage() x509.KeyUsage {
+func (u *KeyUsage) ToKeyUsage() x509.KeyUsage {
 	var ku x509.KeyUsage
 	if u.DigitalSignature {
 		ku |= x509.KeyUsageDigitalSignature
@@ -469,13 +473,13 @@ func (u *Usage) ToKeyUsage() x509.KeyUsage {
 	return ku
 }
 
-type ExtendedUsage struct {
+type ExtendedKeyUsage struct {
 	ServerAuth  bool `json:"serverAuth"`
 	ClientAuth  bool `json:"clientAuth"`
 	CodeSigning bool `json:"codeSigning"`
 }
 
-func (u *ExtendedUsage) ToExtKeyUsage() []x509.ExtKeyUsage {
+func (u *ExtendedKeyUsage) ToExtKeyUsage() []x509.ExtKeyUsage {
 	var eku []x509.ExtKeyUsage
 	if u.ServerAuth {
 		eku = append(eku, x509.ExtKeyUsageServerAuth)
@@ -504,6 +508,7 @@ type Certificate struct {
 	CreatedAt   time.Time
 	Subject     string
 	IsCA        bool
+	Usage       string
 }
 
 type CreateCertReq struct {
@@ -515,8 +520,9 @@ type CreateCertReq struct {
 	ValidDays        int              `json:"validDays"`
 	Desc             string           `json:"desc"`
 	Subject          Subject          `json:"subject"`
-	Usage            Usage            `json:"usage"`
-	ExtendedUsage    ExtendedUsage    `json:"extendedUsage"`
+	Usage            string           `json:"usage"`
+	KeyUsage         KeyUsage         `json:"keyUsage"`
+	ExtendeKeydUsage ExtendedKeyUsage `json:"extendedKeyUsage"`
 	BasicConstraints BasicConstraints `json:"basicConstraints"`
 	DNSNames         []string         `json:"dnsNames"`
 	IPAddresses      []string         `json:"ipAddresses"`

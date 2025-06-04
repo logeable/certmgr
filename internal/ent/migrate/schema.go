@@ -15,6 +15,7 @@ var (
 		{Name: "key_pem", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "desc", Type: field.TypeString, Nullable: true, Size: 2147483647, Default: ""},
 		{Name: "issuer_id", Type: field.TypeInt, Nullable: true},
+		{Name: "usage", Type: field.TypeString, Nullable: true, Size: 2147483647, Default: ""},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "namespace_id", Type: field.TypeInt},
@@ -27,7 +28,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "certificates_namespaces_certificates",
-				Columns:    []*schema.Column{CertificatesColumns[7]},
+				Columns:    []*schema.Column{CertificatesColumns[8]},
 				RefColumns: []*schema.Column{NamespacesColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -36,7 +37,7 @@ var (
 			{
 				Name:    "certificate_namespace_id",
 				Unique:  false,
-				Columns: []*schema.Column{CertificatesColumns[7]},
+				Columns: []*schema.Column{CertificatesColumns[8]},
 			},
 		},
 	}

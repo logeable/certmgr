@@ -10,8 +10,12 @@ import (
 )
 
 func InitDB() (*ent.Client, error) {
-	dbPath := filepath.Join(os.Getenv("HOME"), ".certmgr", "certmgr.db")
-	err := os.MkdirAll(filepath.Dir(dbPath), 0755)
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user home dir: %w", err)
+	}
+	dbPath := filepath.Join(home, ".certmgr", "certmgr.db")
+	err = os.MkdirAll(filepath.Dir(dbPath), 0755)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create db dir: %w", err)
 	}

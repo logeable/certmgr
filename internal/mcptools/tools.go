@@ -9,10 +9,12 @@ import (
 func InitTools(dbClient *ent.Client) ([]server.ServerTool, error) {
 	svcCtx := service.NewServiceContext(dbClient)
 	namespaceService := service.NewNamespaceService(svcCtx)
+	certificateService := service.NewCertificateService(svcCtx)
 
 	var tools []server.ServerTool
 
 	tools = append(tools, InitNamespaceTools(namespaceService)...)
+	tools = append(tools, InitCertificateTools(certificateService)...)
 
 	return tools, nil
 }

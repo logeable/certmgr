@@ -34,6 +34,15 @@ func NewCertificateService(ctx *ServiceContext) *CertificateService {
 }
 
 func (s *CertificateService) CreateCertificate(ctx context.Context, req CreateCertReq) (*Certificate, error) {
+	count, err := s.ctx.client.Certificate.Query().
+		Where(certificate.NamespaceID(req.NamespaceId), certificate.IssuerID(0)).
+		Count(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("count certificates failed: %w", err)
+	}
+	if count > 0 && req.IssuerId == 0 {
+		return nil, fmt.Errorf("root certificate already exists")
+	}
 	newKey, err := createPrivateKey(req.KeyType, req)
 	if err != nil {
 		return nil, fmt.Errorf("create private key failed: %w", err)
@@ -50,7 +59,7 @@ func (s *CertificateService) CreateCertificate(ctx context.Context, req CreateCe
 		NotBefore:             now,
 		NotAfter:              now.AddDate(0, 0, req.ValidDays),
 		KeyUsage:              req.KeyUsage.ToKeyUsage(),
-		ExtKeyUsage:           req.ExtendeKeydUsage.ToExtKeyUsage(),
+		ExtKeyUsage:           req.ExtendedKeyUsage.ToExtKeyUsage(),
 		BasicConstraintsValid: true,
 		IsCA:                  req.BasicConstraints.CA,
 		MaxPathLenZero:        false,
@@ -522,7 +531,7 @@ type CreateCertReq struct {
 	Subject          Subject          `json:"subject"`
 	Usage            string           `json:"usage"`
 	KeyUsage         KeyUsage         `json:"keyUsage"`
-	ExtendeKeydUsage ExtendedKeyUsage `json:"extendedKeyUsage"`
+	ExtendedKeyUsage ExtendedKeyUsage `json:"extendedKeyUsage"`
 	BasicConstraints BasicConstraints `json:"basicConstraints"`
 	DNSNames         []string         `json:"dnsNames"`
 	IPAddresses      []string         `json:"ipAddresses"`

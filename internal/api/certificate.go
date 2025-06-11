@@ -124,7 +124,7 @@ func CreateCertificateHandler(ctx *service.ServiceContext) echo.HandlerFunc {
 		Subject          Subject          `json:"subject"`
 		Usage            string           `json:"usage"`
 		KeyUsage         KeyUsage         `json:"keyUsage"`
-		ExtendeKeydUsage ExtendedKeyUsage `json:"extendedKeyUsage"`
+		ExtendedKeyUsage ExtendedKeyUsage `json:"extendedKeyUsage"`
 		BasicConstraints BasicConstraints `json:"basicConstraints"`
 		DNSNames         []string         `json:"dnsNames"`
 		IPAddresses      []string         `json:"ipAddresses"`
@@ -163,10 +163,10 @@ func CreateCertificateHandler(ctx *service.ServiceContext) echo.HandlerFunc {
 					KeyCertSign:      req.KeyUsage.KeyCertSign,
 					CRLSign:          req.KeyUsage.CRLSign,
 				},
-				ExtendeKeydUsage: service.ExtendedKeyUsage{
-					ServerAuth:  req.ExtendeKeydUsage.ServerAuth,
-					ClientAuth:  req.ExtendeKeydUsage.ClientAuth,
-					CodeSigning: req.ExtendeKeydUsage.CodeSigning,
+				ExtendedKeyUsage: service.ExtendedKeyUsage{
+					ServerAuth:  req.ExtendedKeyUsage.ServerAuth,
+					ClientAuth:  req.ExtendedKeyUsage.ClientAuth,
+					CodeSigning: req.ExtendedKeyUsage.CodeSigning,
 				},
 				BasicConstraints: service.BasicConstraints{
 					CA: req.BasicConstraints.CA,

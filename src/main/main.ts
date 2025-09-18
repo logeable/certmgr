@@ -282,7 +282,7 @@ function handleIPC(serverBaseURL: string) {
 
 function installToLoginKeychain(certPath: string) {
   const script = `
-    do shell script "security add-trusted-cert -r trustRoot -k ~/Library/Keychains/login.keychain-db \\"${certPath}\\"" 
+    do shell script "security add-trusted-cert -d -r trustRoot -k ~/Library/Keychains/login.keychain-db \\"${certPath}\\"" 
   `;
 
   const cmd = `osascript -e '${script}'`;

@@ -3,7 +3,7 @@ generate:
 	go generate ./internal/ent
 
 .PHONY: bin
-bin: generate
+bin:
 	mkdir -p bin
 	go build -o bin/server cmd/server/main.go
 

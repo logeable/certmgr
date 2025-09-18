@@ -164,6 +164,13 @@ const api = {
       }
       throw new Error(res.error);
     },
+    installRoot: async (certId: number) => {
+      const res = await window.request_server<void>('certificates:installRoot', certId);
+      if (res.success) {
+        return res.data;
+      }
+      throw new Error(res.error);
+    },
   },
 };
 export default api;

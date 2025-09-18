@@ -25,6 +25,7 @@ import {
   EyeOutlined,
   ReloadOutlined,
   ExportOutlined,
+  KeyOutlined,
 } from '@ant-design/icons';
 import CreateCertModal from './CreateCertModal';
 import CertificateDetailModal from './CertificateDetailModal';
@@ -50,6 +51,7 @@ export default function CertificateManager() {
   const [selectedCertId, setSelectedCertId] = useState<number | null>(null);
   const [showTreeHelp, setShowTreeHelp] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showInstallRootConfirm, setShowInstallRootConfirm] = useState(false);
 
   useEffect(() => {
     const fetchNamespaces = async () => {
@@ -92,7 +94,15 @@ export default function CertificateManager() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // 只在没有任何模态框弹出时才响应快捷键
-      if (showDetail || showCreate || showRenew || showTreeHelp || showDeleteConfirm) return;
+      if (
+        showDetail ||
+        showCreate ||
+        showRenew ||
+        showTreeHelp ||
+        showDeleteConfirm ||
+        showInstallRootConfirm
+      )
+        return;
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedCertId) {
         onDelete(selectedCertId);
       } else if (e.key === 's' && selectedCertId) {
@@ -111,7 +121,16 @@ export default function CertificateManager() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCertId, showDetail, showCreate, showRenew, showTreeHelp, certs, showDeleteConfirm]);
+  }, [
+    selectedCertId,
+    showDetail,
+    showCreate,
+    showRenew,
+    showTreeHelp,
+    certs,
+    showDeleteConfirm,
+    showInstallRootConfirm,
+  ]);
 
   const onIssue = (issuerId: number) => {
     setIssuerId(issuerId);
@@ -156,6 +175,39 @@ export default function CertificateManager() {
         }
       },
     });
+  };
+
+  const onInstallRootCert = async (certId: number) => {
+    const cert = certs.find(c => c.id === certId);
+    if (cert) {
+      setShowInstallRootConfirm(true);
+      modal.confirm({
+        title: '安装根证书到系统钥匙串',
+        icon: <ExclamationCircleOutlined />,
+        content: (
+          <div>
+            <p>确定要将该根证书安装到系统钥匙串吗？</p>
+            <p style={{ color: '#faad14', fontSize: '12px' }}>
+              安装后，该证书将被系统信任，请确保证书来源可靠！
+            </p>
+          </div>
+        ),
+        okText: '确认安装',
+        cancelText: '取消',
+        onOk: async () => {
+          try {
+            await api.certificates.installRoot(certId);
+            message.success('安装根证书成功');
+          } catch (err) {
+            message.error('安装根证书失败');
+            console.error('Failed to install root certificate:', err);
+          }
+        },
+        afterClose: () => {
+          setShowInstallRootConfirm(false);
+        },
+      });
+    }
   };
 
   // 删除证书确认
@@ -293,6 +345,7 @@ export default function CertificateManager() {
                     onViewDetails={onViewDetails}
                     onRenew={onRenew}
                     onExport={onExport}
+                    onInstallRootCert={onInstallRootCert}
                     setSelectedCertId={setSelectedCertId}
                   />
                 </div>
@@ -365,6 +418,7 @@ const TreeWithContextMenu = ({
   onRenew,
   onDelete,
   onExport,
+  onInstallRootCert,
   setSelectedCertId,
 }: {
   certs: Certificate[];
@@ -373,6 +427,7 @@ const TreeWithContextMenu = ({
   onRenew: (id: number) => void;
   onDelete: (id: number) => void;
   onExport: (id: number) => void;
+  onInstallRootCert: (id: number) => void;
   setSelectedCertId: (id: number | null) => void;
 }) => {
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
@@ -436,6 +491,15 @@ const TreeWithContextMenu = ({
       ),
     },
     {
+      key: 'installRootCert',
+      label: (
+        <Space>
+          <KeyOutlined />
+          安装根证书
+        </Space>
+      ),
+    },
+    {
       type: 'divider',
     },
     {
@@ -466,6 +530,9 @@ const TreeWithContextMenu = ({
         break;
       case 'export':
         onExport(certId);
+        break;
+      case 'installRootCert':
+        onInstallRootCert(certId);
         break;
       case 'delete':
         onDelete(certId);

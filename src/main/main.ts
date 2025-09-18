@@ -1,9 +1,10 @@
-import { ChildProcess, spawn } from 'child_process';
+import { ChildProcess, spawn, exec } from 'child_process';
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
-import { join } from 'path';
+import path, { join } from 'path';
 import { URLSearchParams } from 'url';
 import logger from './logger';
-import { writeFile } from 'fs/promises';
+import { writeFile, unlink, mkdtemp } from 'fs/promises';
+import { tmpdir } from 'os';
 
 async function createWindow() {
   // 创建浏览器窗口
@@ -245,5 +246,52 @@ function handleIPC(serverBaseURL: string) {
       logger.error(`export certificate error`, { error: err });
       throw err;
     }
+  });
+
+  handleWrapper('certificates:installRoot', async (...args: unknown[]) => {
+    const [certId] = args;
+    const cert = await doGet(`certificates/${certId}`);
+
+    if (!cert.certPem) {
+      throw new Error('证书数据不存在');
+    }
+
+    // 创建临时目录和文件
+    const tempDir = await mkdtemp(join(tmpdir(), 'certmgr-'));
+    const certPath = join(tempDir, `cert-${certId}.pem`);
+
+    try {
+      // 写入证书数据到临时文件
+      await writeFile(certPath, cert.certPem);
+
+      // 安装到登录钥匙串
+      installToLoginKeychain(certPath);
+
+      return null;
+    } catch (error) {
+      // 清理临时文件
+      try {
+        await unlink(certPath);
+      } catch (cleanupError) {
+        logger.warn('清理临时文件失败', { error: cleanupError });
+      }
+      throw error;
+    }
+  });
+}
+
+function installToLoginKeychain(certPath: string) {
+  const script = `
+    do shell script "security add-trusted-cert -r trustRoot -k ~/Library/Keychains/login.keychain-db \\"${certPath}\\"" 
+  `;
+
+  const cmd = `osascript -e '${script}'`;
+
+  exec(cmd, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error: ${error.message}`);
+      return;
+    }
+    console.log('Certificate installed to login keychain successfully via osascript');
   });
 }
